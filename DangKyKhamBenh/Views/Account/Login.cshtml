@@ -1,7 +1,41 @@
 ﻿
 @{
-    ViewBag.Title = "Login";
+    Layout = null;
 }
 
-<h2>Login</h2>
+<!DOCTYPE html>
 
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta charset="utf-8"/>
+    <title>Login</title>
+    <link href="~/Content/bootstrap.css" rel="stylesheet"/>
+</head>
+<body class="bg-success">
+
+    <div class="container d-flex justify-content-center align-items-center vh-100" >
+        <div class="card shadow p-4" style="width:100%; max-width: 600px">
+            <h3 class="text-center mb-4"> Login </h3>
+            <form action="/Account/Login" method="post">
+                <div class="mb-3">
+                    <label for="user" class="form-label">User Name</label>
+                    <input type="text" class="form-control" id="user" name="user">
+                </div>
+                <div class="mb-3">
+                    <label for="Password1" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="Password1" name="password">
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                    <label class="form-check-label" for="exampleCheck1">Lưu Thông Tin</label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Submit</button>
+
+                <p class="text-danger">@ViewBag.Error</p>
+            </form>
+        </div>
+    </div>
+    
+</body>
+</html>
