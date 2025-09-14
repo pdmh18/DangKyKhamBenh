@@ -22,7 +22,7 @@ namespace DangKyKhamBenh.Controllers
         public ActionResult Login(string user, string password)
         {
             bool isValid = false;
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] User: '{user}', Password: '{password}'");
+      
             using (var conn = new OracleConnection(
                 ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString))
             {
