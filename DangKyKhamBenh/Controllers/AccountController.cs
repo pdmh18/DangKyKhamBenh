@@ -1,4 +1,5 @@
 ﻿
+using DangKyKhamBenh.Models;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
@@ -6,8 +7,8 @@ using System.Configuration;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Security;
 using System.Web.UI.WebControls.WebParts;
-using DangKyKhamBenh.Models;
 
 namespace DangKyKhamBenh.Controllers
 {
@@ -278,7 +279,21 @@ namespace DangKyKhamBenh.Controllers
 
         public ActionResult Logout()
         {
-            return View();
+            // Xoá thông tin đăng nhập trên Session
+            Session.Clear();
+            Session.Abandon();
+
+            // (tuỳ chọn) đăng xuất FormsAuthentication nếu có dùng
+            try { FormsAuthentication.SignOut(); } catch { }
+
+            // (tuỳ chọn) xoá cookie session cũ
+            Response.Cookies.Add(new HttpCookie("ASP.NET_SessionId", "")
+            {
+                Expires = DateTime.UtcNow.AddDays(-1)
+            });
+
+            TempData["Msg"] = "Bạn đã đăng xuất.";
+            return RedirectToAction("Login", "Account");
         }
 
     }

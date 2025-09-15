@@ -87,6 +87,11 @@
                 </div>
                 <p class="text-center auth-sub">Vui lòng đăng nhập để tiếp tục</p>
 
+                @if (TempData["Msg"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Msg"]</div>
+                }
+
                 <!-- Form -->
                 <form action="/Account/Login" method="post">
                     <div class="mb-3 position-relative">
