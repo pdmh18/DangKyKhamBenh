@@ -1,7 +1,92 @@
-﻿
+﻿@model DangKyKhamBenh.ViewModel.Register
+
 @{
     ViewBag.Title = "Register";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <h2>Register</h2>
-
+@using (Html.BeginForm("Register", "Account", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+<div class="row">
+    <div class="col-md-6">
+        @Html.LabelFor(temp => temp.Username)
+        @Html.TextBoxFor(temp => temp.Username, new
+        {
+            placeholder = "Username",
+            @class = "form-control"
+        })
+        @Html.ValidationMessageFor(temp => temp.Username)
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(temp => temp.Email)
+        @Html.TextBoxFor(temp => temp.Email, new
+        {
+            placeholder = "Email",
+            @class = "form-control"
+        })
+        @Html.ValidationMessageFor(temp => temp.Email)
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(temp => temp.Password)
+        @Html.PasswordFor(temp => temp.Password, new
+        {
+            placeholder = "Password",
+            @class = "form-control"
+        })
+        @Html.ValidationMessageFor(temp => temp.Password)
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(temp => temp.ConfirmPassword)
+        @Html.PasswordFor(temp => temp.ConfirmPassword, new
+        {
+            placeholder = "ConfirmPassword",
+            @class = "form-control"
+        })
+        @Html.ValidationMessageFor(temp => temp.ConfirmPassword)
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(temp => temp.PhoneNumber)
+        @Html.TextBoxFor(temp => temp.PhoneNumber, new
+        {
+            placeholder = "PhoneNumber",
+            @class = "form-control"
+        })
+        @Html.ValidationMessageFor(temp => temp.PhoneNumber)
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(temp => temp.DateOfBirth)
+        @Html.TextBoxFor(temp => temp.DateOfBirth, new
+        {
+            placeholder = "Date Of Birth",
+            @class = "form-control",
+            type = "date"
+        })
+        @Html.ValidationMessageFor(temp => temp.DateOfBirth)
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(temp => temp.Address)
+        @Html.TextBoxFor(temp => temp.Address, new
+        {
+            placeholder = "Address",
+            @class = "form-control"
+        })
+        @Html.ValidationMessageFor(temp => temp.Address)
+    </div>
+    <div class="col-md-6">
+        @Html.Label("Loại tài khoản (StaffType)")
+        @Html.DropDownListFor(m => m.StaffType,
+            new SelectList(new[]
+            {
+                new { Value = "BenhNhan", Text = "Bệnh nhân" },
+                new { Value = "BacSi",    Text = "Bác sĩ" }
+            }, "Value", "Text"),
+            "-- Chọn loại tài khoản --",
+            new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.StaffType)
+    </div>
+</div>
+    <button type="submit" class="btn btn-success">Register</button>
+}
