@@ -56,9 +56,6 @@ namespace DangKyKhamBenh.Controllers
             }
         }
 
-
-
-
         public ActionResult Register()
         {
             return View();
