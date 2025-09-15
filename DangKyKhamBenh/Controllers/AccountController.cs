@@ -28,9 +28,9 @@ namespace DangKyKhamBenh.Controllers
             {
                 conn.Open();
                 string sql = @"SELECT COUNT(*) 
-               FROM TAIKHOAN 
-               WHERE TRIM(UPPER(TK_UserName)) = TRIM(UPPER(:pUser)) 
-                 AND TRIM(TK_PassWord) = TRIM(:pPassword)";
+                               FROM TAIKHOAN 
+                               WHERE TRIM(UPPER(TK_UserName)) = TRIM(UPPER(:pUser)) 
+                                 AND TRIM(TK_PassWord) = TRIM(:pPassword)";
 
 
                 using (var cmd = new OracleCommand(sql, conn))
