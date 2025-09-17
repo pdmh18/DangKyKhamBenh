@@ -2,6 +2,11 @@
 @{
     Layout = null;                // không dùng layout
     ViewBag.Title = "Đăng ký";    // tiêu đề trang
+
+    // nhận cờ/thông điệp từ TempData (được map sang ViewBag ở GET Register)
+    var pendingOk = (ViewBag.PendingOk as bool?) == true;
+    var pendingMsg = ViewBag.PendingMsg as string;
+    var pendingPhone = ViewBag.PendingPhone as string;
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -33,7 +38,7 @@
         }
 
         .auth-header {
-            background: linear-gradient(135deg, var(--pri) 0%, #22c55e 100%);
+            background: linear-gradient(135deg,var(--pri) 0%,#22c55e 100%);
             color: #fff;
             padding: 28px;
         }
@@ -129,11 +134,11 @@
 
         @@media (max-width:576px) {
             .auth-header {
-                padding: 20px;
+                padding: 20px
             }
 
             .auth-body {
-                padding: 20px;
+                padding: 20px
             }
         }
     </style>
@@ -147,17 +152,47 @@
                     <div class="logo"><i class="fa-solid fa-user-plus"></i></div>
                     Đăng ký tài khoản
                 </div>
-                <div class="small-muted mt-2">
-                    Tạo tài khoản để đặt lịch khám nhanh chóng và theo dõi hồ sơ sức khỏe.
-                </div>
+                <div class="small-muted mt-2">Tạo tài khoản để đặt lịch khám nhanh chóng và theo dõi hồ sơ sức khỏe.</div>
             </div>
 
             <!-- Body -->
             <div class="auth-body">
-                @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+
+                @* Nếu đã gửi yêu cầu thành công: hiện thông báo & nút điều hướng *@
+                @if (pendingOk)
+                {
+                    <div class="alert alert-success" role="alert">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fa-solid fa-circle-check mt-1"></i>
+                            <div>
+                                <div class="fw-bold">Yêu cầu đăng ký đã được gửi</div>
+                                <div>
+                                    @(string.IsNullOrWhiteSpace(pendingMsg)
+                                    ? "Tài khoản của bạn phải chờ xác minh. Khi xác minh xong, chúng tôi sẽ gửi thông báo về số điện thoại bạn đã cung cấp."
+                                    : pendingMsg)
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(pendingPhone))
+                                {
+                                    <div class="text-muted mt-1">Số nhận thông báo: <strong>@pendingPhone</strong></div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mb-3">
+                        <a class="btn btn-success" href="@Url.Action("Login","Account")"><i class="fa-solid fa-right-to-bracket me-1"></i> Đến trang đăng nhập</a>
+                        <a class="btn btn-outline-secondary" href="@Url.Action("Index","Home")">Về trang chủ</a>
+                    </div>
+                }
+
+                @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate", id = "frmRegister" }))
                 {
                     @Html.AntiForgeryToken()
                     @Html.ValidationSummary(true, "", new { @class = "text-danger mb-2" })
+
+                    @* Force: Bệnh nhân + USER *@
+                    <input type="hidden" name="StaffType" value="BenhNhan" />
+                    <input type="hidden" name="Role" value="USER" />
 
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -224,22 +259,6 @@
                                 <input name="Address" class="form-control" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành" />
                             </div>
                         </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Loại tài khoản (StaffType)</label>
-                            <div class="input-icon">
-                                <i class="fa-solid fa-user-doctor"></i>
-                                @Html.DropDownListFor(m => m.StaffType,
-                                    new SelectList(new[]
-                                    {
-                                        new { Value = "BenhNhan", Text = "Bệnh nhân" },
-                                        new { Value = "BacSi",    Text = "Bác sĩ" }
-                                    }, "Value", "Text", Model?.StaffType ?? "BenhNhan"),
-                                    "-- Chọn loại tài khoản --",
-                                    new { @class = "form-select" })
-                            </div>
-                            @Html.ValidationMessageFor(m => m.StaffType, "", new { @class = "text-danger" })
-                        </div>
                     </div>
 
                     <div class="divider"></div>
@@ -253,29 +272,36 @@
                         <a href="@Url.Action("Login","Account")" class="small">Đã có tài khoản? Đăng nhập</a>
                     </div>
                 }
+
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
-        function togglePwd(id, btn) {
-            const input = document.getElementById(id);
-            const icon = btn.querySelector('i');
-            if (!input) return;
-            input.type = input.type === 'password' ? 'text' : 'password';
-            icon.classList.toggle('fa-eye');
-            icon.classList.toggle('fa-eye-slash');
-        }
-        // cảnh báo confirm password realtime
-        const pw = document.getElementById('Password');
-        const cpw = document.getElementById('ConfirmPassword');
-        const msg = document.getElementById('cpwMsg');
-        function checkMatch() {
-            if (!pw || !cpw || !msg) return;
-            msg.style.display = (cpw.value.length > 0 && pw.value !== cpw.value) ? 'block' : 'none';
-        }
-        if (pw && cpw) { pw.addEventListener('input', checkMatch); cpw.addEventListener('input', checkMatch); }
+    function togglePwd(id, btn) {
+        const input = document.getElementById(id);
+        const icon = btn.querySelector('i');
+        if (!input) return;
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+    }
+
+    // cảnh báo confirm password realtime
+    const pw = document.getElementById('Password');
+    const cpw = document.getElementById('ConfirmPassword');
+    const msg = document.getElementById('cpwMsg');
+    function checkMatch() {
+        if (!pw || !cpw || !msg) return;
+        msg.style.display = (cpw.value.length > 0 && pw.value !== cpw.value) ? 'block' : 'none';
+    }
+    if (pw && cpw) { pw.addEventListener('input', checkMatch); cpw.addEventListener('input', checkMatch); }
+
+    // nếu pendingOk=true thì ẩn form (tránh user nghĩ chưa gửi)
+    @if (pendingOk) {
+        @:document.addEventListener('DOMContentLoaded', function(){ var f=document.getElementById('frmRegister'); if(f) f.style.display='none'; });
+    }
     </script>
 </body>
 </html>

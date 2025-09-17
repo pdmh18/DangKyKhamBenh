@@ -15,49 +15,94 @@ namespace DangKyKhamBenh.Controllers
     public class AccountController : Controller
     {
         // GET: Account
-        [HttpGet]
-        public ActionResult Login()
+        [HttpGet, AllowAnonymous]
+        public ActionResult Login(string returnUrl = null)
         {
+            ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
-        [HttpPost]
-        public ActionResult Login(string user, string password)
+        [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+        public ActionResult Login(string user, string password, string returnUrl = null)
         {
-            bool isValid = false;
-      
-            using (var conn = new OracleConnection(
-                ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString))
+            if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(password))
             {
-                conn.Open();
-                string sql = @"SELECT COUNT(*) 
-                               FROM TAIKHOAN 
-                               WHERE TRIM(UPPER(TK_UserName)) = TRIM(UPPER(:pUser)) 
-                                 AND TRIM(TK_PassWord) = TRIM(:pPassword)";
-
-
-                using (var cmd = new OracleCommand(sql, conn))
-                {
-                    cmd.BindByName = true;
-                    cmd.Parameters.Add(new OracleParameter("pUser", user?.Trim()));
-                    cmd.Parameters.Add(new OracleParameter("pPassword", password?.Trim()));
-
-                    int count = Convert.ToInt32(cmd.ExecuteScalar());
-                    isValid = (count > 0);
-                }
-            }
-
-            if (isValid)
-            {
-                Session["User"] = user;
-                return RedirectToAction("Index", "Home");
-            }
-            else
-            {
-                ViewBag.Error = $"Invalid username or password. (User={user}, Pass={password})";
+                ViewBag.Error = "Vui lòng nhập Username và Password.";
                 return View();
             }
+
+            try
+            {
+                using (var conn = new OracleConnection(
+                    ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString))
+                {
+                    conn.Open();
+
+                    // Lấy trạng thái + role theo username (so sánh case-insensitive)
+                    const string sql = @"
+                        SELECT TK_PassWord, NVL(TK_TrangThai,'PENDING') AS TrangThai, TK_Role, TK_StaffType
+                        FROM TAIKHOAN
+                        WHERE TRIM(UPPER(TK_UserName)) = TRIM(UPPER(:pUser))";
+
+                    using (var cmd = new OracleCommand(sql, conn))
+                    {
+                        cmd.BindByName = true;
+                        cmd.Parameters.Add("pUser", user?.Trim());
+
+                        using (var r = cmd.ExecuteReader())
+                        {
+                            if (!r.Read())
+                            {
+                                ViewBag.Error = "Sai tài khoản hoặc mật khẩu.";
+                                return View();
+                            }
+
+                            var dbPassword = r.GetString(0)?.Trim();
+                            var status = r.GetString(1)?.Trim().ToUpperInvariant(); // ACTIVE / PENDING / LOCKED ...
+                            var role = r.IsDBNull(2) ? null : r.GetString(2);
+                            var staffType = r.IsDBNull(3) ? null : r.GetString(3);
+
+                            // So sánh password thô (TODO: hash sau)
+                            if (!string.Equals(dbPassword, password?.Trim()))
+                            {
+                                ViewBag.Error = "Sai tài khoản hoặc mật khẩu.";
+                                return View();
+                            }
+
+                            if (!string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // Tuỳ biến message theo trạng thái
+                                if (status == "PENDING")
+                                    ViewBag.Error = "Tài khoản đang chờ duyệt. Vui lòng đợi Admin phê duyệt.";
+                                else if (status == "LOCKED")
+                                    ViewBag.Error = "Tài khoản đã bị khoá. Vui lòng liên hệ quản trị.";
+                                else
+                                    ViewBag.Error = $"Tài khoản chưa sẵn sàng (trạng thái: {status}).";
+
+                                return View();
+                            }
+
+                            // OK: set session & điều hướng
+                            Session["User"] = user?.Trim();
+                            Session["Role"] = role;
+                            Session["StaffType"] = staffType;
+
+                            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                                return Redirect(returnUrl);
+
+                            return RedirectToAction("Index", "Home");
+                        }
+                    }
+                }
+            }
+            catch (OracleException ex)
+            {
+                ViewBag.Error = $"Lỗi Oracle ORA-{ex.Number}: {ex.Message}";
+                return View();
+            }
+
         }
+
 
 
 
@@ -88,12 +133,21 @@ namespace DangKyKhamBenh.Controllers
         [HttpGet, AllowAnonymous]
         public ActionResult Register()
         {
-            // nếu muốn default StaffType:
+            // giữ default nếu bạn cần
             var model = new TaiKhoan { StaffType = "BenhNhan", Role = "USER" };
+
+            // nhận cờ/thông điệp từ TempData (sau khi Redirect)
+            ViewBag.PendingOk = TempData["PendingOk"] as bool?;
+            ViewBag.PendingMsg = TempData["PendingMsg"] as string;
+            ViewBag.PendingPhone = TempData["PendingPhone"] as string;
+
             return View(model);
+            //// nếu muốn default StaffType:
+            //var model = new TaiKhoan { StaffType = "BenhNhan", Role = "USER" };
+            //return View(model);
         }
 
-        // POST: Account/Register
+        // POST: Account/Register  
         [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
         public ActionResult Register(TaiKhoan model)
         {
@@ -116,8 +170,10 @@ namespace DangKyKhamBenh.Controllers
                 ModelState.AddModelError("", "Mật khẩu xác nhận không khớp.");
                 return View(model);
             }
-            if (string.IsNullOrEmpty(model.StaffType)) model.StaffType = "BenhNhan";
-            if (string.IsNullOrEmpty(model.Role)) model.Role = MapRole(model.StaffType);
+
+            // Chỉ cho phép đăng ký Bệnh nhân; Role mặc định USER
+            model.StaffType = "BenhNhan";
+            model.Role = "USER";
 
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"]?.ConnectionString;
 
@@ -130,110 +186,74 @@ namespace DangKyKhamBenh.Controllers
                     {
                         try
                         {
-                            // 0) Check username đã tồn tại
-                            using (var checkCmd = new OracleCommand(@"
-                                SELECT COUNT(*) FROM TAIKHOAN 
-                                WHERE TRIM(UPPER(TK_UserName)) = TRIM(UPPER(:u))", conn))
+                            // 0) Check username đã tồn tại trong TAIKHOAN (đã Active/Pending/Locked gì cũng tính)
+                            using (var cmd = new OracleCommand(@"
+                        SELECT COUNT(*) FROM TAIKHOAN 
+                        WHERE TRIM(UPPER(TK_UserName)) = TRIM(UPPER(:u))", conn))
                             {
-                                checkCmd.Transaction = tx;
-                                checkCmd.BindByName = true;
-                                checkCmd.Parameters.Add("u", model.Username?.Trim());
-                                if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+                                cmd.Transaction = tx;
+                                cmd.BindByName = true;
+                                cmd.Parameters.Add("u", model.Username?.Trim());
+                                if (Convert.ToInt32(cmd.ExecuteScalar()) > 0)
                                 {
-                                    ModelState.AddModelError("", "Username đã tồn tại.");
+                                    ModelState.AddModelError("", "Username đã tồn tại trong hệ thống.");
                                     tx.Rollback();
                                     return View(model);
                                 }
                             }
 
-                            // 1) NGUOIDUNG
-                            string ndId = NextId(conn, tx, "NGUOIDUNG", "ND_IdNguoiDung", "ND");
+                            // 0.1) Check username đã nằm trong hàng chờ PENDING_TAIKHOAN chưa
                             using (var cmd = new OracleCommand(@"
-                                INSERT INTO NGUOIDUNG
-                                (ND_IdNguoiDung, ND_HoTen, ND_SoDienThoai, ND_Email, ND_NgaySinh, ND_DiaChiThuongChu)
-                                VALUES (:id, :hoten, :sdt, :email, :dob, :addr)", conn))
+                        SELECT COUNT(*) FROM PENDING_TAIKHOAN
+                        WHERE TRIM(UPPER(PT_UserName)) = TRIM(UPPER(:u))", conn))
                             {
                                 cmd.Transaction = tx;
                                 cmd.BindByName = true;
-                                cmd.Parameters.Add("id", ndId);
-                                cmd.Parameters.Add("hoten", (object)model.Username ?? DBNull.Value);
-                                cmd.Parameters.Add("sdt", (object)phoneNumber ?? DBNull.Value);
-                                cmd.Parameters.Add("email", (object)email ?? DBNull.Value);
-                                cmd.Parameters.Add("dob", (object)dateOfBirth ?? DBNull.Value);
-                                cmd.Parameters.Add("addr", (object)address ?? DBNull.Value);
-                                cmd.ExecuteNonQuery();
-                            }
-
-                            // 2) BENHNHAN hoặc BACSI
-                            string bnId = null, bsId = null;
-                            bool isBacSi = string.Equals(model.StaffType, "BacSi", StringComparison.OrdinalIgnoreCase);
-
-                            if (isBacSi)
-                            {
-                                bsId = NextId(conn, tx, "BACSI", "BS_MaBacSi", "BS");
-                                using (var cmd = new OracleCommand(@"
-                                    INSERT INTO BACSI (BS_MaBacSi, BS_ChuyenKhoa, BS_ChucDanh, BS_NamKinhNghiem, ND_IdNguoiDung)
-                                    VALUES (:id, :ck, :cd, :nam, :nd)", conn))
-                                {
-                                    cmd.Transaction = tx;
-                                    cmd.BindByName = true;
-                                    cmd.Parameters.Add("id", bsId);
-                                    cmd.Parameters.Add("ck", "Tổng quát");
-                                    cmd.Parameters.Add("cd", "BS");
-                                    cmd.Parameters.Add("nam", 0);
-                                    cmd.Parameters.Add("nd", ndId);
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
-                            else
-                            {
-                                bnId = NextId(conn, tx, "BENHNHAN", "BN_MaBenhNhan", "BN");
-                                using (var cmd = new OracleCommand(@"
-                                    INSERT INTO BENHNHAN (BN_MaBenhNhan, BN_SoBaoHiemYT, BN_NhomMau, BN_TieuSuBenhAn, ND_IdNguoiDung)
-                                    VALUES (:id, :bh, :nhom, :tieuSu, :nd)", conn))
-                                {
-                                    cmd.Transaction = tx;
-                                    cmd.BindByName = true;
-                                    cmd.Parameters.Add("id", bnId);
-                                    cmd.Parameters.Add("bh", DBNull.Value);
-                                    cmd.Parameters.Add("nhom", DBNull.Value);
-                                    cmd.Parameters.Add("tieuSu", DBNull.Value);
-                                    cmd.Parameters.Add("nd", ndId);
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
-
-                            // 3) TAIKHOAN
-                            string tkId = NextId(conn, tx, "TAIKHOAN", "TK_MaTK", "TK");
-                            using (var cmd = new OracleCommand(@"
-                                INSERT INTO TAIKHOAN
-                                (TK_MaTK, TK_UserName, TK_PassWord, TK_Role, TK_TrangThai, TK_StaffType,
-                                 BN_MaBenhNhan, BS_MaBacSi, ND_IdNguoiDung)
-                                VALUES
-                                (:tk, :u, :p, :r, :tt, :st, :bn, :bs, :nd)", conn))
-                            {
-                                cmd.Transaction = tx;
-                                cmd.BindByName = true;
-                                cmd.Parameters.Add("tk", tkId);
                                 cmd.Parameters.Add("u", model.Username?.Trim());
-                                cmd.Parameters.Add("p", model.Password?.Trim());   // TODO: hash mật khẩu
-                                cmd.Parameters.Add("r", MapRole(model.StaffType));
-                                cmd.Parameters.Add("tt", "Active");
-                                cmd.Parameters.Add("st", isBacSi ? (object)@"Bác sĩ" : @"Bệnh nhân");
-                                cmd.Parameters.Add("bn", (object)bnId ?? DBNull.Value);
-                                cmd.Parameters.Add("bs", (object)bsId ?? DBNull.Value);
-                                cmd.Parameters.Add("nd", ndId);
-                                cmd.ExecuteNonQuery();
+                                if (Convert.ToInt32(cmd.ExecuteScalar()) > 0)
+                                {
+                                    ModelState.AddModelError("", "Username này đang chờ duyệt, vui lòng đợi Admin phê duyệt.");
+                                    tx.Rollback();
+                                    return View(model);
+                                }
+                            }
+
+                            // 1) Tạo mã yêu cầu mới cho bảng PENDING_TAIKHOAN (PT_MaYeuCau)
+                            string reqId = NextId(conn, tx, "PENDING_TAIKHOAN", "PT_MaYeuCau", "PT");
+
+                            // 2) Ghi vào bảng chờ duyệt
+                            using (var ins = new OracleCommand(@"
+                        INSERT INTO PENDING_TAIKHOAN
+                        (PT_MaYeuCau, PT_UserName, PT_PassWord, PT_Email, PT_SoDienThoai, PT_NgaySinh, PT_DiaChi, PT_Stafftype, PT_NgayYeuCau)
+                        VALUES
+                        (:id, :u, :p, :email, :sdt, :dob, :addr, :st, SYSDATE)", conn))
+                            {
+                                ins.Transaction = tx;
+                                ins.BindByName = true;
+                                ins.Parameters.Add("id", reqId);
+                                ins.Parameters.Add("u", model.Username?.Trim());
+                                ins.Parameters.Add("p", model.Password?.Trim()); // TODO: mã hoá mật khẩu sau
+                                ins.Parameters.Add("email", (object)email ?? DBNull.Value);
+                                ins.Parameters.Add("sdt", (object)phoneNumber ?? DBNull.Value);
+                                ins.Parameters.Add("dob", (object)dateOfBirth ?? DBNull.Value);
+                                ins.Parameters.Add("addr", (object)address ?? DBNull.Value);
+                                ins.Parameters.Add("st", model.StaffType); // luôn 'BenhNhan'
+                                ins.ExecuteNonQuery();
                             }
 
                             tx.Commit();
-                            TempData["Success"] = "Đăng ký thành công, vui lòng đăng nhập.";
-                            return RedirectToAction("Login");
+                            // Gửi thông điệp qua TempData để hiển thị ở Register.cshtml
+                            TempData["PendingOk"] = true;
+                            TempData["PendingMsg"] = "Tài khoản của bạn đã được gửi để chờ xác minh. Khi xác minh xong chúng tôi sẽ gửi thông báo về số điện thoại bạn đã cung cấp.";
+                            TempData["PendingPhone"] = MaskPhone(phoneNumber);
+
+                            // Redirect về GET Register (PRG) để tránh F5 tạo trùng
+                            return RedirectToAction("Register");
                         }
                         catch (Exception ex)
                         {
                             tx.Rollback();
-                            ModelState.AddModelError("", "Lỗi đăng ký: " + ex.Message);
+                            ModelState.AddModelError("", "Lỗi khi lưu yêu cầu: " + ex.Message);
                             return View(model);
                         }
                     }
@@ -245,6 +265,18 @@ namespace DangKyKhamBenh.Controllers
                 return View(model);
             }
         }
+        private static string MaskPhone(string s) // ẩn bớt số
+        {
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            var digits = new string(s.Where(char.IsDigit).ToArray());
+            if (digits.Length <= 4) return s;
+            var prefix = digits.Substring(0, Math.Min(3, digits.Length));
+            var suffix = digits.Substring(digits.Length - 2);
+            return $"{prefix}******{suffix}";
+        }
+
+
+
 
         // Sinh mã kế tiếp
         private static string NextId(
