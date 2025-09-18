@@ -1,0 +1,81 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Tạo tài khoản bác sĩ";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <h3 class="mb-3">Tạo tài khoản Bác sĩ</h3>
+
+        @if (TempData["Msg"] != null)
+        {<div class="alert alert-success">@TempData["Msg"]</div>}
+        @if (TempData["Err"] != null)
+        {<div class="alert alert-danger">@TempData["Err"]</div>}
+
+        <div class="alert alert-info">
+            Chỉ quản trị viên (Admin) được phép tạo tài khoản bác sĩ.
+        </div>
+
+        @using (Html.BeginForm("CreateDoctor", "Admin", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Username (đăng nhập) *</label>
+                    <input name="Username" class="form-control" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Mật khẩu *</label>
+                    <input name="Password" type="password" class="form-control" required />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Họ tên *</label>
+                    <input name="FullName" class="form-control" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Chuyên khoa</label>
+                    <input name="ChuyenKhoa" class="form-control" placeholder="VD: Tim mạch" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Chức danh</label>
+                    <input name="ChucDanh" class="form-control" placeholder="VD: BS.CKI, ThS.BS…" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Năm kinh nghiệm</label>
+                    <input name="NamKinhNghiem" type="number" min="0" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input name="PhoneNumber" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Email</label>
+                    <input name="Email" type="email" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ngày sinh</label>
+                    <input name="DateOfBirth" type="date" class="form-control" />
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Địa chỉ</label>
+                    <input name="Address" class="form-control" />
+                </div>
+            </div>
+
+            <button class="btn btn-primary mt-3">Tạo bác sĩ</button>
+            <a class="btn btn-outline-secondary mt-3" href="@Url.Action("Home","Admin")">Về trang Admin</a>
+        }
+    </div>
+</body>
+</html>

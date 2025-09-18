@@ -126,7 +126,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button"
                                data-bs-toggle="dropdown" aria-expanded="false">TIN TỨC</a>
-                        
+
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="#">Y học thường thức</a></li>
                                 <li><a class="dropdown-item" href="#">Tin tức sự kiện</a></li>
@@ -146,7 +146,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button"
                                data-bs-toggle="dropdown" aria-expanded="false">LIÊN HỆ</a>
-                        
+
 
                         </li>
 
@@ -171,7 +171,12 @@
                                 }
                             </ul>
                         </li>
-
+                        @if (Session["Role"]?.ToString().ToUpper() == "ADMIN")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Action("Home","Admin")">Admin</a>
+                            </li>
+                        }
 
                     </ul>
                 </div>

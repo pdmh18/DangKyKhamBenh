@@ -1,0 +1,30 @@
+﻿@model System.Data.DataTable
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Lịch sử tài khoản";
+}
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>Mã TK</th>
+            <th>Username</th>
+            <th>Trạng thái</th>
+            <th>Role</th>
+            <th>StaffType</th>
+            <th>Ngày tạo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (System.Data.DataRow row in Model.Rows)
+        {
+            <tr>
+                <td>@row["TK_MaTK"]</td>
+                <td>@row["TK_UserName"]</td>
+                <td>@row["TrangThai"]</td>
+                <td>@row["TK_Role"]</td>
+                <td>@row["TK_StaffType"]</td>
+                <td>@(row["TK_NgayTao"] is DBNull ? "" : Convert.ToDateTime(row["TK_NgayTao"]).ToString("dd/MM/yyyy HH:mm"))</td>
+            </tr>
+        }
+    </tbody>
+</table>

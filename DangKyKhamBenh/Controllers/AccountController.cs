@@ -84,12 +84,18 @@ namespace DangKyKhamBenh.Controllers
 
                             // OK: set session & điều hướng
                             Session["User"] = user?.Trim();
-                            Session["Role"] = role;
+                            Session["Role"] = role;          // ví dụ "ADMIN" / "USER"
                             Session["StaffType"] = staffType;
 
+                            // 1) Nếu có returnUrl -> quay lại
                             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                                 return Redirect(returnUrl);
 
+                            // 2) Nếu là ADMIN -> vào Home admin
+                            if (string.Equals(role, "ADMIN", StringComparison.OrdinalIgnoreCase))
+                                return RedirectToAction("Home", "Admin");
+
+                            // 3) user thường -> Home thường
                             return RedirectToAction("Index", "Home");
                         }
                     }

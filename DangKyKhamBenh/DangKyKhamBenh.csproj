@@ -162,6 +162,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\AboutUsController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\ChuyenKhoaController.cs" />
     <Compile Include="Controllers\DichVuController.cs" />
     <Compile Include="Controllers\DoiNguBacSiController.cs" />
@@ -169,6 +170,7 @@
     <Compile Include="Controllers\HuongDanKhachHangController.cs" />
     <Compile Include="Controllers\LienHeController.cs" />
     <Compile Include="Controllers\TinTucController.cs" />
+    <Compile Include="Filters\AdminOnlyAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -213,6 +215,11 @@
     <Content Include="Views\Account\Logout.cshtml" />
     <Content Include="Views\AboutUs\AboutUs.cshtml" />
     <Content Include="Views\HuongDanKhachHang\Index.cshtml" />
+    <Content Include="Views\Admin\Pending.cshtml" />
+    <Content Include="Views\Admin\History.cshtml" />
+    <Content Include="Views\Admin\CreateDoctor.cshtml" />
+    <Content Include="Views\Shared\_AdminLayout.cshtml" />
+    <Content Include="Views\Admin\Home.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

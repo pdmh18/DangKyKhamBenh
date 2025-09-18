@@ -1,0 +1,36 @@
+﻿
+@{
+    ViewBag.Title = "Home";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="fw-bold mb-1">Tài khoản chờ duyệt</div>
+                <p class="text-muted">Xem & phê duyệt các tài khoản người dùng mới.</p>
+                <a class="btn btn-primary btn-sm" href="@Url.Action("Pending","Admin")">Đi tới danh sách</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="fw-bold mb-1">Lịch sử tài khoản</div>
+                <p class="text-muted">Theo dõi trạng thái & thời gian tạo tài khoản.</p>
+                <a class="btn btn-primary btn-sm" href="@Url.Action("History","Admin")">Xem lịch sử</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="fw-bold mb-1">Tạo tài khoản bác sĩ</div>
+                <p class="text-muted">Chỉ Admin mới có quyền tạo bác sĩ.</p>
+                <a class="btn btn-primary btn-sm" href="@Url.Action("CreateDoctor","Admin")">Tạo bác sĩ</a>
+            </div>
+        </div>
+    </div>
+</div>
+
