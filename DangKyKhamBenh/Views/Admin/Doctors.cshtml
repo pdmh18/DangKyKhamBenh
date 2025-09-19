@@ -1,0 +1,107 @@
+﻿@model IEnumerable<DangKyKhamBenh.Models.ViewModels.BacSi>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý bác sĩ";
+    ViewBag.Active = "Doctors";
+}
+
+<style>
+    /* Cho cột text dài gọn gàng với ... */
+    .truncate-1 {
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+
+<!-- Header: search + create -->
+<div class="row g-2 align-items-stretch mb-3">
+    <div class="col-12 col-md">
+        <form class="d-flex flex-column flex-md-row gap-2" method="get" action="@Url.Action("Doctors","Admin")">
+            <div class="input-group">
+                <input name="kw" class="form-control" placeholder="Tìm mã BS, họ tên, username..." value="@Request["kw"]" />
+                <button class="btn btn-outline-primary" type="submit">Tìm</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-12 col-md-auto d-grid">
+        <a class="btn btn-primary" href="@Url.Action("CreateDoctor","Admin")">+ Tạo bác sĩ</a>
+    </div>
+</div>
+
+@if (TempData["Msg"] != null)
+{<div class="alert alert-success">@TempData["Msg"]</div>}
+@if (TempData["Err"] != null)
+{<div class="alert alert-danger">@TempData["Err"]</div>}
+
+<div class="table-responsive">
+    <table class="table table-sm table-bordered table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Mã BS</th>
+                <th>Họ tên</th>
+                <th class="d-none d-md-table-cell">Chuyên khoa</th>
+                <th class="d-none d-lg-table-cell">Chức danh</th>
+                <th class="text-center d-none d-lg-table-cell">Năm KN</th>
+                <th>UserName</th>
+                <th>Trạng thái</th>
+                <th class="d-none d-md-table-cell">Liên hệ</th>
+                <th style="width:220px;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model)
+            {
+                <tr>
+                    <td class="truncate-1" title="@d.MaBacSi">@d.MaBacSi</td>
+                    <td class="truncate-1" title="@d.HoTen">@d.HoTen</td>
+
+                    <!-- Ẩn trên < md -->
+                    <td class="d-none d-md-table-cell truncate-1" title="@d.ChuyenKhoa">@d.ChuyenKhoa</td>
+
+                    <!-- Ẩn trên < lg -->
+                    <td class="d-none d-lg-table-cell">@d.ChucDanh</td>
+                    <td class="text-center d-none d-lg-table-cell">@d.NamKinhNghiem</td>
+
+                    <td class="truncate-1" title="@d.UserName">@d.UserName</td>
+
+                    <td>
+                        @if (string.Equals(d.TrangThai, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                        {<span class="badge bg-success">ACTIVE</span> }
+                        else if (string.Equals(d.TrangThai, "LOCKED", StringComparison.OrdinalIgnoreCase))
+                        { <span class="badge bg-danger">LOCKED</span> }
+                        else
+                        { <span class="badge bg-secondary">@d.TrangThai</span>}
+                    </td>
+
+                    <td class="d-none d-md-table-cell">
+                        <div class="truncate-1" title="@d.SoDienThoai">@d.SoDienThoai</div>
+                        <div class="text-muted truncate-1" title="@d.Email">@d.Email</div>
+                    </td>
+
+                    <td>
+                        <!-- trên mobile: cột thao tác xếp dọc full-width; trên md trở lên: nhóm nút ngang -->
+                        <div class="d-grid gap-2 d-md-inline-flex">
+                            <a class="btn btn-sm btn-outline-primary" href="@Url.Action("EditDoctor","Admin", new { id = d.MaBacSi })">Sửa</a>
+
+                            @using (Html.BeginForm("ToggleDoctorStatus", "Admin", FormMethod.Post, new { @class = "d-inline" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@d.MaBacSi" />
+                                if (string.Equals(d.TrangThai, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <button class="btn btn-sm btn-outline-warning" type="submit">Khóa</button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-success" type="submit">Mở</button>
+                                }
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

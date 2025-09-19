@@ -175,6 +175,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\TaiKhoan.cs" />
+    <Compile Include="Models\ViewModels\BacSi.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -220,6 +221,8 @@
     <Content Include="Views\Admin\CreateDoctor.cshtml" />
     <Content Include="Views\Shared\_AdminLayout.cshtml" />
     <Content Include="Views\Admin\Home.cshtml" />
+    <Content Include="Views\Admin\EditDoctor.cshtml" />
+    <Content Include="Views\Admin\Doctors.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

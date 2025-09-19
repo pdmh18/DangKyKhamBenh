@@ -173,8 +173,14 @@
                         </li>
                         @if (Session["Role"]?.ToString().ToUpper() == "ADMIN")
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" href="@Url.Action("Home","Admin")">Admin</a>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Admin</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="@Url.Action("Home","Admin")">Trang chủ Admin</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("Pending","Admin")">Duyệt tài khoản</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("History","Admin")">Lịch sử đăng ký</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("CreateDoctor","Admin")">Tạo bác sĩ</a></li>
+                                </ul>
                             </li>
                         }
 

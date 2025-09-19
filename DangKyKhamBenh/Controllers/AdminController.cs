@@ -1,6 +1,9 @@
 ﻿using DangKyKhamBenh.Filters;                       // Dùng attribute [AdminOnly] để khóa controller cho ADMIN
+using DangKyKhamBenh.Models.ViewModels;
+using System.Data;
 using Oracle.ManagedDataAccess.Client;              
 using System;
+using System.Collections.Generic;
 using System.Configuration;                         
 using System.Web.Mvc;
 
@@ -20,35 +23,37 @@ namespace DangKyKhamBenh.Controllers
 
 
         // ====== A) DANH SÁCH YÊU CẦU CHỜ DUYỆT ======
-        [HttpGet]   // Action GET: hiển thị danh sách yêu cầu đang chờ
-        public ActionResult Pending(string keyword = null)
-        {   
-            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString; // Lấy connection string
-            using (var conn = new OracleConnection(cs))  // // Tạo kết nối Oracle
+        [AdminOnly]
+        public ActionResult Pending()
+        {
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            var tb = new DataTable();
+
+            using (var conn = new OracleConnection(cs))
             {
-                conn.Open(); // Mở kết nối
-                // SQL lấy danh sách yêu cầu
+                conn.Open();
+
                 var sql = @"
-                            SELECT PT_MaYeuCau, PT_UserName, PT_Email, PT_SoDienThoai, PT_NgaySinh, PT_DiaChi, PT_Stafftype, PT_NgayYeuCau
-                            FROM   PENDING_TAIKHOAN
-                            WHERE  (:kw IS NULL 
-                                    OR UPPER(TRIM(PT_UserName)) LIKE UPPER('%' || TRIM(:kw) || '%'))
-                            ORDER BY PT_NgayYeuCau DESC";
+            SELECT
+                PT_MaYeuCau       AS TK_MaTK,
+                PT_UserName       AS TK_UserName,
+                PT_Stafftype      AS TK_StaffType,
+                'USER'            AS TK_Role,
+                'PENDING'         AS TrangThai,
+                PT_NgayYeuCau     AS TK_NgayTao
+            FROM PENDING_TAIKHOAN
+            ORDER BY PT_NgayYeuCau DESC";
 
-                using (var cmd = new OracleCommand(sql, conn)) // Tạo command
+                using (var cmd = new OracleCommand(sql, conn))
+                using (var r = cmd.ExecuteReader())
                 {
-                    cmd.BindByName = true; // Dùng bind name để đặt tham số theo tên
-                    cmd.Parameters.Add("kw", (object)keyword ?? DBNull.Value);// Nếu không có keyword → NULL để WHERE bỏ qua
-
-                    using (var r = cmd.ExecuteReader())// Thực thi và đọc kết quả
-                    {
-                        var rows = new System.Data.DataTable();// Dùng DataTable để đổ dữ liệu nhanh (render view đơn giản)
-                        rows.Load(r); // Nạp toàn bộ kết quả vào DataTable
-                        return View(rows); // Trả về view Pending.cshtml (model là DataTable)
-                    }
+                    tb.Load(r);
                 }
             }
+
+            return View(tb);  // Pending.cshtml: @model System.Data.DataTable
         }
+
 
         // ====== B) PHÊ DUYỆT (APPROVE) 1 YÊU CẦU ======
         [HttpPost]   // Action POST: admin bấm Duyệt 
@@ -185,7 +190,7 @@ namespace DangKyKhamBenh.Controllers
                         TempData["Msg"] = "Duyệt thành công. Tài khoản đã ACTIVE.";
                         return RedirectToAction("Pending"); // Quay về danh sách
                     }
-                    catch (Exception ex) 
+                    catch (Exception ex)
                     {
                         tx.Rollback();  // Lỗi → rollback toàn bộ
                         TempData["Err"] = "Lỗi duyệt: " + ex.Message;
@@ -222,25 +227,23 @@ namespace DangKyKhamBenh.Controllers
         }
 
         // ====== D) LỊCH SỬ YÊU CẦU ĐĂNG KÝ ======
-        [HttpGet, AdminOnly]
+        [AdminOnly]
         public ActionResult History(DateTime? from = null, DateTime? to = null)
         {
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            var tb = new System.Data.DataTable();
 
             using (var conn = new OracleConnection(cs))
             {
                 conn.Open();
-
                 var sql = @"
-            SELECT 
-                PT_MaYeuCau,
-                PT_UserName,
-                PT_Email,
-                PT_SoDienThoai,
-                PT_NgaySinh,
-                PT_DiaChi,
-                PT_StaffType,
-                PT_NgayYeuCau
+            SELECT
+                PT_MaYeuCau   AS TK_MaTK,
+                PT_UserName   AS TK_UserName,
+                PT_Stafftype  AS TK_StaffType,
+                'USER'        AS TK_Role,
+                'PENDING'     AS TrangThai,
+                PT_NgayYeuCau AS TK_NgayTao
             FROM PENDING_TAIKHOAN
             WHERE (:d1 IS NULL OR PT_NgayYeuCau >= :d1)
               AND (:d2 IS NULL OR PT_NgayYeuCau <= :d2)
@@ -249,26 +252,18 @@ namespace DangKyKhamBenh.Controllers
                 using (var cmd = new OracleCommand(sql, conn))
                 {
                     cmd.BindByName = true;
+                    // Tránh ORA-00932: set đúng kiểu DATE, cho phép null
+                    cmd.Parameters.Add("d1", OracleDbType.Date).Value = (object)from ?? DBNull.Value;
+                    cmd.Parameters.Add("d2", OracleDbType.Date).Value = (object)to ?? DBNull.Value;
 
-                    // Khai báo KIỂU DATE rõ ràng cho 2 tham số
-                    var pFrom = new OracleParameter("d1", OracleDbType.Date);
-                    pFrom.Value = (object)from ?? DBNull.Value;
-
-                    var pTo = new OracleParameter("d2", OracleDbType.Date);
-                    pTo.Value = (object)to ?? DBNull.Value;
-
-                    cmd.Parameters.Add(pFrom);
-                    cmd.Parameters.Add(pTo);
-
-                    var tb = new System.Data.DataTable();
                     using (var r = cmd.ExecuteReader())
-                    {
                         tb.Load(r);
-                    }
-                    return View(tb);
                 }
             }
+
+            return View(tb); // History.cshtml: @model System.Data.DataTable
         }
+
 
 
         // ====== E) TẠO TÀI KHOẢN BÁC SĨ (ADMIN TỰ TẠO) ======
@@ -403,9 +398,262 @@ namespace DangKyKhamBenh.Controllers
                 maxTail = Convert.ToDecimal(ret);
             }
 
-           // +1 và ghép lại theo format
+            // +1 và ghép lại theo format
             var next = maxTail + 1;
             return prefix + next.ToString("00000000");
+        }
+
+        // ==============================================================
+        // GET: /Admin/EditDoctor/BS00000001
+        [HttpGet]
+        public ActionResult EditDoctor(string id)
+        {
+            var vm = new BacSi();
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+                var sql = @"
+                SELECT b.BS_MaBacSi, b.BS_ChuyenKhoa, b.BS_ChucDanh, b.BS_NamKinhNghiem,
+                       nd.ND_HoTen, nd.ND_SoDienThoai, nd.ND_Email, nd.ND_NgaySinh, nd.ND_DiaChiThuongChu,
+                       tk.TK_UserName, NVL(tk.TK_TrangThai,'ACTIVE') as TrangThai
+                  FROM BACSI b
+                  JOIN NGUOIDUNG nd ON nd.ND_IdNguoiDung = b.ND_IdNguoiDung
+                  JOIN TAIKHOAN tk ON tk.BS_MaBacSi = b.BS_MaBacSi
+                 WHERE b.BS_MaBacSi = :id";
+
+                using (var cmd = new OracleCommand(sql, conn))
+                {
+                    cmd.BindByName = true;
+                    cmd.Parameters.Add("id", id);
+
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        if (!r.Read()) return HttpNotFound();
+
+                        vm.MaBacSi = r.GetString(0);
+                        vm.ChuyenKhoa = r.IsDBNull(1) ? null : r.GetString(1);
+                        vm.ChucDanh = r.IsDBNull(2) ? null : r.GetString(2);
+                        vm.NamKinhNghiem = r.IsDBNull(3) ? (int?)null : Convert.ToInt32(r.GetDecimal(3));
+                        vm.HoTen = r.IsDBNull(4) ? null : r.GetString(4);
+                        vm.SoDienThoai = r.IsDBNull(5) ? null : r.GetString(5);
+                        vm.Email = r.IsDBNull(6) ? null : r.GetString(6);
+                        vm.NgaySinh = r.IsDBNull(7) ? (DateTime?)null : r.GetDateTime(7);
+                        vm.DiaChi = r.IsDBNull(8) ? null : r.GetString(8);
+                        vm.UserName = r.GetString(9);
+                        vm.TrangThai = r.GetString(10);
+                    }
+                }
+            }
+
+            ViewBag.Title = "Sửa bác sĩ";
+            ViewBag.Active = "CreateDoctor"; // hoặc "Doctors"
+            return View(vm);                  // Views/Admin/EditDoctor.cshtml
+        }
+
+        // POST: /Admin/EditDoctor
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult EditDoctor(BacSi vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+                using (var tx = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // Update BACSI
+                        using (var cmd = new OracleCommand(@"
+                        UPDATE BACSI
+                           SET BS_ChuyenKhoa   = :ck,
+                               BS_ChucDanh     = :cd,
+                               BS_NamKinhNghiem= :nam
+                         WHERE BS_MaBacSi     = :id", conn))
+                        {
+                            cmd.Transaction = tx;
+                            cmd.BindByName = true;
+                            cmd.Parameters.Add("ck", (object)vm.ChuyenKhoa ?? DBNull.Value);
+                            cmd.Parameters.Add("cd", (object)vm.ChucDanh ?? DBNull.Value);
+                            cmd.Parameters.Add("nam", (object)vm.NamKinhNghiem ?? DBNull.Value);
+                            cmd.Parameters.Add("id", vm.MaBacSi);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // Update NGUOIDUNG
+                        using (var cmd = new OracleCommand(@"
+                        UPDATE NGUOIDUNG nd
+                           SET nd.ND_HoTen          = :ten,
+                               nd.ND_SoDienThoai    = :sdt,
+                               nd.ND_Email          = :email,
+                               nd.ND_NgaySinh       = :ns,
+                               nd.ND_DiaChiThuongChu= :dc
+                         WHERE nd.ND_IdNguoiDung = (
+                               SELECT ND_IdNguoiDung FROM BACSI WHERE BS_MaBacSi=:id)", conn))
+                        {
+                            cmd.Transaction = tx;
+                            cmd.BindByName = true;
+                            cmd.Parameters.Add("ten", (object)vm.HoTen ?? DBNull.Value);
+                            cmd.Parameters.Add("sdt", (object)vm.SoDienThoai ?? DBNull.Value);
+                            cmd.Parameters.Add("email", (object)vm.Email ?? DBNull.Value);
+                            cmd.Parameters.Add("ns", (object)vm.NgaySinh ?? DBNull.Value);
+                            cmd.Parameters.Add("dc", (object)vm.DiaChi ?? DBNull.Value);
+                            cmd.Parameters.Add("id", vm.MaBacSi);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // Update TAIKHOAN (trạng thái, đổi pass nếu nhập)
+                        using (var cmd = new OracleCommand(@"
+                        UPDATE TAIKHOAN
+                           SET TK_TrangThai = :tt
+                         WHERE BS_MaBacSi   = :id", conn))
+                        {
+                            cmd.Transaction = tx;
+                            cmd.BindByName = true;
+                            cmd.Parameters.Add("tt", (object)vm.TrangThai ?? "ACTIVE");
+                            cmd.Parameters.Add("id", vm.MaBacSi);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(vm.NewPassword))
+                        {
+                            using (var cmd = new OracleCommand(@"
+                            UPDATE TAIKHOAN
+                               SET TK_PassWord = :p
+                             WHERE BS_MaBacSi  = :id", conn))
+                            {
+                                cmd.Transaction = tx;
+                                cmd.BindByName = true;
+                                cmd.Parameters.Add("p", vm.NewPassword.Trim()); // TODO: hash
+                                cmd.Parameters.Add("id", vm.MaBacSi);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        tx.Commit();
+                        TempData["Msg"] = "Cập nhật bác sĩ thành công.";
+                        return RedirectToAction("EditDoctor", new { id = vm.MaBacSi });
+                    }
+                    catch (Exception ex)
+                    {
+                        tx.Rollback();
+                        TempData["Err"] = "Lỗi cập nhật: " + ex.Message;
+                        return View(vm);
+                    }
+                }
+            }
+        }
+
+        [AdminOnly]
+        public ActionResult Doctors(string kw = null)
+        {
+            ViewBag.Title = "Quản lý bác sĩ";
+            ViewBag.Active = "Doctors";
+
+            var list = new List<BacSi>();
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+
+                var sql = @"
+            SELECT
+                bs.BS_MaBacSi           AS BS_MaBacSi,
+                nd.ND_HoTen             AS ND_HoTen,
+                bs.BS_ChuyenKhoa        AS BS_ChuyenKhoa,
+                bs.BS_ChucDanh          AS BS_ChucDanh,
+                bs.BS_NamKinhNghiem     AS BS_NamKinhNghiem,
+                tk.TK_UserName          AS TK_UserName,
+                NVL(tk.TK_TrangThai,'') AS TK_TrangThai,
+                nd.ND_SoDienThoai       AS ND_SoDienThoai,
+                nd.ND_Email             AS ND_Email
+            FROM BACSI bs
+            JOIN NGUOIDUNG nd ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
+            LEFT JOIN TAIKHOAN tk ON tk.BS_MaBacSi = bs.BS_MaBacSi
+            WHERE ( :kw IS NULL
+                 OR UPPER(bs.BS_MaBacSi) LIKE '%'||UPPER(:kw)||'%'
+                 OR UPPER(nd.ND_HoTen)    LIKE '%'||UPPER(:kw)||'%'
+                 OR UPPER(tk.TK_UserName) LIKE '%'||UPPER(:kw)||'%' )
+            ORDER BY nd.ND_HoTen";
+
+                using (var cmd = new OracleCommand(sql, conn))
+                {
+                    cmd.BindByName = true;
+                    // có thể truyền 1 lần; Oracle cho phép lặp lại tên tham số khi BindByName = true
+                    cmd.Parameters.Add("kw", string.IsNullOrWhiteSpace(kw) ? (object)DBNull.Value : kw.Trim());
+
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        // lấy sẵn ordinal để tránh sai alias & tăng tốc
+                        int cMaBS = r.GetOrdinal("BS_MaBacSi");
+                        int cHoTen = r.GetOrdinal("ND_HoTen");
+                        int cCK = r.GetOrdinal("BS_ChuyenKhoa");
+                        int cCD = r.GetOrdinal("BS_ChucDanh");
+                        int cKN = r.GetOrdinal("BS_NamKinhNghiem");
+                        int cUser = r.GetOrdinal("TK_UserName");
+                        int cTrang = r.GetOrdinal("TK_TrangThai");
+                        int cSdt = r.GetOrdinal("ND_SoDienThoai");
+                        int cEmail = r.GetOrdinal("ND_Email");
+
+                        while (r.Read())
+                        {
+                            list.Add(new BacSi
+                            {
+                                MaBacSi = r.IsDBNull(cMaBS) ? null : r.GetString(cMaBS),
+                                HoTen = r.IsDBNull(cHoTen) ? null : r.GetString(cHoTen),
+                                ChuyenKhoa = r.IsDBNull(cCK) ? null : r.GetString(cCK),
+                                ChucDanh = r.IsDBNull(cCD) ? null : r.GetString(cCD),
+                                // Oracle NUMBER -> đọc decimal, rồi Convert.ToInt32
+                                NamKinhNghiem = r.IsDBNull(cKN) ? (int?)null : Convert.ToInt32(r.GetDecimal(cKN)),
+                                UserName = r.IsDBNull(cUser) ? null : r.GetString(cUser),
+                                TrangThai = r.IsDBNull(cTrang) ? null : r.GetString(cTrang),
+                                SoDienThoai = r.IsDBNull(cSdt) ? null : r.GetString(cSdt),
+                                Email = r.IsDBNull(cEmail) ? null : r.GetString(cEmail),
+                            });
+                        }
+                    }
+                }
+            }
+
+            return View("Doctors", list);
+        }
+
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult ToggleDoctorStatus(string id)
+        {
+            // id = BS_MaBacSi
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            try
+            {
+                using (var conn = new OracleConnection(cs))
+                {
+                    conn.Open();
+                    var sql = @"
+                    UPDATE TAIKHOAN
+                       SET TK_TrangThai = CASE UPPER(NVL(TK_TrangThai,'PENDING'))
+                                            WHEN 'ACTIVE' THEN 'LOCKED'
+                                            ELSE 'ACTIVE'
+                                          END
+                     WHERE BS_MaBacSi = :id";
+                    using (var cmd = new OracleCommand(sql, conn))
+                    {
+                        cmd.BindByName = true;
+                        cmd.Parameters.Add("id", id);
+                        var aff = cmd.ExecuteNonQuery();
+                        TempData["Msg"] = aff > 0 ? "Đã cập nhật trạng thái tài khoản bác sĩ." : "Không tìm thấy tài khoản.";
+                    }
+                }
+            }
+            catch (OracleException ex)
+            {
+                TempData["Err"] = $"ORA-{ex.Number}: {ex.Message}";
+            }
+            return RedirectToAction("Doctors");
         }
     }
 }
