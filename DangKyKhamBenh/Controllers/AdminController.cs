@@ -56,9 +56,9 @@ namespace DangKyKhamBenh.Controllers
 
 
         // ====== B) PHÊ DUYỆT (APPROVE) 1 YÊU CẦU ======
-        [HttpPost]   // Action POST: admin bấm Duyệt 
+        [HttpPost] 
         [ValidateAntiForgeryToken] // Chống CSRF
-        public ActionResult Approve(string id)// id = PT_MaYeuCau (vd: RQ00000001)
+        public ActionResult Approve(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -203,7 +203,7 @@ namespace DangKyKhamBenh.Controllers
         // ====== C) TỪ CHỐI (REJECT) 1 YÊU CẦU ======
         [HttpPost]  // Action POST: admin bấm Từ chối → chỉ cần xóa khỏi hàng chờ
         [ValidateAntiForgeryToken]
-        public ActionResult Reject(string id)// id = PT_MaYeuCau
+        public ActionResult Reject(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -219,7 +219,7 @@ namespace DangKyKhamBenh.Controllers
                 {
                     cmd.BindByName = true;
                     cmd.Parameters.Add("id", id);
-                    var rows = cmd.ExecuteNonQuery();       // // rows = số bản ghi xóa
+                    var rows = cmd.ExecuteNonQuery();     
                     TempData["Msg"] = rows > 0 ? "Đã từ chối yêu cầu." : "Không tìm thấy yêu cầu.";
                     return RedirectToAction("Pending");
                 }
@@ -270,7 +270,7 @@ namespace DangKyKhamBenh.Controllers
         [HttpGet] // Form nhập thông tin bác sĩ
         public ActionResult CreateDoctor()
         {
-            return View();   // Trả view CreateDoctor.cshtml (form)
+            return View();   
         }
 
         [HttpPost]     // Nhận dữ liệu form tạo bác sĩ
@@ -654,6 +654,249 @@ namespace DangKyKhamBenh.Controllers
                 TempData["Err"] = $"ORA-{ex.Number}: {ex.Message}";
             }
             return RedirectToAction("Doctors");
+        }
+
+
+        // Quanly benh nhan
+        // ====== A. Danh sách / tìm kiếm bệnh nhân ======
+        [HttpGet]
+        public ActionResult Patients(string kw = null, int page = 1, int pageSize = 20)
+        {
+            ViewBag.Title = "Quản lý bệnh nhân";
+            ViewBag.Active = "Patients";
+            kw = (kw ?? "").Trim();
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            var list = new List<BenhNhan>();
+
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+
+                // Chú ý: StaffType có thể lưu 'Bệnh nhân' hoặc 'BenhNhan' tùy trước đó.
+                var sql = @"
+                            SELECT  bn.BN_MaBenhNhan,
+                                    nd.ND_HoTen, nd.ND_SoDienThoai, nd.ND_Email, nd.ND_NgaySinh, nd.ND_DiaChiThuongChu,
+                                    tk.TK_UserName, NVL(tk.TK_TrangThai, 'PENDING') AS TK_TrangThai,
+                                    bn.BN_SoBaoHiemYT, bn.BN_NhomMau, bn.BN_TieuSuBenhAn
+                            FROM    BENHNHAN bn
+                            JOIN    NGUOIDUNG nd ON nd.ND_IdNguoiDung = bn.ND_IdNguoiDung
+                            LEFT JOIN TAIKHOAN tk ON tk.BN_MaBenhNhan = bn.BN_MaBenhNhan
+                            WHERE   (:kw IS NULL OR :kw = '' OR
+                                    UPPER(nd.ND_HoTen)      LIKE UPPER('%' || :kw || '%') OR
+                                    UPPER(tk.TK_UserName)   LIKE UPPER('%' || :kw || '%') OR
+                                    UPPER(bn.BN_MaBenhNhan) LIKE UPPER('%' || :kw || '%'))
+                            ORDER BY nd.ND_HoTen";
+
+                using (var cmd = new OracleCommand(sql, conn))
+                {
+                    cmd.BindByName = true;
+                    cmd.Parameters.Add("kw", kw);
+
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            list.Add(new BenhNhan
+                            {
+                                MaBenhNhan = r["BN_MaBenhNhan"]?.ToString(),
+                                HoTen = r["ND_HoTen"]?.ToString(),
+                                SoDienThoai = r["ND_SoDienThoai"]?.ToString(),
+                                Email = r["ND_Email"]?.ToString(),
+                                NgaySinh = r.IsDBNull(r.GetOrdinal("ND_NgaySinh")) ? (DateTime?)null : r.GetDateTime(r.GetOrdinal("ND_NgaySinh")),
+                                DiaChi = r["ND_DiaChiThuongChu"]?.ToString(),
+                                UserName = r["TK_UserName"]?.ToString(),
+                                TrangThai = r["TK_TrangThai"]?.ToString(),
+                                SoBaoHiemYT = r["BN_SoBaoHiemYT"]?.ToString(),
+                                NhomMau = r["BN_NhomMau"]?.ToString(),
+                                TieuSuBenhAn = r["BN_TieuSuBenhAn"]?.ToString()
+                            });
+                        }
+                    }
+                }
+            }
+
+            // (tuỳ) phân trang phía server sau
+            return View(list);
+        }
+
+        // ====== B. Sửa bệnh nhân (GET) ======
+        [HttpGet]
+        public ActionResult EditPatient(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return RedirectToAction("Patients");
+
+            ViewBag.Title = "Sửa bệnh nhân";
+            ViewBag.Active = "Patients";
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            BenhNhan bn = null;
+
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+                var sql = @"
+                            SELECT  bn.BN_MaBenhNhan,
+                                    nd.ND_HoTen, nd.ND_SoDienThoai, nd.ND_Email, nd.ND_NgaySinh, nd.ND_DiaChiThuongChu,
+                                    tk.TK_UserName, NVL(tk.TK_TrangThai, 'PENDING') AS TK_TrangThai,
+                                    bn.BN_SoBaoHiemYT, bn.BN_NhomMau, bn.BN_TieuSuBenhAn
+                            FROM    BENHNHAN bn
+                            JOIN    NGUOIDUNG nd ON nd.ND_IdNguoiDung = bn.ND_IdNguoiDung
+                            LEFT JOIN TAIKHOAN tk ON tk.BN_MaBenhNhan = bn.BN_MaBenhNhan
+                            WHERE   bn.BN_MaBenhNhan = :id";
+
+                using (var cmd = new OracleCommand(sql, conn))
+                {
+                    cmd.BindByName = true;
+                    cmd.Parameters.Add("id", id);
+
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        if (r.Read())
+                        {
+                            bn = new BenhNhan
+                            {
+                                MaBenhNhan = r["BN_MaBenhNhan"]?.ToString(),
+                                HoTen = r["ND_HoTen"]?.ToString(),
+                                SoDienThoai = r["ND_SoDienThoai"]?.ToString(),
+                                Email = r["ND_Email"]?.ToString(),
+                                NgaySinh = r.IsDBNull(r.GetOrdinal("ND_NgaySinh")) ? (DateTime?)null : r.GetDateTime(r.GetOrdinal("ND_NgaySinh")),
+                                DiaChi = r["ND_DiaChiThuongChu"]?.ToString(),
+                                UserName = r["TK_UserName"]?.ToString(),
+                                TrangThai = r["TK_TrangThai"]?.ToString(),
+                                SoBaoHiemYT = r["BN_SoBaoHiemYT"]?.ToString(),
+                                NhomMau = r["BN_NhomMau"]?.ToString(),
+                                TieuSuBenhAn = r["BN_TieuSuBenhAn"]?.ToString()
+                            };
+                        }
+                    }
+                }
+            }
+
+            if (bn == null) return RedirectToAction("Patients");
+            return View(bn);
+        }
+
+        // ====== C. Sửa bệnh nhân (POST) ======
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult EditPatient(BenhNhan model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+
+            try
+            {
+                using (var conn = new OracleConnection(cs))
+                {
+                    conn.Open();
+                    using (var tx = conn.BeginTransaction())
+                    {
+                        // Update NGUOIDUNG qua subquery (lấy ND_IdNguoiDung từ BN)
+                        var sqlND = @"
+                                        UPDATE NGUOIDUNG nd
+                                        SET nd.ND_HoTen          = :hoten,
+                                            nd.ND_SoDienThoai    = :sdt,
+                                            nd.ND_Email          = :email,
+                                            nd.ND_NgaySinh       = :ngaysinh,
+                                            nd.ND_DiaChiThuongChu= :diachi
+                                        WHERE nd.ND_IdNguoiDung = (SELECT ND_IdNguoiDung FROM BENHNHAN WHERE BN_MaBenhNhan = :bnid)";
+
+                        using (var cmd = new OracleCommand(sqlND, conn))
+                        {
+                            cmd.Transaction = tx; cmd.BindByName = true;
+                            cmd.Parameters.Add("hoten", (object)model.HoTen ?? DBNull.Value);
+                            cmd.Parameters.Add("sdt", (object)model.SoDienThoai ?? DBNull.Value);
+                            cmd.Parameters.Add("email", (object)model.Email ?? DBNull.Value);
+                            cmd.Parameters.Add("ngaysinh", (object)model.NgaySinh ?? DBNull.Value);
+                            cmd.Parameters.Add("diachi", (object)model.DiaChi ?? DBNull.Value);
+                            cmd.Parameters.Add("bnid", model.MaBenhNhan);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // Update BN (nếu bạn dùng các field phụ)
+                        var sqlBN = @"
+                                        UPDATE BENHNHAN
+                                        SET BN_SoBaoHiemYT = :bh,
+                                            BN_NhomMau     = :nm,
+                                            BN_TieuSuBenhAn= :ts
+                                        WHERE BN_MaBenhNhan = :bnid";
+
+                        using (var cmd = new OracleCommand(sqlBN, conn))
+                        {
+                            cmd.Transaction = tx; cmd.BindByName = true;
+                            cmd.Parameters.Add("bh", (object)model.SoBaoHiemYT ?? DBNull.Value);
+                            cmd.Parameters.Add("nm", (object)model.NhomMau ?? DBNull.Value);
+                            cmd.Parameters.Add("ts", (object)model.TieuSuBenhAn ?? DBNull.Value);
+                            cmd.Parameters.Add("bnid", model.MaBenhNhan);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        tx.Commit();
+                        TempData["Msg"] = "Cập nhật bệnh nhân thành công.";
+                        return RedirectToAction("Patients");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Err"] = "Lỗi cập nhật: " + ex.Message;
+                return View(model);
+            }
+        }
+
+        // ====== D. Khoá/Mở tài khoản bệnh nhân (TOGGLE) ======
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult TogglePatientStatus(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return RedirectToAction("Patients");
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+
+            try
+            {
+                using (var conn = new OracleConnection(cs))
+                {
+                    conn.Open();
+
+                    // Lấy trạng thái hiện tại
+                    string status = null;
+                    using (var get = new OracleCommand(
+                        "SELECT TK_TrangThai FROM TAIKHOAN WHERE BN_MaBenhNhan = :id", conn))
+                    {
+                        get.BindByName = true;
+                        get.Parameters.Add("id", id);
+                        var o = get.ExecuteScalar();
+                        status = (o == null || o == DBNull.Value) ? null : o.ToString();
+                    }
+
+                    if (string.IsNullOrEmpty(status))
+                    {
+                        TempData["Err"] = "Bệnh nhân chưa có tài khoản đăng nhập.";
+                        return RedirectToAction("Patients");
+                    }
+
+                    var newStatus = string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase)
+                                    ? "LOCKED" : "ACTIVE";
+
+                    using (var upd = new OracleCommand(
+                        "UPDATE TAIKHOAN SET TK_TrangThai = :st WHERE BN_MaBenhNhan = :id", conn))
+                    {
+                        upd.BindByName = true;
+                        upd.Parameters.Add("st", newStatus);
+                        upd.Parameters.Add("id", id);
+                        upd.ExecuteNonQuery();
+                    }
+                }
+
+                TempData["Msg"] = "Cập nhật trạng thái tài khoản thành công.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Err"] = "Lỗi: " + ex.Message;
+            }
+
+            return RedirectToAction("Patients");
         }
     }
 }

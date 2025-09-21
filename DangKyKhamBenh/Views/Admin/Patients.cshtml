@@ -1,0 +1,73 @@
+﻿@model IEnumerable<DangKyKhamBenh.Models.ViewModels.BenhNhan>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý bệnh nhân";
+    ViewBag.Active = "Patients";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form class="d-flex" method="get" action="@Url.Action("Patients","Admin")">
+        <input name="kw" class="form-control me-2" placeholder="Tìm mã BN, họ tên, username..."
+               value="@Request["kw"]" />
+        <button class="btn btn-outline-primary">Tìm</button>
+    </form>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Mã BN</th>
+                <th>Họ tên</th>
+                <th>Username</th>
+                <th>Liên hệ</th>
+                <th>Ngày sinh</th>
+                <th>Trạng thái</th>
+                <th style="width:210px;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var b in Model)
+            {
+                <tr>
+                    <td>@b.MaBenhNhan</td>
+                    <td>
+                        <div>@b.HoTen</div>
+                        <div class="text-muted small">@b.DiaChi</div>
+                    </td>
+                    <td>@b.UserName</td>
+                    <td>
+                        <div>@b.SoDienThoai</div>
+                        <div class="text-muted small">@b.Email</div>
+                    </td>
+                    <td>@(b.NgaySinh?.ToString("dd/MM/yyyy"))</td>
+                    <td>
+                        @if (string.Equals(b.TrangThai, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                        {<span class="badge bg-success">ACTIVE</span> }
+                        else if (string.Equals(b.TrangThai, "LOCKED", StringComparison.OrdinalIgnoreCase))
+                        { <span class="badge bg-danger">LOCKED</span> }
+                        else
+                        { <span class="badge bg-secondary">@b.TrangThai</span>}
+                    </td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="@Url.Action("EditPatient","Admin", new { id = b.MaBenhNhan })">Sửa</a>
+
+                        @using (Html.BeginForm("TogglePatientStatus", "Admin", FormMethod.Post, new { style = "display:inline" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@b.MaBenhNhan" />
+                            if (string.Equals(b.TrangThai, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <button class="btn btn-sm btn-outline-warning" type="submit">Khóa</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-outline-success" type="submit">Mở</button>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
