@@ -226,6 +226,7 @@
     <Content Include="Views\Admin\Doctors.cshtml" />
     <Content Include="Views\Admin\Patients.cshtml" />
     <Content Include="Views\Admin\EditPatient.cshtml" />
+    <Content Include="Views\Account\ForgotPassword.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

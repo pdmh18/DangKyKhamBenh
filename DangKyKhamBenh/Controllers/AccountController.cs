@@ -9,6 +9,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
 using System.Web.UI.WebControls.WebParts;
+using System.Text.RegularExpressions;
 
 namespace DangKyKhamBenh.Controllers
 {
@@ -333,6 +334,137 @@ namespace DangKyKhamBenh.Controllers
             TempData["Msg"] = "Bạn đã đăng xuất.";
             return RedirectToAction("Login", "Account");
         }
+
+
+
+        // Hiển thị form quên mật khẩu
+        [HttpGet, AllowAnonymous]
+        public ActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        // Xử lý đổi mật khẩu khi quên
+        [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+        public ActionResult ForgotPassword(string user, string email, string phone,
+                                   string newPassword, string confirmPassword)
+        {
+            // 1) Validate cơ bản
+            if (string.IsNullOrWhiteSpace(user))
+            {
+                ViewBag.Error = "Vui lòng nhập tài khoản (Username).";
+                return View();
+            }
+            if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(phone))
+            {
+                ViewBag.Error = "Nhập email hoặc số điện thoại đã đăng ký để xác minh.";
+                return View();
+            }
+            if (string.IsNullOrWhiteSpace(newPassword) ||
+                !string.Equals(newPassword?.Trim(), confirmPassword?.Trim()))
+            {
+                ViewBag.Error = "Mật khẩu mới và xác nhận không khớp.";
+                return View();
+            }
+
+            // Hàm chuẩn hoá
+            string N(string s) => (s ?? "").Trim();
+            string NormPhone(string s) => Regex.Replace(N(s), "[^0-9]", ""); // bỏ mọi ký tự không phải số
+
+            try
+            {
+                var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+                using (var conn = new OracleConnection(cs))
+                {
+                    conn.Open();
+
+                    // 2) Lấy thông tin email/phone theo username
+                    const string sqlFind = @"
+                                                SELECT tk.TK_MaTK,
+                                                       NVL(tk.TK_TrangThai,'PENDING') AS TrangThai,
+                                                       nd.ND_Email,
+                                                       nd.ND_SoDienThoai
+                                                FROM   TAIKHOAN tk
+                                                JOIN   NGUOIDUNG nd ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
+                                                WHERE  TRIM(UPPER(tk.TK_UserName)) = TRIM(UPPER(:u))";
+
+                    string tkId = null, status = null, dbEmail = null, dbPhone = null;
+
+                    using (var cmd = new OracleCommand(sqlFind, conn))
+                    {
+                        cmd.BindByName = true;
+                        cmd.Parameters.Add("u", N(user).ToUpperInvariant());
+                        using (var r = cmd.ExecuteReader())
+                        {
+                            if (!r.Read())
+                            {
+                                ViewBag.Error = "Không tìm thấy tài khoản.";
+                                return View();
+                            }
+                            tkId = r["TK_MaTK"]?.ToString();
+                            status = r["TrangThai"]?.ToString();
+                            dbEmail = r["ND_Email"]?.ToString();
+                            dbPhone = r["ND_SoDienThoai"]?.ToString();
+                        }
+                    }
+
+                    // 3) (Tùy chọn) ràng buộc trạng thái
+                    // if (!string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                    // {
+                    //     ViewBag.Error = "Tài khoản chưa sẵn sàng (không ở trạng thái ACTIVE).";
+                    //     return View();
+                    // }
+
+                    // 4) So khớp theo trường người dùng đã nhập
+                    bool emailProvided = !string.IsNullOrWhiteSpace(email);
+                    bool phoneProvided = !string.IsNullOrWhiteSpace(phone);
+
+                    bool okEmail = !emailProvided
+                                   || string.Equals(N(dbEmail).ToUpperInvariant(),
+                                                    N(email).ToUpperInvariant());
+                    bool okPhone = !phoneProvided
+                                   || string.Equals(NormPhone(dbPhone), NormPhone(phone));
+
+                    if (!okEmail || !okPhone)
+                    {
+                        // Gợi ý lỗi rõ ràng hơn
+                        if (emailProvided && !okEmail && phoneProvided && !okPhone)
+                            ViewBag.Error = "Email và số điện thoại xác minh đều không khớp.";
+                        else if (emailProvided && !okEmail)
+                            ViewBag.Error = "Email xác minh không khớp.";
+                        else if (phoneProvided && !okPhone)
+                            ViewBag.Error = "Số điện thoại xác minh không khớp.";
+                        else
+                            ViewBag.Error = "Thông tin xác minh không khớp.";
+                        return View();
+                    }
+
+                    // 5) Cập nhật mật khẩu mới (TODO: hash)
+                    const string sqlUpdate = @"UPDATE TAIKHOAN SET TK_PassWord = :p WHERE TK_MaTK = :id";
+                    using (var up = new OracleCommand(sqlUpdate, conn))
+                    {
+                        up.BindByName = true;
+                        up.Parameters.Add("p", N(newPassword));
+                        up.Parameters.Add("id", tkId);
+                        up.ExecuteNonQuery();
+                    }
+                }
+
+                TempData["Msg"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
+                return RedirectToAction("Login");
+            }
+            catch (OracleException ex)
+            {
+                ViewBag.Error = $"Lỗi Oracle ORA-{ex.Number}: {ex.Message}";
+                return View();
+            }
+            catch (System.Exception ex)
+            {
+                ViewBag.Error = "Lỗi: " + ex.Message;
+                return View();
+            }
+        }
+
 
     }
 }

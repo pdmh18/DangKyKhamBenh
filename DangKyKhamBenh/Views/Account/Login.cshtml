@@ -88,7 +88,7 @@
                         Chào mừng bạn đến với <span style="color:#0056d2;">UMC CARE</span>
                     </h5>
                 </div>
-                
+
                 <p class="text-center auth-sub">Vui lòng đăng nhập để tiếp tục</p>
 
                 @if (TempData["Msg"] != null)
@@ -99,7 +99,7 @@
                 @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
                 {
                     @Html.AntiForgeryToken()
-                    @Html.Hidden("returnUrl", returnUrl ?? "") 
+                    @Html.Hidden("returnUrl", returnUrl ?? "")
 
                     <div class="mb-3 position-relative">
                         <label for="user" class="form-label">Tài khoản</label>
@@ -121,8 +121,9 @@
                     <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
 
                     <div class="text-center mt-3">
-                        <a href="#" class="link">Quên mật khẩu?</a>
+                        <a class="link" href="@Url.Action("ForgotPassword","Account")">Quên mật khẩu?</a>
                     </div>
+
 
                     <hr />
 
