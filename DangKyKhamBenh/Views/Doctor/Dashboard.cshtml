@@ -1,0 +1,419 @@
+﻿@model DangKyKhamBenh.Models.ViewModels.DoctorDashboardVm
+@using DangKyKhamBenh.Models.ViewModels
+@using System.Linq
+@using System.Web.Helpers
+@{
+    Layout = null;
+    var stats = Model != null ? Model.ThongKe : null;
+
+    var lich = (Model != null && Model.LichTruc7Ngay != null)
+        ? Model.LichTruc7Ngay
+        : Enumerable.Empty<LichTrucItem>();
+
+    var lichHenHomNay = (Model != null && Model.LichHenHomNay != null)
+        ? Model.LichHenHomNay
+        : Enumerable.Empty<LichHenItem>();
+
+    var hangDoi = (Model != null && Model.HangDoiKham != null)
+        ? Model.HangDoiKham
+        : Enumerable.Empty<HangDoiItem>();
+
+    var clsMoi = (Model != null && Model.KetQuaCanLamSangMoi != null)
+        ? Model.KetQuaCanLamSangMoi
+        : Enumerable.Empty<KetQuaCLSItem>();
+
+    var kpi = Model != null && Model.KPI_30Ngay != null ? Model.KPI_30Ngay : new KpiSeries();
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bảng điều khiển Bác sĩ</title>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+        body {
+            background: #f5f7fb;
+        }
+
+        .page-wrap {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            background: #0d6efd;
+            color: #fff;
+        }
+
+            .app-header .brand {
+                font-weight: 700;
+            }
+
+        .card {
+            border: none;
+            border-radius: 14px;
+        }
+
+            .card .card-body {
+                padding: 1.25rem;
+            }
+
+        .metric-label {
+            color: #6c757d;
+            font-size: .9rem;
+        }
+
+        .metric-value {
+            font-weight: 700;
+        }
+
+        .table thead th {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .footer {
+            color: #6c757d;
+            font-size: .9rem;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .chip {
+            border-radius: 999px;
+            padding: .35rem .7rem;
+            font-size: .85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrap">
+
+
+        <header class="app-header py-3">
+            <div class="container d-flex align-items-center justify-content-between">
+                <div class="brand d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-stethoscope"></i>
+                    <span>UMC CARE — Bảng điều khiển Bác sĩ</span>
+                </div>
+                <div class="user">
+                    <span class="me-3">
+                        Xin chào, <strong>@((Model != null ? Model.TenBacSi : null) ?? "Bác sĩ")</strong>
+                        (@((Model != null ? Model.BS_MaBacSi : null) ?? "—"))
+                    </span>
+                    <a href="@Url.Action("Logout","Account")" class="btn btn-light btn-sm">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </header>
+
+
+        <main class="flex-fill">
+            <div class="container py-4">
+
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="metric-label">Bệnh nhân đã khám (30 ngày)</div>
+                                <div class="metric-value display-6">
+                                    @((stats != null ? stats.SoBenhNhanDaKham_30Ngay : 0))
+                                </div>
+                                <div class="text-muted small">Bình quân/ngày ~ @((stats != null ? stats.BinhQuanNgay : 0))</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="metric-label">Doanh thu dự kiến (30 ngày)</div>
+                                <div class="metric-value display-6">
+                                    @String.Format("{0:N0} đ", (stats != null ? stats.DoanhThuDuKien_30Ngay : 0m))
+                                </div>
+                                <div class="text-muted small">Đơn giá TB: @String.Format("{0:N0} đ", (stats != null ? stats.DonGiaTrungBinh : 0m))</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="metric-label">Chỉ định dịch vụ (30 ngày)</div>
+                                <div class="metric-value display-6">
+                                    @((stats != null ? stats.SoChiDinhDichVu_30Ngay : 0))
+                                </div>
+                                <div class="text-muted small">Tỉ lệ CLS: @((stats != null ? stats.TiLeCLS : 0))%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="metric-label">Hôm nay</div>
+                                    <div class="metric-value h3 mb-0">@((Model != null ? Model.SoHenHomNay : 0)) lịch</div>
+                                    <div class="text-muted small">Đang chờ: @((Model != null ? Model.SoBenhNhanCho : 0))</div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary">CLS mới: @((Model != null ? Model.SoKetQuaMoi : 0))</span><br />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row g-3 mt-1">
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h5 class="mb-0"><i class="fa-solid fa-bolt me-2"></i>Tác vụ nhanh</h5>
+                                    <a class="btn btn-outline-primary btn-sm" href="@Url.Action("Dashboard", "Doctor")">
+                                        <i class="fa-solid fa-rotate-right me-1"></i> Làm mới
+                                    </a>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a class="btn btn-primary btn-icon" href="@Url.Action("CreateVisit","Clinic")"><i class="fa-solid fa-user-plus"></i> Tạo phiếu khám</a>
+                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("OrderLab","Clinic")"><i class="fa-solid fa-vials"></i> Chỉ định cận lâm sàng</a>
+                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Prescribe","Clinic")"><i class="fa-solid fa-prescription-bottle-medical"></i> Kê đơn</a>
+                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Appointments","Doctor")"><i class="fa-regular fa-calendar-plus"></i> Tạo lịch hẹn</a>
+                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Patients","Doctor")"><i class="fa-solid fa-users"></i> Danh sách bệnh nhân</a>
+                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Messages","Doctor")"><i class="fa-regular fa-message"></i> Hộp thư</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="mb-3"><i class="fa-solid fa-magnifying-glass me-2"></i>Tra cứu nhanh</h5>
+                                <form method="get" action="@Url.Action("Search","Doctor")" class="row g-2">
+                                    <div class="col-12">
+                                        <input name="q" class="form-control" placeholder="Nhập Mã BN / Họ tên / SĐT..." />
+                                    </div>
+                                    <div class="col-6">
+                                        <select name="scope" class="form-select">
+                                            <option value="patient">Bệnh nhân</option>
+                                            <option value="record">Hồ sơ khám</option>
+                                            <option value="lab">Cận lâm sàng</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <button class="btn btn-primary w-100" type="submit">
+                                            <i class="fa-solid fa-search me-1"></i> Tìm
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row g-3 mt-1">
+                    <div class="col-xl-7">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="mb-3"><i class="fa-regular fa-calendar-check me-2"></i>Lịch hẹn hôm nay</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Giờ</th>
+                                                <th>Bệnh nhân</th>
+                                                <th>Lý do khám</th>
+                                                <th>Trạng thái</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (lichHenHomNay.Any())
+                                            {
+                                                foreach (var a in lichHenHomNay)
+                                                {
+                                                    <tr>
+                                                        <td>@a.ThoiGian.ToString("HH:mm")</td>
+                                                        <td>
+                                                            <strong>@a.TenBenhNhan</strong>
+                                                            <div class="text-muted small">@a.MaBenhNhan • @a.SDT</div>
+                                                        </td>
+                                                        <td>@a.LyDo</td>
+                                                        <td>
+                                                            <span class="badge @(a.TrangThai == "Đã đến" ? "bg-success" : "bg-secondary")">@a.TrangThai</span>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <a class="btn btn-sm btn-outline-primary" href="@Url.Action("OpenVisit","Clinic", new { id = a.MaHoSo })">
+                                                                Mở hồ sơ
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <tr><td colspan="5" class="text-muted">Hôm nay chưa có lịch hẹn.</td></tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-5">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="mb-3"><i class="fa-solid fa-list-ol me-2"></i>Hàng đợi bệnh nhân</h5>
+                                <ol class="list-group list-group-numbered">
+                                    @if (hangDoi.Any())
+                                    {
+                                        foreach (var q in hangDoi.Take(8))
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                                <div class="ms-2 me-auto">
+                                                    <div class="fw-bold">@q.TenBenhNhan <span class="text-muted">(@q.MaBenhNhan)</span></div>
+                                                    <div class="small text-muted">Ưu tiên: @q.DoUuTien • Phiếu: @q.SoPhieu • Vào lúc @q.ThoiGianDangKy.ToString("HH:mm")</div>
+                                                </div>
+                                                <span class="badge bg-primary rounded-pill">@q.STT</span>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="list-group-item text-muted">Chưa có bệnh nhân trong hàng đợi.</li>
+                                    }
+                                </ol>
+                                <div class="text-end mt-2">
+                                    <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Queue","Clinic")">Xem tất cả</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row g-3 mt-1">
+                    <div class="col-lg-7">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="mb-3"><i class="fa-solid fa-vial-circle-check me-2"></i>Kết quả cận lâm sàng mới</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Thời gian</th>
+                                                <th>BN</th>
+                                                <th>Loại</th>
+                                                <th>Kết quả</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (clsMoi.Any())
+                                            {
+                                                foreach (var r in clsMoi.Take(10))
+                                                {
+                                                    <tr>
+                                                        <td>@r.ThoiGian.ToString("dd/MM HH:mm")</td>
+                                                        <td><strong>@r.TenBenhNhan</strong> <span class="text-muted small">(@r.MaBenhNhan)</span></td>
+                                                        <td>@r.LoaiXetNghiem</td>
+                                                        <td><span class="chip bg-light">@r.TomTat</span></td>
+                                                        <td class="text-end">
+                                                            <a class="btn btn-sm btn-outline-primary" href="@Url.Action("LabResult","Clinic", new { id = r.Id })">
+                                                                Xem
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <tr><td colspan="5" class="text-muted">Chưa có kết quả mới.</td></tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="col-lg-5">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h5 class="mb-0"><i class="fa-solid fa-chart-line me-2"></i>KPI 30 ngày</h5>
+                                    <div class="text-muted small">Nguồn: hệ thống</div>
+                                </div>
+                                <canvas id="kpiChart" height="160"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+
+        <footer class="footer text-center py-3">
+            <div class="container">
+                © @DateTime.Now.Year UMC CARE
+            </div>
+        </footer>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        (function () {
+            try {
+                    var labels = @Html.Raw(System.Web.Helpers.Json.Encode(kpi != null ? kpi.Labels : new System.Collections.Generic.List<string>()));
+                    var soDv   = @Html.Raw(System.Web.Helpers.Json.Encode(kpi != null ? kpi.SoLuotDichVu : new System.Collections.Generic.List<int>()));
+                    var rev    = @Html.Raw(System.Web.Helpers.Json.Encode(kpi != null ? kpi.DoanhThuNgay : new System.Collections.Generic.List<decimal>()));
+
+                var el = document.getElementById('kpiChart');
+                if (!el) return;
+
+                new Chart(el, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Số lượt DV', data: soDv, yAxisID: 'y1', tension: 0.3 },
+                            { label: 'Doanh thu (đ)', data: rev, yAxisID: 'y2', tension: 0.3 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: { mode: 'index', intersect: false },
+                        stacked: false,
+                        plugins: { legend: { display: true } },
+                        scales: {
+                            y1: { type: 'linear', position: 'left' },
+                            y2: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+            } catch (e) { console && console.warn && console.warn(e); }
+        })();
+    </script>
+</body>
+</html>

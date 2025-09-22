@@ -10,6 +10,8 @@ using System.Web.Mvc;
 using System.Web.Security;
 using System.Web.UI.WebControls.WebParts;
 using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Text;
 
 namespace DangKyKhamBenh.Controllers
 {
@@ -39,11 +41,17 @@ namespace DangKyKhamBenh.Controllers
                 {
                     conn.Open();
 
-                    // Lấy trạng thái + role theo username (so sánh case-insensitive)
+                    // Lấy đủ thông tin cần cho điều hướng và session
                     const string sql = @"
-                        SELECT TK_PassWord, NVL(TK_TrangThai,'PENDING') AS TrangThai, TK_Role, TK_StaffType
-                        FROM TAIKHOAN
-                        WHERE TRIM(UPPER(TK_UserName)) = TRIM(UPPER(:pUser))";
+                        SELECT 
+                            tk.TK_PassWord,
+                            NVL(tk.TK_TrangThai,'PENDING') AS TrangThai,
+                            tk.TK_Role,
+                            tk.TK_StaffType,
+                            tk.BS_MaBacSi,
+                            tk.ND_IdNguoiDung
+                        FROM TAIKHOAN tk
+                        WHERE TRIM(UPPER(tk.TK_UserName)) = TRIM(UPPER(:pUser))";
 
                     using (var cmd = new OracleCommand(sql, conn))
                     {
@@ -59,44 +67,64 @@ namespace DangKyKhamBenh.Controllers
                             }
 
                             var dbPassword = r.GetString(0)?.Trim();
-                            var status = r.GetString(1)?.Trim().ToUpperInvariant(); // ACTIVE / PENDING / LOCKED ...
-                            var role = r.IsDBNull(2) ? null : r.GetString(2);
-                            var staffType = r.IsDBNull(3) ? null : r.GetString(3);
+                            var status = r.GetString(1)?.Trim();                // ACTIVE / PENDING / LOCKED ...
+                            var role = r.IsDBNull(2) ? "" : r.GetString(2);   // ADMIN / USER
+                            var staffType = r.IsDBNull(3) ? "" : r.GetString(3);   // Bác sĩ / Bệnh nhân ...
+                            var bsMa = r.IsDBNull(4) ? "" : r.GetString(4);   // mã bác sĩ
+                            var ndId = r.IsDBNull(5) ? "" : r.GetString(5);
 
-                            // So sánh password thô (TODO: hash sau)
+                            // So sánh password (TODO: chuyển sang hash)
                             if (!string.Equals(dbPassword, password?.Trim()))
                             {
                                 ViewBag.Error = "Sai tài khoản hoặc mật khẩu.";
                                 return View();
                             }
 
+                            // Chặn tài khoản chưa ACTIVE
                             if (!string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
                             {
-                                // Tuỳ biến message theo trạng thái
-                                if (status == "PENDING")
+                                if (status.Equals("PENDING", StringComparison.OrdinalIgnoreCase))
                                     ViewBag.Error = "Tài khoản đang chờ duyệt. Vui lòng đợi Admin phê duyệt.";
-                                else if (status == "LOCKED")
+                                else if (status.Equals("LOCKED", StringComparison.OrdinalIgnoreCase))
                                     ViewBag.Error = "Tài khoản đã bị khoá. Vui lòng liên hệ quản trị.";
                                 else
                                     ViewBag.Error = $"Tài khoản chưa sẵn sàng (trạng thái: {status}).";
-
                                 return View();
                             }
 
-                            // OK: set session & điều hướng
+                            // ==== SET SESSION CHUẨN ====
                             Session["User"] = user?.Trim();
-                            Session["Role"] = role;          // ví dụ "ADMIN" / "USER"
-                            Session["StaffType"] = staffType;
+                            Session["TK_Role"] = role;
+                            Session["Role"] = role;       // backward-compat nếu nơi khác dùng "Role"
+                            Session["TK_StaffType"] = staffType;
+                            Session["StaffType"] = staffType;  // backward-compat
+                            Session["StaffTypeRaw"] = staffType;
+                            Session["BS_MaBacSi"] = bsMa;
+                            Session["ND_IdNguoiDung"] = ndId;
+                            Session["TK_TrangThai"] = status;
 
-                            // 1) Nếu có returnUrl -> quay lại
+                            // ================== ĐIỀU HƯỚNG ==================
+
+                            // 1) Nếu có returnUrl hợp lệ -> quay lại (nếu bạn muốn ép bác sĩ vào Dashboard, đưa check bác sĩ lên trước)
                             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                                 return Redirect(returnUrl);
 
-                            // 2) Nếu là ADMIN -> vào Home admin
-                            if (string.Equals(role, "ADMIN", StringComparison.OrdinalIgnoreCase))
-                                return RedirectToAction("Home", "Admin");
+                            // 2) Admin -> Admin
+                            if (role.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
+                                return RedirectToAction("Home", "Admin"); // hoặc "Dashboard"
 
-                            // 3) user thường -> Home thường
+                            // 3) User + Bác sĩ -> Doctor
+                            if (role.Equals("USER", StringComparison.OrdinalIgnoreCase) && IsDoctor(staffType))
+                            {
+                                if (string.IsNullOrWhiteSpace(bsMa))
+                                {
+                                    ViewBag.Error = "Tài khoản bác sĩ chưa liên kết BS_MaBacSi. Vui lòng liên hệ quản trị.";
+                                    return View();
+                                }
+                                return RedirectToAction("Dashboard", "Doctor");
+                            }
+
+                            // 4) Mặc định -> Home
                             return RedirectToAction("Index", "Home");
                         }
                     }
@@ -107,7 +135,33 @@ namespace DangKyKhamBenh.Controllers
                 ViewBag.Error = $"Lỗi Oracle ORA-{ex.Number}: {ex.Message}";
                 return View();
             }
+            catch (Exception ex)
+            {
+                ViewBag.Error = "Lỗi: " + ex.Message;
+                return View();
+            }
+        }
 
+        // Nhận diện "Bác sĩ" / "Doctor" (khử dấu + chỉ giữ ký tự chữ)
+        private static bool IsDoctor(string staffType)
+        {
+            if (string.IsNullOrWhiteSpace(staffType)) return false;
+            var s = RemoveDiacritics(staffType).ToUpperInvariant();
+            s = new string(s.Where(char.IsLetter).ToArray());
+            return s == "BACSI" || s == "DOCTOR";
+        }
+
+        private static string RemoveDiacritics(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+            var n = input.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+            foreach (var ch in n)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(ch) != UnicodeCategory.NonSpacingMark)
+                    sb.Append(ch);
+            }
+            return sb.ToString().Normalize(NormalizationForm.FormC);
         }
 
 

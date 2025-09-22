@@ -165,6 +165,8 @@
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\ChuyenKhoaController.cs" />
     <Compile Include="Controllers\DichVuController.cs" />
+    <Compile Include="Controllers\DoctorController.cs" />
+    <Compile Include="Controllers\DoctorOnlyAttribute.cs" />
     <Compile Include="Controllers\DoiNguBacSiController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\HuongDanKhachHangController.cs" />
@@ -177,6 +179,8 @@
     <Compile Include="Models\TaiKhoan.cs" />
     <Compile Include="Models\ViewModels\BacSi.cs" />
     <Compile Include="Models\ViewModels\BenhNhan.cs" />
+    <Compile Include="Models\ViewModels\DoctorDashboardVm.cs" />
+    <Compile Include="Models\ViewModels\Items.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -227,6 +231,7 @@
     <Content Include="Views\Admin\Patients.cshtml" />
     <Content Include="Views\Admin\EditPatient.cshtml" />
     <Content Include="Views\Account\ForgotPassword.cshtml" />
+    <Content Include="Views\Doctor\Dashboard.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
