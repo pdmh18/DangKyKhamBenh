@@ -20,6 +20,25 @@
 
     <!-- đơn giản nhất: nhét version vào bên trong Url.Content -->
     <link href="@Url.Content("~/Content/style.css?v=3")" rel="stylesheet" />
+    <style>
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-register, .btn-hotline {
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 10px 16px;
+        }
+
+            .btn-register i,
+            .btn-hotline i {
+                margin-right: 6px;
+            }
+
+    </style>
 </head>
 <body>
     <div class="banner-top">
@@ -33,15 +52,23 @@
                 <i class="fa fa-search"></i>
             </button>
         </form>
+        <div class="actions d-flex align-items-center gap-2">
+            <div class="dropdown">
+                <button class="btn btn-success dropdown-toggle btn-register" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-bell"></i> Đăng Ký Khám Bệnh
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Đã có hồ sơ</a></li>
+                    <li><a class="dropdown-item" href="#">Chưa có hồ sơ</a></li>
+                </ul>
+            </div>
 
-        <div class="actions">
-            <button class="btn-register">
-                <i class="fa-solid fa-bell"></i> Đăng Ký Khám Bệnh
-            </button>
-            <button class="btn-hotline">
+            <!-- Nút hotline -->
+            <button class="btn btn-warning btn-hotline">
                 <i class="fa-solid fa-phone"></i> Tổng Đài Liên Hệ: 1900 6923
             </button>
         </div>
+
     </div>
 
     <div class="nav-wrap">

@@ -17,7 +17,7 @@ namespace DangKyKhamBenh.Controllers
 {
     public class AccountController : Controller
     {
-        // GET: Account
+        // GET: Account     
         [HttpGet, AllowAnonymous]
         public ActionResult Login(string returnUrl = null)
         {
@@ -36,6 +36,7 @@ namespace DangKyKhamBenh.Controllers
 
             try
             {
+
                 using (var conn = new OracleConnection(
                     ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString))
                 {

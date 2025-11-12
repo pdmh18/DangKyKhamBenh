@@ -7,7 +7,7 @@
 <div class="row g-3">
     <div class="col-md-4">
         <div class="card shadow-sm">
-            <div class="card-body">
+            <div class="card-body" style="height:150px">
                 <div class="fw-bold mb-1">Tài khoản chờ duyệt</div>
                 <p class="text-muted">Xem & phê duyệt các tài khoản người dùng mới.</p>
                 <a class="btn btn-primary btn-sm" href="@Url.Action("Pending","Admin")">Đi tới danh sách</a>
@@ -16,7 +16,7 @@
     </div>
     <div class="col-md-4">
         <div class="card shadow-sm">
-            <div class="card-body">
+            <div class="card-body" style="height:150px">
                 <div class="fw-bold mb-1">Lịch sử tài khoản</div>
                 <p class="text-muted">Theo dõi trạng thái & thời gian tạo tài khoản.</p>
                 <a class="btn btn-primary btn-sm" href="@Url.Action("History","Admin")">Xem lịch sử</a>
@@ -24,29 +24,38 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm" style="height:150px">
             <div class="card-body">
                 <div class="fw-bold mb-1">Tạo tài khoản bác sĩ</div>
-                <p class="text-muted">Chỉ Admin mới có quyền tạo bác sĩ.</p>
+                <p class="text-muted">Admin mới có quyền tạo bác sĩ.</p>
                 <a class="btn btn-primary btn-sm" href="@Url.Action("CreateDoctor","Admin")">Tạo bác sĩ</a>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm" style="height:150px">
             <div class="card-body">
                 <div class="fw-bold mb-1">Danh Sách Bác Sĩ</div>
-                <p class="text-muted">Chỉ Admin mới có quyền chỉnh sửa thông tin bác sĩ.</p>
+                <p class="text-muted">Admin mới có quyền chỉnh sửa thông tin bác sĩ.</p>
                 <a class="btn btn-primary btn-sm" href="@Url.Action("Doctors","Admin")">Quản lý bác sĩ</a>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm" style="height:150px">
             <div class="card-body">
                 <div class="fw-bold mb-1">Danh Sách Bệnh Nhân</div>
-                <p class="text-muted">Chỉ Admin mới có quyền chỉnh sửa thông tin bệnh nhân.</p>
+                <p class="text-muted">Admin mới có quyền chỉnh sửa thông tin bệnh nhân.</p>
                 <a class="btn btn-primary btn-sm" href="@Url.Action("Patients","Admin")">Quản lý bệnh nhân</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm" style="height:150px">
+            <div class="card-body">
+                <div class="fw-bold mb-1">Mã Hóa Thông Tin Người Dùng</div>
+                <p class="text-muted">Chỉ Admin mới có quyền mã hóa thông tin.</p>
+                <a class="btn btn-primary btn-sm" href="@Url.Action("Patients","Admin")">Mã Hóa</a>
             </div>
         </div>
     </div>
