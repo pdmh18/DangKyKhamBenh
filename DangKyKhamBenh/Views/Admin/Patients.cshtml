@@ -64,16 +64,16 @@
                 <tr>
                     <td>
                         <span class="badge bg-light text-dark border">
-                            @b.MaBenhNhan
+                            @b.BN_MaBenhNhan
                         </span>
                     </td>
 
                     <td class="col-name">
-                        <div class="fw-semibold text-enc" title="@b.HoTen">
-                            @b.HoTen
+                        <div class="fw-semibold text-enc" title="@b.ND_HoTen">
+                            @b.ND_HoTen
                         </div>
-                        <div class="text-muted small text-enc" title="@b.DiaChi">
-                            @b.DiaChi
+                        <div class="text-muted small text-enc" title="@b.ND_DiaChiThuongChu">
+                            @b.ND_DiaChiThuongChu
                         </div>
                     </td>
 
@@ -84,15 +84,15 @@
                     </td>
 
                     <td class="col-contact">
-                        <div class="text-enc" title="@b.SoDienThoai">
-                            @b.SoDienThoai
+                        <div class="text-enc" title="@b.ND_SoDienThoai">
+                            @b.ND_SoDienThoai
                         </div>
-                        <div class="text-muted small text-enc" title="@b.Email">
-                            @b.Email
+                        <div class="text-muted small text-enc" title="@b.ND_Email">
+                            @b.ND_Email
                         </div>
                     </td>
 
-                    <td>@(b.NgaySinh?.ToString("dd/MM/yyyy"))</td>
+                    <td>@(b.ND_NgaySinh?.ToString("dd/MM/yyyy"))</td>
 
                     <td>
                         @if (string.Equals(b.TrangThai, "ACTIVE", StringComparison.OrdinalIgnoreCase))
@@ -112,7 +112,7 @@
                     <td>
                         <div class="d-grid gap-2 d-md-inline-flex">
                             <a class="btn btn-outline-primary" 
-                               href="@Url.Action("EditPatient","Admin", new { id = b.MaBenhNhan })">
+                               href="@Url.Action("EditPatient","Admin", new { id = b.BN_MaBenhNhan })">
                                 Sửa
                             </a>
 
@@ -120,7 +120,7 @@
                                    new { style = "display:inline-block" }))
                             {
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@b.MaBenhNhan" />
+                                <input type="hidden" name="id" value="@b.BN_MaBenhNhan" />
                                 if (string.Equals(b.TrangThai, "ACTIVE", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <button class="btn btn-outline-warning" type="submit">Khóa</button>

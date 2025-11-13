@@ -6,24 +6,38 @@ namespace DangKyKhamBenh.Models.ViewModels
     public class BenhNhan
     {
         [Required]
-        public string MaBenhNhan { get; set; }   
+        public string BN_MaBenhNhan { get; set; }   
 
         // NGUOIDUNG
         [Required, StringLength(100)]
         [Display(Name = "Họ tên")]
-        public string HoTen { get; set; }    
+        public string ND_HoTen { get; set; }    
 
         [Phone, Display(Name = "Số điện thoại")]
-        public string SoDienThoai { get; set; }  
+        public string ND_SoDienThoai { get; set; }  
 
         [EmailAddress, Display(Name = "Email")]
-        public string Email { get; set; }     
+        public string ND_Email { get; set; }    
+        
+        public string ND_CCCD { get; set; }
+
+
 
         [Display(Name = "Ngày sinh")]
-        public DateTime? NgaySinh { get; set; }    
+        public DateTime? ND_NgaySinh { get; set; }    
+
+        [Display(Name = "Giới tính")]
+        public string ND_GioiTinh { get; set; }
+
+        public string ND_QuocGia { get; set; }
+        public string ND_DanToc { get; set; }
+        public string ND_NgheNghiep { get; set; }
+        public string ND_TinhThanh { get; set; }
+        public string ND_QuanHuyen { get; set; }
+        public string ND_PhuongXa { get; set; }
 
         [Display(Name = "Địa chỉ")]
-        public string DiaChi { get; set; }     
+        public string ND_DiaChiThuongChu { get; set; }     
 
         // TAIKHOAN
         [Display(Name = "Username")]
@@ -33,8 +47,8 @@ namespace DangKyKhamBenh.Models.ViewModels
         public string TrangThai { get; set; }       
 
         // Thông tin phụ BN (tuỳ có/không trong DB)
-        public string SoBaoHiemYT { get; set; }   
-        public string NhomMau { get; set; }   
-        public string TieuSuBenhAn { get; set; }      
+        public string BN_SoBaoHiemYT { get; set; }   
+        public string BN_NhomMau { get; set; }   
+        public string BN_TieuSuBenhAn { get; set; }      
     }
 }

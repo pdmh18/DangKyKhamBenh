@@ -29,14 +29,18 @@ namespace DangKyKhamBenh.Services
         }
 
         // Giải mã dữ liệu (Caesar Cipher) và khóa Caesar Cipher (RSA)
-        public string Decrypt(string encryptedData, string encryptedKey)
+        public string Decrypt(string encryptedData, int caesarKey)
         {
-            // Giải mã khóa Caesar Cipher bằng RSA
-            string decryptedKeyString = _rsaService.Decrypt(encryptedKey);
-            int caesarKey = int.Parse(decryptedKeyString);
+            // Chuyển caesarKey thành string trước khi truyền vào giải mã
+            string encryptedKey = caesarKey.ToString();
 
-            // Giải mã văn bản bằng Caesar Cipher
-            return _caesarCipher.Decrypt(encryptedData, caesarKey);
+            // Giải mã khóa Caesar Cipher bằng RSA
+            string decryptedKeyString = _rsaService.Decrypt(encryptedKey);  // decryptedKeyString là một chuỗi số
+            int key = int.Parse(decryptedKeyString);  // Chuyển chuỗi thành số nguyên (int)
+
+            // Giải mã văn bản bằng Caesar Cipher với khóa đối xứng đã giải mã
+            return _caesarCipher.Decrypt(encryptedData, key);
         }
+
     }
 }
