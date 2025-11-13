@@ -165,16 +165,22 @@
     <Compile Include="Controllers\DoctorController.cs" />
     <Compile Include="Controllers\DoctorOnlyAttribute.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\HoSoController.cs" />
     <Compile Include="Filters\AdminOnlyAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\NguoiDung.cs" />
     <Compile Include="Models\TaiKhoan.cs" />
     <Compile Include="Models\ViewModels\BacSi.cs" />
     <Compile Include="Models\ViewModels\BenhNhan.cs" />
     <Compile Include="Models\ViewModels\DoctorDashboardVm.cs" />
     <Compile Include="Models\ViewModels\Items.cs" />
+    <Compile Include="Models\Patient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\CaesarCipher.cs" />
+    <Compile Include="Services\HybridService.cs" />
+    <Compile Include="Services\RsaService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />
@@ -223,6 +229,7 @@
     <Content Include="Views\Admin\EditPatient.cshtml" />
     <Content Include="Views\Account\ForgotPassword.cshtml" />
     <Content Include="Views\Doctor\Dashboard.cshtml" />
+    <Content Include="Views\HoSo\HoSo.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
