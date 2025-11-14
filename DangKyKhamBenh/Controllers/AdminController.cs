@@ -959,8 +959,7 @@ namespace DangKyKhamBenh.Controllers
                     return View(model);
                 }
 
-                TempData["Msg"] = "Cập nhật thành công.";
-                return RedirectToAction("Patients");
+                
             }
             catch (Exception ex)
             {

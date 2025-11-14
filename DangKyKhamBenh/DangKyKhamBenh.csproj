@@ -234,6 +234,7 @@
     <Content Include="Views\HoSo\HoSo.cshtml" />
     <Content Include="Views\Shared\shared\_AdminLayout.cshtml" />
     <Content Include="Views\HoSo\HoSoCaNhan.cshtml" />
+    <Content Include="Views\HoSo\CapNhatHoSo.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
