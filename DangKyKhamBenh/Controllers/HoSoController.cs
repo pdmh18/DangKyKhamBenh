@@ -27,44 +27,44 @@ namespace DangKyKhamBenh.Controllers
         [HttpGet]
         public ActionResult HoSo()
         {
-            //var userId = Session["ND_IdNguoiDung"]?.ToString();
-            //if (string.IsNullOrEmpty(userId))
-            //{
-            //    ViewBag.ErrorMessage = "Không xác định được người dùng.";
-            //    return View(new BenhNhan());
-            //}
-
-            //var model = new BenhNhan { ND_IdNguoiDung = userId };
-            //return View(model);
-            if (Session["User"] == null)
-                return RedirectToAction("Login", "Account");
-
             var userId = Session["ND_IdNguoiDung"]?.ToString();
             if (string.IsNullOrEmpty(userId))
             {
-                TempData["Err"] = "Không xác định được người dùng.";
-                return RedirectToAction("Index", "Home");
+                ViewBag.ErrorMessage = "Không xác định được người dùng.";
+                return View(new BenhNhan());
             }
 
-            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
-            using (var conn = new OracleConnection(cs))
-            {
-                conn.Open();
-                var sql = "SELECT BN_MaBenhNhan FROM BENHNHAN WHERE ND_IdNguoiDung = :ndid";
-                using (var cmd = new OracleCommand(sql, conn))
-                {
-                    cmd.Parameters.Add("ndid", userId);
-                    var result = cmd.ExecuteScalar();
-
-                    if (result != null)
-                    {
-                        TempData["Err"] = "Bạn đã có hồ sơ rồi.";
-                        return RedirectToAction("HoSoCaNhan");
-                    }
-                }
-            }
             var model = new BenhNhan { ND_IdNguoiDung = userId };
             return View(model);
+            //if (Session["User"] == null)
+            //    return RedirectToAction("Login", "Account");
+
+            //var userId = Session["ND_IdNguoiDung"]?.ToString();
+            //if (string.IsNullOrEmpty(userId))
+            //{
+            //    TempData["Err"] = "Không xác định được người dùng.";
+            //    return RedirectToAction("Index", "Home");
+            //}
+
+            //var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            //using (var conn = new OracleConnection(cs))
+            //{
+            //    conn.Open();
+            //    var sql = "SELECT BN_MaBenhNhan FROM BENHNHAN WHERE ND_IdNguoiDung = :ndid";
+            //    using (var cmd = new OracleCommand(sql, conn))
+            //    {
+            //        cmd.Parameters.Add("ndid", userId);
+            //        var result = cmd.ExecuteScalar();
+
+            //        if (result != null)
+            //        {
+            //            TempData["Err"] = "Bạn đã có hồ sơ rồi.";
+            //            return RedirectToAction("HoSoCaNhan");
+            //        }
+            //    }
+            //}
+            //var model = new BenhNhan { ND_IdNguoiDung = userId };
+            //return View(model);
 
         }
 
