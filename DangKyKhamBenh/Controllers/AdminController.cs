@@ -855,21 +855,44 @@ namespace DangKyKhamBenh.Controllers
 
             }
 
-            if (!ModelState.IsValid)
+
+
+            if (action == "Save")
             {
-                TempData["Err"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
-                return View(model);
+                if (!ModelState.IsValid)
+                {
+                    TempData["Err"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+                    return View(model);
+                }
+
+
             }
             try
             {
-                using (var conn = new OracleConnection(cs))
+                // ✅ Mã hóa lại trước khi lưu
+                //model.ND_HoTen = _caesarCipher.Encrypt(model.ND_HoTen, 15);
+                model.ND_TinhThanh = _caesarCipher.Encrypt(model.ND_TinhThanh, 15);
+                model.ND_QuanHuyen = _caesarCipher.Encrypt(model.ND_QuanHuyen, 15);
+                model.ND_PhuongXa = _caesarCipher.Encrypt(model.ND_PhuongXa, 15);
+
+                model.ND_SoDienThoai = _rsaService.Encrypt(model.ND_SoDienThoai);
+                model.ND_DiaChiThuongChu = _rsaService.Encrypt(model.ND_DiaChiThuongChu);
+                model.BN_TieuSuBenhAn = _rsaService.Encrypt(model.BN_TieuSuBenhAn);
+
+                model.ND_Email = _hybridService.Encrypt(model.ND_Email, model.BN_MaBenhNhan);
+                model.ND_CCCD = _hybridService.Encrypt(model.ND_CCCD, model.BN_MaBenhNhan);
+                model.BN_SoBaoHiemYT = _hybridService.Encrypt(model.BN_SoBaoHiemYT, model.BN_MaBenhNhan);
+
+                try
                 {
-                    conn.Open();
-                    using (var tx = conn.BeginTransaction())
+                    using (var conn = new OracleConnection(cs))
                     {
-                        
-                        // Update NGUOIDUNG qua subquery (lấy ND_IdNguoiDung từ BN)
-                        var sqlND = @"
+                        conn.Open();
+                        using (var tx = conn.BeginTransaction())
+                        {
+
+                            // Update NGUOIDUNG qua subquery (lấy ND_IdNguoiDung từ BN)
+                            var sqlND = @"
                                         UPDATE NGUOIDUNG nd
                                         SET nd.ND_HoTen          = :hoten,
                                             nd.ND_SoDienThoai    = :sdt,
@@ -886,57 +909,68 @@ namespace DangKyKhamBenh.Controllers
                                             nd.ND_DiaChiThuongChu= :diachi
                                         WHERE nd.ND_IdNguoiDung = (SELECT ND_IdNguoiDung FROM BENHNHAN WHERE BN_MaBenhNhan = :bnid)";
 
-                        using (var cmd = new OracleCommand(sqlND, conn))
-                        {
-                            cmd.Transaction = tx; cmd.BindByName = true;
-                            cmd.Parameters.Add("hoten", (object)model.ND_HoTen ?? DBNull.Value);
-                            cmd.Parameters.Add("sdt", (object)model.ND_SoDienThoai ?? DBNull.Value);
-                            cmd.Parameters.Add("email", (object)model.ND_Email ?? DBNull.Value);
-                            cmd.Parameters.Add("cccd", (object)model.ND_CCCD ?? DBNull.Value);
-                            cmd.Parameters.Add("gioitinh", (object)model.ND_GioiTinh ?? DBNull.Value);
-                            cmd.Parameters.Add("quocgia", (object)model.ND_QuocGia ?? DBNull.Value);
-                            cmd.Parameters.Add("dantoc", (object)model.ND_DanToc ?? DBNull.Value);
-                            cmd.Parameters.Add("nghenghiep", (object)model.ND_NgheNghiep ?? DBNull.Value);
-                            cmd.Parameters.Add("tinhthanh", (object)model.ND_TinhThanh ?? DBNull.Value);
-                            cmd.Parameters.Add("quanhuyen", (object)model.ND_QuanHuyen ?? DBNull.Value);
-                            cmd.Parameters.Add("phuongxa", (object)model.ND_PhuongXa ?? DBNull.Value);
-                            cmd.Parameters.Add("ngaysinh", (object)model.ND_NgaySinh ?? DBNull.Value);
-                            cmd.Parameters.Add("diachi", (object)model.ND_DiaChiThuongChu ?? DBNull.Value);
-                            cmd.Parameters.Add("bnid", model.BN_MaBenhNhan);
-                            cmd.ExecuteNonQuery();
-                        }
+                            using (var cmd = new OracleCommand(sqlND, conn))
+                            {
+                                cmd.Transaction = tx; cmd.BindByName = true;
+                                cmd.Parameters.Add("hoten", (object)model.ND_HoTen ?? DBNull.Value);
+                                cmd.Parameters.Add("sdt", (object)model.ND_SoDienThoai ?? DBNull.Value);
+                                cmd.Parameters.Add("email", (object)model.ND_Email ?? DBNull.Value);
+                                cmd.Parameters.Add("cccd", (object)model.ND_CCCD ?? DBNull.Value);
+                                cmd.Parameters.Add("gioitinh", (object)model.ND_GioiTinh ?? DBNull.Value);
+                                cmd.Parameters.Add("quocgia", (object)model.ND_QuocGia ?? DBNull.Value);
+                                cmd.Parameters.Add("dantoc", (object)model.ND_DanToc ?? DBNull.Value);
+                                cmd.Parameters.Add("nghenghiep", (object)model.ND_NgheNghiep ?? DBNull.Value);
+                                cmd.Parameters.Add("tinhthanh", (object)model.ND_TinhThanh ?? DBNull.Value);
+                                cmd.Parameters.Add("quanhuyen", (object)model.ND_QuanHuyen ?? DBNull.Value);
+                                cmd.Parameters.Add("phuongxa", (object)model.ND_PhuongXa ?? DBNull.Value);
+                                cmd.Parameters.Add("ngaysinh", (object)model.ND_NgaySinh ?? DBNull.Value);
+                                cmd.Parameters.Add("diachi", (object)model.ND_DiaChiThuongChu ?? DBNull.Value);
+                                cmd.Parameters.Add("bnid", model.BN_MaBenhNhan);
+                                cmd.ExecuteNonQuery();
+                            }
 
-                        // Update BN (nếu bạn dùng các field phụ)
-                        var sqlBN = @"
+                            // Update BN (nếu bạn dùng các field phụ)
+                            var sqlBN = @"
                                         UPDATE BENHNHAN
                                         SET BN_SoBaoHiemYT = :bh,
                                             BN_NhomMau     = :nm,
                                             BN_TieuSuBenhAn= :ts
                                         WHERE BN_MaBenhNhan = :bnid";
 
-                        using (var cmd = new OracleCommand(sqlBN, conn))
-                        {
-                            cmd.Transaction = tx; cmd.BindByName = true;
-                            cmd.Parameters.Add("bh", (object)model.BN_SoBaoHiemYT ?? DBNull.Value);
-                            cmd.Parameters.Add("nm", (object)model.BN_NhomMau ?? DBNull.Value);
-                            cmd.Parameters.Add("ts", (object)model.BN_TieuSuBenhAn ?? DBNull.Value);
-                            cmd.Parameters.Add("bnid", model.BN_MaBenhNhan);
-                            cmd.ExecuteNonQuery();
-                        }
+                            using (var cmd = new OracleCommand(sqlBN, conn))
+                            {
+                                cmd.Transaction = tx; cmd.BindByName = true;
+                                cmd.Parameters.Add("bh", (object)model.BN_SoBaoHiemYT ?? DBNull.Value);
+                                cmd.Parameters.Add("nm", (object)model.BN_NhomMau ?? DBNull.Value);
+                                cmd.Parameters.Add("ts", (object)model.BN_TieuSuBenhAn ?? DBNull.Value);
+                                cmd.Parameters.Add("bnid", model.BN_MaBenhNhan);
+                                cmd.ExecuteNonQuery();
+                            }
 
-                        tx.Commit();
-                        TempData["Msg"] = "Cập nhật bệnh nhân thành công.";
-                        return RedirectToAction("Patients");
+                            tx.Commit();
+                            TempData["Msg"] = "Cập nhật bệnh nhân thành công.";
+                            return RedirectToAction("Patients");
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    TempData["Err"] = "Lỗi cập nhật: " + ex.Message;
+                    return View(model);
+                }
+
+                TempData["Msg"] = "Cập nhật thành công.";
+                return RedirectToAction("Patients");
             }
             catch (Exception ex)
             {
-                TempData["Err"] = "Lỗi cập nhật: " + ex.Message;
+                TempData["Err"] = "Lỗi lưu: " + ex.Message;
                 return View(model);
             }
-        }
 
+            
+        }
+       
 
         // ====== D. Khoá/Mở tài khoản bệnh nhân (TOGGLE) ======
         [HttpPost, ValidateAntiForgeryToken]
