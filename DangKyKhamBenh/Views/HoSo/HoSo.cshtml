@@ -90,6 +90,12 @@
 </head>
 <body>
     <div class="form-container">
+        @if (TempData["Err"] != null)
+        {
+            <div class="alert alert-warning">
+                @TempData["Err"]
+            </div>
+        }
         <h2><i class="fa-solid fa-id-card"></i> Hồ Sơ Bệnh Nhân</h2>
 
         <form method="post" action="@Url.Action("HoSo", "HoSo")">
@@ -194,6 +200,12 @@
                 <i class="fa-solid fa-file-medical me-1"></i> Tạo Hồ Sơ
             </button>
         </form>
+        <div class="mt-4 d-flex gap-3">
+
+            <a class="btn btn-outline-secondary" href="@Url.Action("Index","Home")">
+                Hủy
+            </a>
+        </div>
 
         @if (ViewBag.SuccessMessage != null)
         {

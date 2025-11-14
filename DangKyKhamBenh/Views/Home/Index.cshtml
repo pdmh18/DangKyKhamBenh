@@ -58,9 +58,16 @@
                     <i class="fa-solid fa-bell"></i> Đăng Ký Khám Bệnh
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#">Đã có hồ sơ</a></li>
-                    <li><a class="dropdown-item" href="@Url.Action("HoSo", "HoSo")">Chưa có hồ sơ</a></li>
-                    <li><a class="dropdown-item" href="@Url.Action("HoSoCaNhan", "HoSo")">Xem Hồ Sơ</a></li>                </ul>
+                    @if (Session["User"] != null)
+                    {
+                        <li><a class="dropdown-item" href="@Url.Action("HoSoCaNhan", "HoSo")">Đã có hồ sơ</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("HoSo", "HoSo")">Chưa có hồ sơ</a></li>
+                    }
+                    else
+                    {
+                        <li><a class="dropdown-item" href="@Url.Action("Login", "Account")" style="color:red">Vui lòng đăng nhập để đăng ký khám</a></li>
+                    }
+                </ul>
             </div>
 
             <!-- Nút hotline -->

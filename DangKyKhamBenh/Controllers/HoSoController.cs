@@ -194,12 +194,16 @@ namespace DangKyKhamBenh.Controllers
 
         public ActionResult HoSoCaNhan()
         {
+            if (Session["User"] == null)
+                return RedirectToAction("Login", "Account");
+
             var maBenhNhan = Session["MaBenhNhan"]?.ToString();
             if (string.IsNullOrEmpty(maBenhNhan))
             {
-                TempData["Err"] = "Không tìm thấy mã bệnh nhân.";
-                return RedirectToAction("Index", "Home");
+                TempData["Err"] = "Bạn chưa có hồ sơ. Vui lòng tạo hồ sơ trước.";
+                return RedirectToAction("HoSo", "HoSo");
             }
+
 
 
             var model = new BenhNhan(); // ViewModel bạn đang dùng
@@ -209,10 +213,10 @@ namespace DangKyKhamBenh.Controllers
             {
                 conn.Open();
                 var sql = @"
-            SELECT bn.*, nd.*
-            FROM BENHNHAN bn
-            JOIN NGUOIDUNG nd ON bn.ND_IdNguoiDung = nd.ND_IdNguoiDung
-            WHERE bn.BN_MaBenhNhan = :ma";
+                    SELECT bn.*, nd.*
+                    FROM BENHNHAN bn
+                    JOIN NGUOIDUNG nd ON bn.ND_IdNguoiDung = nd.ND_IdNguoiDung
+                    WHERE bn.BN_MaBenhNhan = :ma";
 
                 using (var cmd = new OracleCommand(sql, conn))
                 {
@@ -240,6 +244,22 @@ namespace DangKyKhamBenh.Controllers
                             model.BN_SoBaoHiemYT = reader["BN_SoBaoHiemYT"].ToString();
                             model.BN_NhomMau = reader["BN_NhomMau"].ToString();
                             model.BN_TieuSuBenhAn = reader["BN_TieuSuBenhAn"].ToString();
+                            if (string.IsNullOrEmpty(model.BN_SoBaoHiemYT) ||
+                                string.IsNullOrEmpty(model.BN_TieuSuBenhAn) ||
+                                string.IsNullOrEmpty(model.BN_NhomMau) ||
+                                string.IsNullOrEmpty(model.ND_CCCD) ||
+                                string.IsNullOrEmpty(model.ND_GioiTinh) ||
+                                string.IsNullOrEmpty(model.ND_QuocGia) ||
+                                string.IsNullOrEmpty(model.ND_DanToc) ||
+                                string.IsNullOrEmpty(model.ND_NgheNghiep) ||
+                                string.IsNullOrEmpty(model.ND_TinhThanh) ||
+                                string.IsNullOrEmpty(model.ND_QuanHuyen) ||
+                                string.IsNullOrEmpty(model.ND_PhuongXa))
+                            {
+                                TempData["Err"] = "Bạn Chưa Có Hồ Sơ. Vui Lòng Lập Hồ Sơ";
+                                return RedirectToAction("HoSo", "HoSo");
+                            }
+
                         }
                         else
                         {
