@@ -51,8 +51,6 @@ namespace DangKyKhamBenh.Controllers
 
             try
             {
-                // Mã hóa dữ liệu
-                //model.ND_HoTen = _caesarCipher.Encrypt(model.ND_HoTen, 15);
                 model.ND_TinhThanh = _caesarCipher.Encrypt(model.ND_TinhThanh, 15);
                 model.ND_QuanHuyen = _caesarCipher.Encrypt(model.ND_QuanHuyen, 15);
                 model.ND_PhuongXa = _caesarCipher.Encrypt(model.ND_PhuongXa, 15);
@@ -61,13 +59,6 @@ namespace DangKyKhamBenh.Controllers
                 model.ND_DiaChiThuongChu = _rsaService.Encrypt(model.ND_DiaChiThuongChu);
                 model.BN_TieuSuBenhAn = _rsaService.Encrypt( model.BN_TieuSuBenhAn);
 
-                //var (encEmail, _) = _hybridService.Encrypt(model.ND_Email, 15);
-                //var (encCCCD, _) = _hybridService.Encrypt(model.ND_CCCD, 15);
-                //var (encBaoHiem, _) = _hybridService.Encrypt(model.BN_SoBaoHiemYT, 15);
-
-                //model.ND_Email = encEmail;
-                //model.ND_CCCD = encCCCD;
-                //model.BN_SoBaoHiemYT = encBaoHiem;
                 model.ND_Email = _hybridService.Encrypt(model.ND_Email, model.BN_MaBenhNhan);
                 model.ND_CCCD = _hybridService.Encrypt( model.ND_CCCD, model.BN_MaBenhNhan);
                 model.BN_SoBaoHiemYT = _hybridService.Encrypt( model.BN_SoBaoHiemYT, model.BN_MaBenhNhan);
@@ -198,7 +189,107 @@ namespace DangKyKhamBenh.Controllers
                 ViewBag.ErrorMessage = "Lỗi khi lưu hồ sơ: " + ex.Message;
             }
 
-            return View(model);
+            return RedirectToAction("HoSoCaNhan", "HoSo", new { maBenhNhan = model.BN_MaBenhNhan });
+        }
+
+        public ActionResult HoSoCaNhan()
+        {
+            var maBenhNhan = Session["MaBenhNhan"]?.ToString();
+            if (string.IsNullOrEmpty(maBenhNhan))
+            {
+                TempData["Err"] = "Không tìm thấy mã bệnh nhân.";
+                return RedirectToAction("Index", "Home");
+            }
+
+
+            var model = new BenhNhan(); // ViewModel bạn đang dùng
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+                var sql = @"
+            SELECT bn.*, nd.*
+            FROM BENHNHAN bn
+            JOIN NGUOIDUNG nd ON bn.ND_IdNguoiDung = nd.ND_IdNguoiDung
+            WHERE bn.BN_MaBenhNhan = :ma";
+
+                using (var cmd = new OracleCommand(sql, conn))
+                {
+                    cmd.Parameters.Add("ma", maBenhNhan);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            // Gán dữ liệu vào model
+                            model.BN_MaBenhNhan = reader["BN_MaBenhNhan"].ToString();
+                            model.ND_IdNguoiDung = reader["ND_IdNguoiDung"].ToString();
+                            model.ND_HoTen = reader["ND_HoTen"].ToString();
+                            model.ND_SoDienThoai = reader["ND_SoDienThoai"].ToString();
+                            model.ND_Email = reader["ND_Email"].ToString();
+                            model.ND_CCCD = reader["ND_CCCD"].ToString();
+                            model.ND_NgaySinh = reader.GetDateTime(reader.GetOrdinal("ND_NgaySinh"));
+                            model.ND_GioiTinh = reader["ND_GioiTinh"].ToString();
+                            model.ND_QuocGia = reader["ND_QuocGia"].ToString();
+                            model.ND_DanToc = reader["ND_DanToc"].ToString();
+                            model.ND_NgheNghiep = reader["ND_NgheNghiep"].ToString();
+                            model.ND_TinhThanh = reader["ND_TinhThanh"].ToString();
+                            model.ND_QuanHuyen = reader["ND_QuanHuyen"].ToString();
+                            model.ND_PhuongXa = reader["ND_PhuongXa"].ToString();
+                            model.ND_DiaChiThuongChu = reader["ND_DiaChiThuongChu"].ToString();
+                            model.BN_SoBaoHiemYT = reader["BN_SoBaoHiemYT"].ToString();
+                            model.BN_NhomMau = reader["BN_NhomMau"].ToString();
+                            model.BN_TieuSuBenhAn = reader["BN_TieuSuBenhAn"].ToString();
+                        }
+                        else
+                        {
+                            TempData["Err"] = "Không tìm thấy hồ sơ.";
+                            return RedirectToAction("Index");
+                        }
+                    }
+                }
+            }
+
+           
+                try
+                {
+                    // Giải mã dữ liệu Caesar
+                    //model.ND_HoTen = _caesarCipher.Decrypt(model.ND_HoTen, 15);
+                    model.ND_TinhThanh = _caesarCipher.Decrypt(model.ND_TinhThanh, 15);
+                    model.ND_QuanHuyen = _caesarCipher.Decrypt(model.ND_QuanHuyen, 15);
+                    model.ND_PhuongXa = _caesarCipher.Decrypt(model.ND_PhuongXa, 15);
+
+                    // Giải mã dữ liệu RSA
+                    try
+                    {
+                        model.ND_SoDienThoai = _rsaService.Decrypt(model.ND_SoDienThoai);
+                        System.Diagnostics.Debug.WriteLine("Số điện thoại sau giải mã: " + model.ND_SoDienThoai);
+                    }
+                    catch (Exception ex)
+                    {
+                        TempData["Err"] = "Lỗi giải mã số điện thoại: " + ex.Message;
+                        return View(model);
+                    }
+                    model.ND_DiaChiThuongChu = _rsaService.Decrypt(model.ND_DiaChiThuongChu);
+                    model.BN_TieuSuBenhAn = _rsaService.Decrypt(model.BN_TieuSuBenhAn);
+
+                    // Giải mã dữ liệu Hybrid (không cần gọi key từ DB)
+                    model.ND_Email = _hybridService.Decrypt(model.ND_Email, model.BN_MaBenhNhan);
+
+                    model.ND_CCCD = _hybridService.Decrypt(model.ND_CCCD, model.BN_MaBenhNhan);
+                    model.BN_SoBaoHiemYT = _hybridService.Decrypt(model.BN_SoBaoHiemYT, model.BN_MaBenhNhan);
+
+                    TempData["Msg"] = "Giải mã thành công.";
+                }
+                catch (Exception ex)
+                {
+                    TempData["Err"] = "Lỗi giải mã: " + ex.Message;
+                }
+
+                ModelState.Clear(); // Bỏ qua lỗi validation do dữ liệu đang mã hóa
+                return View(model);
+         
+         
         }
     }
 }

@@ -233,6 +233,7 @@
     <Content Include="Views\Doctor\Dashboard.cshtml" />
     <Content Include="Views\HoSo\HoSo.cshtml" />
     <Content Include="Views\Shared\shared\_AdminLayout.cshtml" />
+    <Content Include="Views\HoSo\HoSoCaNhan.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

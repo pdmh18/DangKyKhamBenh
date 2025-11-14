@@ -73,6 +73,22 @@ namespace DangKyKhamBenh.Controllers
                             var staffType = r.IsDBNull(3) ? "" : r.GetString(3);   // Bác sĩ / Bệnh nhân ...
                             var bsMa = r.IsDBNull(4) ? "" : r.GetString(4);   // mã bác sĩ
                             var ndId = r.IsDBNull(5) ? "" : r.GetString(5);
+                            Session["ND_IdNguoiDung"] = ndId;
+
+                            string maBenhNhan = null;
+                            using (var cmdBN = new OracleCommand("SELECT BN_MaBenhNhan FROM BENHNHAN WHERE ND_IdNguoiDung = :ndid", conn))
+                            {
+                                cmdBN.Parameters.Add(":ndid", ndId);
+                                var result = cmdBN.ExecuteScalar();
+                                if (result != null)
+                                    maBenhNhan = result.ToString();
+                            }
+
+                            // ✅ Gán vào session nếu có
+                            if (!string.IsNullOrEmpty(maBenhNhan))
+                            {
+                                Session["MaBenhNhan"] = maBenhNhan;
+                            }
 
                             // So sánh password (TODO: chuyển sang hash)
                             if (!string.Equals(dbPassword, password?.Trim()))
