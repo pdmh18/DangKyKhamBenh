@@ -180,6 +180,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CaesarCipher.cs" />
     <Compile Include="Services\HybridService.cs" />
+    <Compile Include="Services\KeyDerivationService.cs" />
+    <Compile Include="Services\RsaKeyManager.cs" />
     <Compile Include="Services\RsaService.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -230,6 +232,7 @@
     <Content Include="Views\Account\ForgotPassword.cshtml" />
     <Content Include="Views\Doctor\Dashboard.cshtml" />
     <Content Include="Views\HoSo\HoSo.cshtml" />
+    <Content Include="Views\Shared\shared\_AdminLayout.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

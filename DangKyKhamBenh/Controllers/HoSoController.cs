@@ -1,4 +1,202 @@
-﻿using DangKyKhamBenh.Models;
+﻿//using DangKyKhamBenh.Models;
+//using DangKyKhamBenh.Services;
+//using Oracle.ManagedDataAccess.Client;
+//using System;
+//using System.Configuration;
+//using System.Data;
+//using System.Web.Mvc;
+
+//namespace DangKyKhamBenh.Controllers
+//{
+//    public class HoSoController : Controller
+//    {
+//        private readonly CaesarCipher _caesarCipher;
+//        private readonly RsaService _rsaService;
+//        private readonly HybridService _hybridService;
+
+//        public HoSoController()
+//        {
+//            _caesarCipher = new CaesarCipher();
+//            _rsaService = new RsaService();
+//            _hybridService = new HybridService();
+//        }
+
+
+
+//        // Hàm mã hóa Hồ Sơ và lưu vào cơ sở dữ liệu Oracle
+//        [HttpGet]
+//        public ActionResult HoSo()
+//        {
+//            var userId = Session["ND_IdNguoiDung"]?.ToString();
+//            if (string.IsNullOrEmpty(userId))
+//            {
+//                ViewBag.ErrorMessage = "Không xác định được người dùng.";
+//                return View(new NguoiDung());
+//            }
+
+//            var model = new NguoiDung { ND_IdNguoiDung = userId };
+//            return View(model);
+//        }
+
+
+//        [HttpPost]
+//        public ActionResult HoSo(NguoiDung nguoiDung, Patient benhNhan)
+//        {
+//            if (nguoiDung == null || benhNhan == null || string.IsNullOrEmpty(nguoiDung.ND_IdNguoiDung))
+//            {
+//                ViewBag.ErrorMessage = "Dữ liệu không hợp lệ hoặc thiếu ID người dùng.";
+//                return View(new NguoiDung());
+//            }
+
+
+//            try
+//            {
+//                // Mã hóa dữ liệu
+//                nguoiDung.ND_HoTen = _caesarCipher.Encrypt(nguoiDung.ND_HoTen, 15);
+//                nguoiDung.ND_TinhThanh = _caesarCipher.Encrypt(nguoiDung.ND_TinhThanh, 15);
+//                nguoiDung.ND_QuanHuyen = _caesarCipher.Encrypt(nguoiDung.ND_QuanHuyen, 15);
+//                nguoiDung.ND_PhuongXa = _caesarCipher.Encrypt(nguoiDung.ND_PhuongXa, 15);
+
+//                nguoiDung.ND_SoDienThoai = _rsaService.Encrypt(nguoiDung.ND_SoDienThoai);
+//                nguoiDung.ND_DiaChiThuongChu = _rsaService.Encrypt(nguoiDung.ND_DiaChiThuongChu);
+//                benhNhan.BN_TieuSuBenhAn = _rsaService.Encrypt(benhNhan.BN_TieuSuBenhAn);
+
+//                var (encEmail, _) = _hybridService.Encrypt(nguoiDung.ND_Email, 15);
+//                var (encCCCD, _) = _hybridService.Encrypt(nguoiDung.ND_CCCD, 15);
+//                var (encBaoHiem, _) = _hybridService.Encrypt(benhNhan.BN_SoBaoHiemYT, 15);
+
+//                nguoiDung.ND_Email = encEmail;
+//                nguoiDung.ND_CCCD = encCCCD;
+//                benhNhan.BN_SoBaoHiemYT = encBaoHiem;
+
+//                using (var conn = new OracleConnection(ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString))
+//                {
+//                    conn.Open();
+
+//                    // Kiểm tra tồn tại NGUOIDUNG
+//                    bool nguoiDungTonTai;
+//                    using (var check = new OracleCommand("SELECT COUNT(*) FROM NGUOIDUNG WHERE ND_IdNguoiDung = :id", conn))
+//                    {
+//                        check.Parameters.Add(":id", OracleDbType.Varchar2).Value = nguoiDung.ND_IdNguoiDung;
+//                        nguoiDungTonTai = Convert.ToInt32(check.ExecuteScalar()) > 0;
+//                    }
+
+//                    if (nguoiDungTonTai)
+//                    {
+//                        // UPDATE NGUOIDUNG
+//                        using (var cmd = new OracleCommand(@"
+//                    UPDATE NGUOIDUNG SET
+//                        ND_CCCD = :cccd,
+//                        ND_GioiTinh = :gt,
+//                        ND_QuocGia = :qg,
+//                        ND_DanToc = :dt,
+//                        ND_NgheNghiep = :nn,
+//                        ND_TinhThanh = :tt,
+//                        ND_QuanHuyen = :qh,
+//                        ND_PhuongXa = :px,
+//                        ND_DiaChiThuongChu = :dc,
+//                        ND_Email = :email,
+//                        ND_SoDienThoai = :sdt
+//                    WHERE ND_IdNguoiDung = :id", conn))
+//                        {
+//                            cmd.Parameters.Add(":cccd", encCCCD);
+//                            cmd.Parameters.Add(":gt", nguoiDung.ND_GioiTinh);
+//                            cmd.Parameters.Add(":qg", nguoiDung.ND_QuocGia);
+//                            cmd.Parameters.Add(":dt", nguoiDung.ND_DanToc);
+//                            cmd.Parameters.Add(":nn", nguoiDung.ND_NgheNghiep);
+//                            cmd.Parameters.Add(":tt", nguoiDung.ND_TinhThanh);
+//                            cmd.Parameters.Add(":qh", nguoiDung.ND_QuanHuyen);
+//                            cmd.Parameters.Add(":px", nguoiDung.ND_PhuongXa);
+//                            cmd.Parameters.Add(":dc", nguoiDung.ND_DiaChiThuongChu);
+//                            cmd.Parameters.Add(":email", nguoiDung.ND_Email);
+//                            cmd.Parameters.Add(":sdt", nguoiDung.ND_SoDienThoai);
+//                            cmd.Parameters.Add(":id", nguoiDung.ND_IdNguoiDung);
+//                            cmd.ExecuteNonQuery();
+//                        }
+//                    }
+//                    else
+//                    {
+//                        // INSERT NGUOIDUNG
+//                        using (var cmd = new OracleCommand(@"
+//                    INSERT INTO NGUOIDUNG
+//                    (ND_IdNguoiDung, ND_HoTen, ND_SoDienThoai, ND_Email, ND_CCCD, ND_NgaySinh, ND_GioiTinh,
+//                     ND_QuocGia, ND_DanToc, ND_NgheNghiep, ND_TinhThanh, ND_QuanHuyen, ND_PhuongXa, ND_DiaChiThuongChu)
+//                    VALUES
+//                    (:id, :ht, :sdt, :email, :cccd, :dob, :gt, :qg, :dt, :nn, :tt, :qh, :px, :dc)", conn))
+//                        {
+//                            cmd.Parameters.Add(":id", nguoiDung.ND_IdNguoiDung);
+//                            cmd.Parameters.Add(":ht", nguoiDung.ND_HoTen);
+//                            cmd.Parameters.Add(":sdt", nguoiDung.ND_SoDienThoai);
+//                            cmd.Parameters.Add(":email", nguoiDung.ND_Email);
+//                            cmd.Parameters.Add(":cccd", encCCCD);
+//                            cmd.Parameters.Add(":dob", nguoiDung.ND_NgaySinh);
+//                            cmd.Parameters.Add(":gt", nguoiDung.ND_GioiTinh);
+//                            cmd.Parameters.Add(":qg", nguoiDung.ND_QuocGia);
+//                            cmd.Parameters.Add(":dt", nguoiDung.ND_DanToc);
+//                            cmd.Parameters.Add(":nn", nguoiDung.ND_NgheNghiep);
+//                            cmd.Parameters.Add(":tt", nguoiDung.ND_TinhThanh);
+//                            cmd.Parameters.Add(":qh", nguoiDung.ND_QuanHuyen);
+//                            cmd.Parameters.Add(":px", nguoiDung.ND_PhuongXa);
+//                            cmd.Parameters.Add(":dc", nguoiDung.ND_DiaChiThuongChu);
+//                            cmd.ExecuteNonQuery();
+//                        }
+//                    }
+
+//                    // Kiểm tra tồn tại BENHNHAN
+//                    bool benhNhanTonTai;
+//                    using (var check = new OracleCommand("SELECT COUNT(*) FROM BENHNHAN WHERE BN_MaBenhNhan = :ma", conn))
+//                    {
+//                        check.Parameters.Add(":ma", OracleDbType.Varchar2).Value = benhNhan.BN_MaBenhNhan;
+//                        benhNhanTonTai = Convert.ToInt32(check.ExecuteScalar()) > 0;
+//                    }
+
+//                    if (benhNhanTonTai)
+//                    {
+//                        // UPDATE BENHNHAN
+//                        using (var cmd = new OracleCommand(@"
+//                    UPDATE BENHNHAN SET
+//                        BN_SoBaoHiemYT = :sbh,
+//                        BN_TieuSuBenhAn = :tsba
+//                    WHERE BN_MaBenhNhan = :ma", conn))
+//                        {
+//                            cmd.Parameters.Add(":sbh", benhNhan.BN_SoBaoHiemYT);
+//                            cmd.Parameters.Add(":tsba", benhNhan.BN_TieuSuBenhAn);
+//                            cmd.Parameters.Add(":ma", benhNhan.BN_MaBenhNhan);
+//                            cmd.ExecuteNonQuery();
+//                        }
+//                    }
+//                    else
+//                    {
+//                        // INSERT BENHNHAN
+//                        using (var cmd = new OracleCommand(@"
+//                    INSERT INTO BENHNHAN
+//                    (BN_MaBenhNhan, BN_SoBaoHiemYT, BN_TieuSuBenhAn, ND_IdNguoiDung)
+//                    VALUES
+//                    (:ma, :sbh, :tsba, :id)", conn))
+//                        {
+//                            cmd.Parameters.Add(":ma", benhNhan.BN_MaBenhNhan);
+//                            cmd.Parameters.Add(":sbh", benhNhan.BN_SoBaoHiemYT);
+//                            cmd.Parameters.Add(":tsba", benhNhan.BN_TieuSuBenhAn);
+//                            cmd.Parameters.Add(":id", nguoiDung.ND_IdNguoiDung);
+//                            cmd.ExecuteNonQuery();
+//                        }
+//                    }
+
+//                    conn.Close();
+//                }
+
+//                ViewBag.SuccessMessage = "Hồ sơ đã được lưu thành công!";
+//            }
+//            catch (Exception ex)
+//            {
+//                ViewBag.ErrorMessage = "Lỗi khi lưu hồ sơ: " + ex.Message;
+//            }
+
+//            return View(nguoiDung);
+//        }
+//    }
+//}
+using DangKyKhamBenh.Models.ViewModels;
 using DangKyKhamBenh.Services;
 using Oracle.ManagedDataAccess.Client;
 using System;
@@ -31,43 +229,47 @@ namespace DangKyKhamBenh.Controllers
             if (string.IsNullOrEmpty(userId))
             {
                 ViewBag.ErrorMessage = "Không xác định được người dùng.";
-                return View(new NguoiDung());
+                return View(new BenhNhan());
             }
 
-            var model = new NguoiDung { ND_IdNguoiDung = userId };
+            var model = new BenhNhan { ND_IdNguoiDung = userId };
             return View(model);
         }
 
 
         [HttpPost]
-        public ActionResult HoSo(NguoiDung nguoiDung, Patient benhNhan)
+        public ActionResult HoSo(BenhNhan model)
         {
-            if (nguoiDung == null || benhNhan == null || string.IsNullOrEmpty(nguoiDung.ND_IdNguoiDung))
+            if (model == null || model == null || string.IsNullOrEmpty(model.ND_IdNguoiDung))
             {
                 ViewBag.ErrorMessage = "Dữ liệu không hợp lệ hoặc thiếu ID người dùng.";
-                return View(new NguoiDung());
+                return View(new BenhNhan());
             }
 
 
             try
             {
                 // Mã hóa dữ liệu
-                nguoiDung.ND_HoTen = _caesarCipher.Encrypt(nguoiDung.ND_HoTen, 15);
-                nguoiDung.ND_TinhThanh = _caesarCipher.Encrypt(nguoiDung.ND_TinhThanh, 15);
-                nguoiDung.ND_QuanHuyen = _caesarCipher.Encrypt(nguoiDung.ND_QuanHuyen, 15);
-                nguoiDung.ND_PhuongXa = _caesarCipher.Encrypt(nguoiDung.ND_PhuongXa, 15);
+                //model.ND_HoTen = _caesarCipher.Encrypt(model.ND_HoTen, 15);
+                model.ND_TinhThanh = _caesarCipher.Encrypt(model.ND_TinhThanh, 15);
+                model.ND_QuanHuyen = _caesarCipher.Encrypt(model.ND_QuanHuyen, 15);
+                model.ND_PhuongXa = _caesarCipher.Encrypt(model.ND_PhuongXa, 15);
 
-                nguoiDung.ND_SoDienThoai = _rsaService.Encrypt(nguoiDung.ND_SoDienThoai);
-                nguoiDung.ND_DiaChiThuongChu = _rsaService.Encrypt(nguoiDung.ND_DiaChiThuongChu);
-                benhNhan.BN_TieuSuBenhAn = _rsaService.Encrypt(benhNhan.BN_TieuSuBenhAn);
+                model.ND_SoDienThoai = _rsaService.Encrypt(model.ND_SoDienThoai);
+                model.ND_DiaChiThuongChu = _rsaService.Encrypt(model.ND_DiaChiThuongChu);
+                model.BN_TieuSuBenhAn = _rsaService.Encrypt( model.BN_TieuSuBenhAn);
 
-                var (encEmail, _) = _hybridService.Encrypt(nguoiDung.ND_Email, 15);
-                var (encCCCD, _) = _hybridService.Encrypt(nguoiDung.ND_CCCD, 15);
-                var (encBaoHiem, _) = _hybridService.Encrypt(benhNhan.BN_SoBaoHiemYT, 15);
+                //var (encEmail, _) = _hybridService.Encrypt(model.ND_Email, 15);
+                //var (encCCCD, _) = _hybridService.Encrypt(model.ND_CCCD, 15);
+                //var (encBaoHiem, _) = _hybridService.Encrypt(model.BN_SoBaoHiemYT, 15);
 
-                nguoiDung.ND_Email = encEmail;
-                nguoiDung.ND_CCCD = encCCCD;
-                benhNhan.BN_SoBaoHiemYT = encBaoHiem;
+                //model.ND_Email = encEmail;
+                //model.ND_CCCD = encCCCD;
+                //model.BN_SoBaoHiemYT = encBaoHiem;
+                model.ND_Email = _hybridService.Encrypt(model.ND_Email, model.BN_MaBenhNhan);
+                model.ND_CCCD = _hybridService.Encrypt( model.ND_CCCD, model.BN_MaBenhNhan);
+                model.BN_SoBaoHiemYT = _hybridService.Encrypt( model.BN_SoBaoHiemYT, model.BN_MaBenhNhan);
+
 
                 using (var conn = new OracleConnection(ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString))
                 {
@@ -77,7 +279,7 @@ namespace DangKyKhamBenh.Controllers
                     bool nguoiDungTonTai;
                     using (var check = new OracleCommand("SELECT COUNT(*) FROM NGUOIDUNG WHERE ND_IdNguoiDung = :id", conn))
                     {
-                        check.Parameters.Add(":id", OracleDbType.Varchar2).Value = nguoiDung.ND_IdNguoiDung;
+                        check.Parameters.Add(":id", OracleDbType.Varchar2).Value = model.ND_IdNguoiDung;
                         nguoiDungTonTai = Convert.ToInt32(check.ExecuteScalar()) > 0;
                     }
 
@@ -99,18 +301,19 @@ namespace DangKyKhamBenh.Controllers
                         ND_SoDienThoai = :sdt
                     WHERE ND_IdNguoiDung = :id", conn))
                         {
-                            cmd.Parameters.Add(":cccd", encCCCD);
-                            cmd.Parameters.Add(":gt", nguoiDung.ND_GioiTinh);
-                            cmd.Parameters.Add(":qg", nguoiDung.ND_QuocGia);
-                            cmd.Parameters.Add(":dt", nguoiDung.ND_DanToc);
-                            cmd.Parameters.Add(":nn", nguoiDung.ND_NgheNghiep);
-                            cmd.Parameters.Add(":tt", nguoiDung.ND_TinhThanh);
-                            cmd.Parameters.Add(":qh", nguoiDung.ND_QuanHuyen);
-                            cmd.Parameters.Add(":px", nguoiDung.ND_PhuongXa);
-                            cmd.Parameters.Add(":dc", nguoiDung.ND_DiaChiThuongChu);
-                            cmd.Parameters.Add(":email", nguoiDung.ND_Email);
-                            cmd.Parameters.Add(":sdt", nguoiDung.ND_SoDienThoai);
-                            cmd.Parameters.Add(":id", nguoiDung.ND_IdNguoiDung);
+                            //cmd.Parameters.Add(":cccd", encCCCD);
+                            cmd.Parameters.Add(":cccd", model.ND_CCCD);
+                            cmd.Parameters.Add(":gt", model.ND_GioiTinh);
+                            cmd.Parameters.Add(":qg", model.ND_QuocGia);
+                            cmd.Parameters.Add(":dt", model.ND_DanToc);
+                            cmd.Parameters.Add(":nn", model.ND_NgheNghiep);
+                            cmd.Parameters.Add(":tt", model.ND_TinhThanh);
+                            cmd.Parameters.Add(":qh", model.ND_QuanHuyen);
+                            cmd.Parameters.Add(":px", model.ND_PhuongXa);
+                            cmd.Parameters.Add(":dc", model.ND_DiaChiThuongChu);
+                            cmd.Parameters.Add(":email", model.ND_Email);
+                            cmd.Parameters.Add(":sdt", model.ND_SoDienThoai);
+                            cmd.Parameters.Add(":id", model.ND_IdNguoiDung);
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -124,20 +327,21 @@ namespace DangKyKhamBenh.Controllers
                     VALUES
                     (:id, :ht, :sdt, :email, :cccd, :dob, :gt, :qg, :dt, :nn, :tt, :qh, :px, :dc)", conn))
                         {
-                            cmd.Parameters.Add(":id", nguoiDung.ND_IdNguoiDung);
-                            cmd.Parameters.Add(":ht", nguoiDung.ND_HoTen);
-                            cmd.Parameters.Add(":sdt", nguoiDung.ND_SoDienThoai);
-                            cmd.Parameters.Add(":email", nguoiDung.ND_Email);
-                            cmd.Parameters.Add(":cccd", encCCCD);
-                            cmd.Parameters.Add(":dob", nguoiDung.ND_NgaySinh);
-                            cmd.Parameters.Add(":gt", nguoiDung.ND_GioiTinh);
-                            cmd.Parameters.Add(":qg", nguoiDung.ND_QuocGia);
-                            cmd.Parameters.Add(":dt", nguoiDung.ND_DanToc);
-                            cmd.Parameters.Add(":nn", nguoiDung.ND_NgheNghiep);
-                            cmd.Parameters.Add(":tt", nguoiDung.ND_TinhThanh);
-                            cmd.Parameters.Add(":qh", nguoiDung.ND_QuanHuyen);
-                            cmd.Parameters.Add(":px", nguoiDung.ND_PhuongXa);
-                            cmd.Parameters.Add(":dc", nguoiDung.ND_DiaChiThuongChu);
+                            cmd.Parameters.Add(":id", model.ND_IdNguoiDung);
+                            cmd.Parameters.Add(":ht", model.ND_HoTen);
+                            cmd.Parameters.Add(":sdt", model.ND_SoDienThoai);
+                            cmd.Parameters.Add(":email", model.ND_Email);
+                            //cmd.Parameters.Add(":cccd", encCCCD);
+                            cmd.Parameters.Add(":cccd", model.ND_CCCD);
+                            cmd.Parameters.Add(":dob", model.ND_NgaySinh);
+                            cmd.Parameters.Add(":gt", model.ND_GioiTinh);
+                            cmd.Parameters.Add(":qg", model.ND_QuocGia);
+                            cmd.Parameters.Add(":dt", model.ND_DanToc);
+                            cmd.Parameters.Add(":nn", model.ND_NgheNghiep);
+                            cmd.Parameters.Add(":tt", model.ND_TinhThanh);
+                            cmd.Parameters.Add(":qh", model.ND_QuanHuyen);
+                            cmd.Parameters.Add(":px", model.ND_PhuongXa);
+                            cmd.Parameters.Add(":dc", model.ND_DiaChiThuongChu);
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -146,7 +350,7 @@ namespace DangKyKhamBenh.Controllers
                     bool benhNhanTonTai;
                     using (var check = new OracleCommand("SELECT COUNT(*) FROM BENHNHAN WHERE BN_MaBenhNhan = :ma", conn))
                     {
-                        check.Parameters.Add(":ma", OracleDbType.Varchar2).Value = benhNhan.BN_MaBenhNhan;
+                        check.Parameters.Add(":ma", OracleDbType.Varchar2).Value =  model.BN_MaBenhNhan;
                         benhNhanTonTai = Convert.ToInt32(check.ExecuteScalar()) > 0;
                     }
 
@@ -159,9 +363,9 @@ namespace DangKyKhamBenh.Controllers
                         BN_TieuSuBenhAn = :tsba
                     WHERE BN_MaBenhNhan = :ma", conn))
                         {
-                            cmd.Parameters.Add(":sbh", benhNhan.BN_SoBaoHiemYT);
-                            cmd.Parameters.Add(":tsba", benhNhan.BN_TieuSuBenhAn);
-                            cmd.Parameters.Add(":ma", benhNhan.BN_MaBenhNhan);
+                            cmd.Parameters.Add(":sbh", model.BN_SoBaoHiemYT);
+                            cmd.Parameters.Add(":tsba", model.BN_TieuSuBenhAn);
+                            cmd.Parameters.Add(":ma", model.BN_MaBenhNhan);
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -174,10 +378,10 @@ namespace DangKyKhamBenh.Controllers
                     VALUES
                     (:ma, :sbh, :tsba, :id)", conn))
                         {
-                            cmd.Parameters.Add(":ma", benhNhan.BN_MaBenhNhan);
-                            cmd.Parameters.Add(":sbh", benhNhan.BN_SoBaoHiemYT);
-                            cmd.Parameters.Add(":tsba", benhNhan.BN_TieuSuBenhAn);
-                            cmd.Parameters.Add(":id", nguoiDung.ND_IdNguoiDung);
+                            cmd.Parameters.Add(":ma", model.BN_MaBenhNhan);
+                            cmd.Parameters.Add(":sbh", model.BN_SoBaoHiemYT);
+                            cmd.Parameters.Add(":tsba", model.BN_TieuSuBenhAn);
+                            cmd.Parameters.Add(":id", model.ND_IdNguoiDung);
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -192,8 +396,9 @@ namespace DangKyKhamBenh.Controllers
                 ViewBag.ErrorMessage = "Lỗi khi lưu hồ sơ: " + ex.Message;
             }
 
-            return View(nguoiDung);
+            return View(model);
         }
     }
 }
+
 

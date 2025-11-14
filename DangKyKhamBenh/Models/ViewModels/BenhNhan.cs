@@ -6,9 +6,11 @@ namespace DangKyKhamBenh.Models.ViewModels
     public class BenhNhan
     {
         [Required]
-        public string BN_MaBenhNhan { get; set; }   
+        public string BN_MaBenhNhan { get; set; }
 
         // NGUOIDUNG
+        public string ND_IdNguoiDung { get; set; }
+
         [Required, StringLength(100)]
         [Display(Name = "Họ tên")]
         public string ND_HoTen { get; set; }    
@@ -49,6 +51,9 @@ namespace DangKyKhamBenh.Models.ViewModels
         // Thông tin phụ BN (tuỳ có/không trong DB)
         public string BN_SoBaoHiemYT { get; set; }   
         public string BN_NhomMau { get; set; }   
-        public string BN_TieuSuBenhAn { get; set; }      
+        public string BN_TieuSuBenhAn { get; set; }     
+        
+
+
     }
 }

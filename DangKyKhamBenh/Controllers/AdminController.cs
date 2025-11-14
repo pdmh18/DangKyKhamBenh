@@ -806,12 +806,60 @@ namespace DangKyKhamBenh.Controllers
 
         // ====== C. Sửa bệnh nhân (POST) ======
         [HttpPost, ValidateAntiForgeryToken]
-        public ActionResult EditPatient(BenhNhan model, string action)
-        {
-            if (!ModelState.IsValid) return View(model);
+        [ValidateInput(false)]
 
+        public ActionResult EditPatient(DangKyKhamBenh.Models.ViewModels.BenhNhan model, string action)
+        {
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
 
+            if (action == "Decrypt")
+            {
+
+                try
+                {
+                    // Giải mã dữ liệu Caesar
+                    //model.ND_HoTen = _caesarCipher.Decrypt(model.ND_HoTen, 15);
+                    model.ND_TinhThanh = _caesarCipher.Decrypt(model.ND_TinhThanh, 15);
+                    model.ND_QuanHuyen = _caesarCipher.Decrypt(model.ND_QuanHuyen, 15);
+                    model.ND_PhuongXa = _caesarCipher.Decrypt(model.ND_PhuongXa, 15);
+
+                    // Giải mã dữ liệu RSA
+                    try
+                    {
+                        model.ND_SoDienThoai = _rsaService.Decrypt(model.ND_SoDienThoai);
+                        System.Diagnostics.Debug.WriteLine("Số điện thoại sau giải mã: " + model.ND_SoDienThoai);
+                    }
+                    catch (Exception ex)
+                    {
+                        TempData["Err"] = "Lỗi giải mã số điện thoại: " + ex.Message;
+                        return View(model);
+                    }
+                    model.ND_DiaChiThuongChu = _rsaService.Decrypt(model.ND_DiaChiThuongChu);
+                    model.BN_TieuSuBenhAn = _rsaService.Decrypt(model.BN_TieuSuBenhAn);
+
+                    // Giải mã dữ liệu Hybrid (không cần gọi key từ DB)
+                    model.ND_Email = _hybridService.Decrypt(model.ND_Email, model.BN_MaBenhNhan);
+
+                    model.ND_CCCD = _hybridService.Decrypt(model.ND_CCCD, model.BN_MaBenhNhan);
+                    model.BN_SoBaoHiemYT = _hybridService.Decrypt(model.BN_SoBaoHiemYT, model.BN_MaBenhNhan);
+
+                    TempData["Msg"] = "Giải mã thành công.";
+                }
+                catch (Exception ex)
+                {
+                    TempData["Err"] = "Lỗi giải mã: " + ex.Message;
+                }
+
+                ModelState.Clear(); // Bỏ qua lỗi validation do dữ liệu đang mã hóa
+                return View(model);
+
+            }
+
+            if (!ModelState.IsValid)
+            {
+                TempData["Err"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+                return View(model);
+            }
             try
             {
                 using (var conn = new OracleConnection(cs))
@@ -819,21 +867,7 @@ namespace DangKyKhamBenh.Controllers
                     conn.Open();
                     using (var tx = conn.BeginTransaction())
                     {
-                        if (action == "Decrypt")
-                        {
-                            // Giải mã các trường thông tin trước khi cập nhật
-                            model.ND_HoTen = _caesarCipher.Decrypt(model.ND_HoTen, 15);
-                            model.ND_TinhThanh = _caesarCipher.Decrypt(model.ND_TinhThanh, 15);
-                            model.ND_QuanHuyen = _caesarCipher.Decrypt(model.ND_QuanHuyen, 15);
-                            model.ND_PhuongXa = _caesarCipher.Decrypt(model.ND_PhuongXa, 15);
-                            model.ND_SoDienThoai = _rsaService.Decrypt(model.ND_SoDienThoai);
-                           
-                            model.ND_DiaChiThuongChu = _rsaService.Decrypt(model.ND_DiaChiThuongChu);
-                            model.BN_TieuSuBenhAn = _rsaService.Decrypt(model.BN_TieuSuBenhAn);
-                            model.ND_CCCD = _hybridService.Decrypt(model.ND_CCCD, 15);
-                            model.ND_Email = _hybridService.Decrypt(model.ND_Email, 15);
-                            model.BN_SoBaoHiemYT = _hybridService.Decrypt(model.BN_SoBaoHiemYT, 15);
-                        }
+                        
                         // Update NGUOIDUNG qua subquery (lấy ND_IdNguoiDung từ BN)
                         var sqlND = @"
                                         UPDATE NGUOIDUNG nd
@@ -902,6 +936,7 @@ namespace DangKyKhamBenh.Controllers
                 return View(model);
             }
         }
+
 
         // ====== D. Khoá/Mở tài khoản bệnh nhân (TOGGLE) ======
         [HttpPost, ValidateAntiForgeryToken]
