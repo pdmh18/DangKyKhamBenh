@@ -220,9 +220,6 @@ namespace DangKyKhamBenh.Controllers
             ViewBag.PendingPhone = TempData["PendingPhone"] as string;
 
             return View(model);
-            //// nếu muốn default StaffType:
-            //var model = new TaiKhoan { StaffType = "BenhNhan", Role = "USER" };
-            //return View(model);
         }
 
         // POST: Account/Register  

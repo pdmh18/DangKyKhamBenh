@@ -179,6 +179,7 @@
     <Compile Include="Models\Patient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CaesarCipher.cs" />
+    <Compile Include="Services\HoSoHelper.cs" />
     <Compile Include="Services\HybridService.cs" />
     <Compile Include="Services\KeyDerivationService.cs" />
     <Compile Include="Services\RsaKeyManager.cs" />
