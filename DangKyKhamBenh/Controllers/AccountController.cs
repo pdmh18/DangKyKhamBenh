@@ -41,26 +41,26 @@ namespace DangKyKhamBenh.Controllers
                 {
                     conn.Open();
 
-                    // Lúc đăng ký:
-                    //   TK_UserName  = PKG_SECURITY.AES_ENCRYPT_B64(:u)
-                    //   TK_PassWord  = PKG_SECURITY.HASH_PASSWORD(:p)
-                    // => Lúc login: mã hoá + hash lại trong WHERE
+                    // Mã hóa username và hash mật khẩu người dùng nhập vào
+                    string encryptedUser = EncryptUser(user?.Trim(), conn);
+                    string hashedPassword = HashPassword(password?.Trim(), conn);
+
                     const string sql = @"
-                SELECT 
-                    NVL(tk.TK_TrangThai,'PENDING') AS TrangThai,
-                    tk.TK_Role,
-                    tk.TK_StaffType,
-                    tk.BS_MaBacSi,
-                    tk.ND_IdNguoiDung
-                FROM TAIKHOAN tk
-                WHERE tk.TK_UserName = PKG_SECURITY.AES_ENCRYPT_B64(:pUser)
-                  AND tk.TK_PassWord = PKG_SECURITY.HASH_PASSWORD(:pPass)";
+                    SELECT 
+                        NVL(tk.TK_TrangThai,'PENDING') AS TrangThai,
+                        tk.TK_Role,
+                        tk.TK_StaffType,
+                        tk.BS_MaBacSi,
+                        tk.ND_IdNguoiDung
+                    FROM TAIKHOAN tk
+                    WHERE tk.TK_UserName = :pUser
+                      AND tk.TK_PassWord = :pPass";
 
                     using (var cmd = new OracleCommand(sql, conn))
                     {
                         cmd.BindByName = true;
-                        cmd.Parameters.Add("pUser", user?.Trim());
-                        cmd.Parameters.Add("pPass", password?.Trim());
+                        cmd.Parameters.Add("pUser", encryptedUser);  // Mã hóa username
+                        cmd.Parameters.Add("pPass", hashedPassword); // Hash mật khẩu
 
                         using (var r = cmd.ExecuteReader())
                         {
@@ -71,14 +71,14 @@ namespace DangKyKhamBenh.Controllers
                                 return View();
                             }
 
-                            // Cột 0: TrangThai (đã NVL -> luôn có string)
-                            var status = r.GetString(0)?.Trim();                 // ACTIVE / PENDING / LOCKED ...
-                            var role = r.IsDBNull(1) ? "" : r.GetString(1);      // ADMIN / USER
+                            var status = r.GetString(0)?.Trim();        // ACTIVE / PENDING / LOCKED ...
+                            var role = r.IsDBNull(1) ? "" : r.GetString(1);   // ADMIN / USER
                             var staffType = r.IsDBNull(2) ? "" : r.GetString(2); // Bác sĩ / Bệnh nhân ...
-                            var bsMa = r.IsDBNull(3) ? "" : r.GetString(3);      // mã bác sĩ
-                            var ndId = r.IsDBNull(4) ? "" : r.GetString(4);
+                            var bsMa = r.IsDBNull(3) ? "" : r.GetString(3);     // mã bác sĩ
+                            var ndId = r.IsDBNull(4) ? "" : r.GetString(4);     // ND_IdNguoiDung
+                            Session["ND_IdNguoiDung"] = ndId;
 
-                            // Chặn tài khoản chưa ACTIVE
+                            // Tiếp tục xác thực trạng thái tài khoản và các thông tin khác
                             if (!string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
                             {
                                 if (status.Equals("PENDING", StringComparison.OrdinalIgnoreCase))
@@ -91,7 +91,21 @@ namespace DangKyKhamBenh.Controllers
                                 return View();
                             }
 
-                            // ==== SET SESSION ====
+                            string maBenhNhan = null;
+                            using (var cmdBN = new OracleCommand("SELECT BN_MaBenhNhan FROM BENHNHAN WHERE ND_IdNguoiDung = :ndid", conn))
+                            {
+                                cmdBN.Parameters.Add(":ndid", ndId);
+                                var result = cmdBN.ExecuteScalar();
+                                if (result != null)
+                                    maBenhNhan = result.ToString();
+                            }
+
+                            // ✅ Gán vào session nếu có
+                            if (!string.IsNullOrEmpty(maBenhNhan))
+                            {
+                                Session["MaBenhNhan"] = maBenhNhan;
+                            }
+                            // ==== SET SESSION ==== 
                             Session["User"] = user?.Trim();          // lưu plaintext để hiển thị
                             Session["TK_Role"] = role;
                             Session["Role"] = role;
@@ -103,16 +117,12 @@ namespace DangKyKhamBenh.Controllers
                             Session["TK_TrangThai"] = status;
 
                             // ==== ĐIỀU HƯỚNG ====
-
-                            // 1) Nếu có returnUrl hợp lệ -> quay lại
                             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                                 return Redirect(returnUrl);
 
-                            // 2) Admin -> trang Admin
                             if (role.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
-                                return RedirectToAction("Home", "Admin"); // hoặc Dashboard
+                                return RedirectToAction("Home", "Admin");
 
-                            // 3) User + là Bác sĩ -> Doctor Dashboard
                             if (role.Equals("USER", StringComparison.OrdinalIgnoreCase) && IsDoctor(staffType))
                             {
                                 if (string.IsNullOrWhiteSpace(bsMa))
@@ -123,7 +133,6 @@ namespace DangKyKhamBenh.Controllers
                                 return RedirectToAction("Dashboard", "Doctor");
                             }
 
-                            // 4) Còn lại -> Home
                             return RedirectToAction("Index", "Home");
                         }
                     }
@@ -140,6 +149,33 @@ namespace DangKyKhamBenh.Controllers
                 return View();
             }
         }
+
+        // Hàm mã hóa username bằng AES
+        private string EncryptUser(string user, OracleConnection conn)
+        {
+            const string sql = "SELECT PKG_SECURITY.AES_ENCRYPT_B64(:pUser) FROM DUAL";
+            using (var cmd = new OracleCommand(sql, conn))
+            {
+                cmd.BindByName = true;
+                cmd.Parameters.Add("pUser", user);
+
+                return cmd.ExecuteScalar()?.ToString();
+            }
+        }
+
+        // Hàm hash mật khẩu bằng SHA-256
+        private string HashPassword(string password, OracleConnection conn)
+        {
+            const string sql = "SELECT PKG_SECURITY.HASH_PASSWORD(:pPass) FROM DUAL";
+            using (var cmd = new OracleCommand(sql, conn))
+            {
+                cmd.BindByName = true;
+                cmd.Parameters.Add("pPass", password);
+
+                return cmd.ExecuteScalar()?.ToString();
+            }
+        }
+
 
 
         // Nhận diện "Bác sĩ" / "Doctor" (khử dấu + chỉ giữ ký tự chữ)
@@ -202,9 +238,6 @@ namespace DangKyKhamBenh.Controllers
             ViewBag.PendingPhone = TempData["PendingPhone"] as string;
 
             return View(model);
-            //// nếu muốn default StaffType:
-            //var model = new TaiKhoan { StaffType = "BenhNhan", Role = "USER" };
-            //return View(model);
         }
         // GET: Account/Register
         [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
