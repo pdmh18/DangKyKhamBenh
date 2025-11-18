@@ -312,8 +312,34 @@ namespace DangKyKhamBenh.Controllers
          
         }
 
-      
-        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult HoSoCaNhan(BenhNhan model, string action)
+        {
+            // Trường hợp bấm Đăng ký khám
+            if (action == "DangKyKham")
+            {
+                var maBenhNhan = !string.IsNullOrEmpty(model.BN_MaBenhNhan)
+                    ? model.BN_MaBenhNhan
+                    : Session["MaBenhNhan"]?.ToString();
+
+                if (string.IsNullOrEmpty(maBenhNhan))
+                {
+                    TempData["Err"] = "Không xác định được mã bệnh nhân để đăng ký khám.";
+                    return RedirectToAction("HoSoCaNhan");
+                }
+                return RedirectToAction(
+                    "ChonChuyenKhoa",
+                    "DangKyKham",
+                    new { bnId = maBenhNhan }
+                );
+            }
+            return RedirectToAction("HoSoCaNhan");
+        }
+
+
+
+
         public ActionResult CapNhatHoSo()
         {
             if (Session["User"] == null)

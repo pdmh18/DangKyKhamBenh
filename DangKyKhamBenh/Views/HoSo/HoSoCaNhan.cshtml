@@ -61,7 +61,7 @@
                     @TempData["Err"]
                 </div>
             }
-            @using (Html.BeginForm("HoSoCaNhan", "HoSo", FormMethod.Get))
+            @using (Html.BeginForm("HoSoCaNhan", "HoSo", FormMethod.Post))
             {
                 @Html.AntiForgeryToken()
                 @Html.HiddenFor(m => m.BN_MaBenhNhan)
