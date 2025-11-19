@@ -13,6 +13,9 @@ using System.Web.UI.WebControls.WebParts;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Text;
+using System.Net;
+using System.Net.Mail;
+
 
 namespace DangKyKhamBenh.Controllers
 {
@@ -511,39 +514,177 @@ namespace DangKyKhamBenh.Controllers
 
 
 
-        // Hiển thị form quên mật khẩu
+        //    // Hiển thị form quên mật khẩu
+        //    [HttpGet, AllowAnonymous]
+        //    public ActionResult ForgotPassword()
+        //    {
+        //        return View();
+        //    }
+
+        //    // Xử lý đổi mật khẩu khi quên
+        //    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+        //    public ActionResult ForgotPassword(string user, string email, string phone,
+        //                               string newPassword, string confirmPassword)
+        //    {
+        //        // 1) Validate cơ bản
+        //        if (string.IsNullOrWhiteSpace(user))
+        //        {
+        //            ViewBag.Error = "Vui lòng nhập tài khoản (Username).";
+        //            return View();
+        //        }
+        //        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(phone))
+        //        {
+        //            ViewBag.Error = "Nhập email hoặc số điện thoại đã đăng ký để xác minh.";
+        //            return View();
+        //        }
+        //        if (string.IsNullOrWhiteSpace(newPassword) ||
+        //            !string.Equals(newPassword?.Trim(), confirmPassword?.Trim()))
+        //        {
+        //            ViewBag.Error = "Mật khẩu mới và xác nhận không khớp.";
+        //            return View();
+        //        }
+
+        //        // Hàm chuẩn hoá
+        //        string N(string s) => (s ?? "").Trim();
+        //        string NormPhone(string s) => Regex.Replace(N(s), "[^0-9]", ""); // bỏ mọi ký tự không phải số
+
+        //        try
+        //        {
+        //            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+        //            using (var conn = new OracleConnection(cs))
+        //            {
+        //                conn.Open();
+
+        //                // 2) Lấy thông tin email/phone theo username
+        //                const string sqlFind = @"
+        //                                            SELECT tk.TK_MaTK,
+        //                                                   NVL(tk.TK_TrangThai,'PENDING') AS TrangThai,
+        //                                                   nd.ND_Email,
+        //                                                   nd.ND_SoDienThoai
+        //                                            FROM   TAIKHOAN tk
+        //                                            JOIN   NGUOIDUNG nd ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
+        //                                            WHERE  TRIM(UPPER(tk.TK_UserName)) = TRIM(UPPER(:u))";
+
+        //                string tkId = null, status = null, dbEmail = null, dbPhone = null;
+
+        //                using (var cmd = new OracleCommand(sqlFind, conn))
+        //                {
+        //                    cmd.BindByName = true;
+        //                    cmd.Parameters.Add("u", N(user).ToUpperInvariant());
+        //                    using (var r = cmd.ExecuteReader())
+        //                    {
+        //                        if (!r.Read())
+        //                        {
+        //                            ViewBag.Error = "Không tìm thấy tài khoản.";
+        //                            return View();
+        //                        }
+        //                        tkId = r["TK_MaTK"]?.ToString();
+        //                        status = r["TrangThai"]?.ToString();
+        //                        dbEmail = r["ND_Email"]?.ToString();
+        //                        dbPhone = r["ND_SoDienThoai"]?.ToString();
+        //                    }
+        //                }
+
+        //                // 3) (Tùy chọn) ràng buộc trạng thái
+        //                // if (!string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+        //                // {
+        //                //     ViewBag.Error = "Tài khoản chưa sẵn sàng (không ở trạng thái ACTIVE).";
+        //                //     return View();
+        //                // }
+
+        //                // 4) So khớp theo trường người dùng đã nhập
+        //                bool emailProvided = !string.IsNullOrWhiteSpace(email);
+        //                bool phoneProvided = !string.IsNullOrWhiteSpace(phone);
+
+        //                bool okEmail = !emailProvided
+        //                               || string.Equals(N(dbEmail).ToUpperInvariant(),
+        //                                                N(email).ToUpperInvariant());
+        //                bool okPhone = !phoneProvided
+        //                               || string.Equals(NormPhone(dbPhone), NormPhone(phone));
+
+        //                if (!okEmail || !okPhone)
+        //                {
+        //                    // Gợi ý lỗi rõ ràng hơn
+        //                    if (emailProvided && !okEmail && phoneProvided && !okPhone)
+        //                        ViewBag.Error = "Email và số điện thoại xác minh đều không khớp.";
+        //                    else if (emailProvided && !okEmail)
+        //                        ViewBag.Error = "Email xác minh không khớp.";
+        //                    else if (phoneProvided && !okPhone)
+        //                        ViewBag.Error = "Số điện thoại xác minh không khớp.";
+        //                    else
+        //                        ViewBag.Error = "Thông tin xác minh không khớp.";
+        //                    return View();
+        //                }
+
+        //                // 5) Cập nhật mật khẩu mới (TODO: hash)
+        //                const string sqlUpdate = @"UPDATE TAIKHOAN SET TK_PassWord = :p WHERE TK_MaTK = :id";
+        //                using (var up = new OracleCommand(sqlUpdate, conn))
+        //                {
+        //                    up.BindByName = true;
+        //                    up.Parameters.Add("p", N(newPassword));
+        //                    up.Parameters.Add("id", tkId);
+        //                    up.ExecuteNonQuery();
+        //                }
+        //            }
+
+        //            TempData["Msg"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
+        //            return RedirectToAction("Login");
+        //        }
+        //        catch (OracleException ex)
+        //        {
+        //            ViewBag.Error = $"Lỗi Oracle ORA-{ex.Number}: {ex.Message}";
+        //            return View();
+        //        }
+        //        catch (System.Exception ex)
+        //        {
+        //            ViewBag.Error = "Lỗi: " + ex.Message;
+        //            return View();
+        //        }
+        //    }
+
+
+
         [HttpGet, AllowAnonymous]
         public ActionResult ForgotPassword()
         {
-            return View();
+            // Trả về model rỗng để view binding
+            return View(new ForgotPasswordOtpViewModel());
         }
 
-        // Xử lý đổi mật khẩu khi quên
         [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
-        public ActionResult ForgotPassword(string user, string email, string phone,
-                                   string newPassword, string confirmPassword)
+        public ActionResult ForgotPassword(ForgotPasswordOtpViewModel model)
         {
-            // 1) Validate cơ bản
-            if (string.IsNullOrWhiteSpace(user))
+            // Xác định đang ở bước nào qua việc user đã nhập OTP hay chưa
+            bool isVerifyPhase = !string.IsNullOrWhiteSpace(model.Otp);
+
+            // Validate cơ bản: luôn cần Username + Email
+            if (string.IsNullOrWhiteSpace(model.UserName))
+                ModelState.AddModelError("UserName", "Vui lòng nhập tài khoản.");
+
+            if (string.IsNullOrWhiteSpace(model.Email))
+                ModelState.AddModelError("Email", "Vui lòng nhập email đã đăng ký.");
+
+            // Nếu đang ở bước xác nhận OTP → bắt buộc mật khẩu mới + confirm
+            if (isVerifyPhase)
             {
-                ViewBag.Error = "Vui lòng nhập tài khoản (Username).";
-                return View();
-            }
-            if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(phone))
-            {
-                ViewBag.Error = "Nhập email hoặc số điện thoại đã đăng ký để xác minh.";
-                return View();
-            }
-            if (string.IsNullOrWhiteSpace(newPassword) ||
-                !string.Equals(newPassword?.Trim(), confirmPassword?.Trim()))
-            {
-                ViewBag.Error = "Mật khẩu mới và xác nhận không khớp.";
-                return View();
+                if (string.IsNullOrWhiteSpace(model.NewPassword))
+                    ModelState.AddModelError("NewPassword", "Vui lòng nhập mật khẩu mới.");
+
+                if (string.IsNullOrWhiteSpace(model.ConfirmPassword))
+                    ModelState.AddModelError("ConfirmPassword", "Vui lòng xác nhận mật khẩu mới.");
+
+                if (!string.Equals(model.NewPassword?.Trim(), model.ConfirmPassword?.Trim()))
+                    ModelState.AddModelError("ConfirmPassword", "Mật khẩu xác nhận không khớp.");
             }
 
-            // Hàm chuẩn hoá
+            if (!ModelState.IsValid)
+            {
+                // Nếu đã gửi OTP rồi thì vẫn hiện ô OTP
+                model.OtpSent = isVerifyPhase || model.OtpSent;
+                return View(model);
+            }
+
             string N(string s) => (s ?? "").Trim();
-            string NormPhone(string s) => Regex.Replace(N(s), "[^0-9]", ""); // bỏ mọi ký tự không phải số
 
             try
             {
@@ -552,93 +693,172 @@ namespace DangKyKhamBenh.Controllers
                 {
                     conn.Open();
 
-                    // 2) Lấy thông tin email/phone theo username
-                    const string sqlFind = @"
-                                                SELECT tk.TK_MaTK,
-                                                       NVL(tk.TK_TrangThai,'PENDING') AS TrangThai,
-                                                       nd.ND_Email,
-                                                       nd.ND_SoDienThoai
-                                                FROM   TAIKHOAN tk
-                                                JOIN   NGUOIDUNG nd ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
-                                                WHERE  TRIM(UPPER(tk.TK_UserName)) = TRIM(UPPER(:u))";
+                    // Mã hoá username để so khớp với TK_UserName đã lưu (AES_ENCRYPT_B64)
+                    string encryptedUser = EncryptUser(N(model.UserName), conn);
 
-                    string tkId = null, status = null, dbEmail = null, dbPhone = null;
+                    // Tìm TK_MaTK theo username + email (email đang lưu RSA_ENCRYPT_B64)
+                    const string sqlFind = @"
+                        SELECT tk.TK_MaTK
+                        FROM   TAIKHOAN tk
+                        JOIN   NGUOIDUNG nd ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
+                        WHERE  tk.TK_UserName = :pUser
+                          AND  nd.ND_Email   = PKG_SECURITY.RSA_ENCRYPT_B64(:pEmail)";
+
+                    string tkId = null;
 
                     using (var cmd = new OracleCommand(sqlFind, conn))
                     {
                         cmd.BindByName = true;
-                        cmd.Parameters.Add("u", N(user).ToUpperInvariant());
+                        cmd.Parameters.Add("pUser", encryptedUser);
+                        cmd.Parameters.Add("pEmail", N(model.Email));
+
                         using (var r = cmd.ExecuteReader())
                         {
                             if (!r.Read())
                             {
-                                ViewBag.Error = "Không tìm thấy tài khoản.";
-                                return View();
+                                ViewBag.Error = "Không tìm thấy tài khoản với Username và Email này.";
+                                model.OtpSent = false;
+                                return View(model);
                             }
-                            tkId = r["TK_MaTK"]?.ToString();
-                            status = r["TrangThai"]?.ToString();
-                            dbEmail = r["ND_Email"]?.ToString();
-                            dbPhone = r["ND_SoDienThoai"]?.ToString();
+                            tkId = r.GetString(0);
                         }
                     }
 
-                    // 3) (Tùy chọn) ràng buộc trạng thái
-                    // if (!string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
-                    // {
-                    //     ViewBag.Error = "Tài khoản chưa sẵn sàng (không ở trạng thái ACTIVE).";
-                    //     return View();
-                    // }
-
-                    // 4) So khớp theo trường người dùng đã nhập
-                    bool emailProvided = !string.IsNullOrWhiteSpace(email);
-                    bool phoneProvided = !string.IsNullOrWhiteSpace(phone);
-
-                    bool okEmail = !emailProvided
-                                   || string.Equals(N(dbEmail).ToUpperInvariant(),
-                                                    N(email).ToUpperInvariant());
-                    bool okPhone = !phoneProvided
-                                   || string.Equals(NormPhone(dbPhone), NormPhone(phone));
-
-                    if (!okEmail || !okPhone)
+                    // ========== BƯỚC 1: GỬI OTP ========== 
+                    if (!isVerifyPhase)
                     {
-                        // Gợi ý lỗi rõ ràng hơn
-                        if (emailProvided && !okEmail && phoneProvided && !okPhone)
-                            ViewBag.Error = "Email và số điện thoại xác minh đều không khớp.";
-                        else if (emailProvided && !okEmail)
-                            ViewBag.Error = "Email xác minh không khớp.";
-                        else if (phoneProvided && !okPhone)
-                            ViewBag.Error = "Số điện thoại xác minh không khớp.";
-                        else
-                            ViewBag.Error = "Thông tin xác minh không khớp.";
-                        return View();
+                        string otp = GenerateOtpCode(6); // ví dụ 6 chữ số
+                        DateTime expire = DateTime.UtcNow.AddMinutes(5);
+
+                        // Lưu OTP vào Session theo TK_MaTK
+                        Session["FP_OTP_" + tkId] = otp;
+                        Session["FP_OTP_EXP_" + tkId] = expire;
+
+                        // Gửi email OTP
+                        SendOtpEmail(N(model.Email), N(model.UserName), otp);
+
+                        ViewBag.Info = "Đã gửi mã OTP đến email của bạn. Vui lòng kiểm tra hộp thư và nhập OTP để xác nhận đổi mật khẩu.";
+                        model.OtpSent = true;  // Để view hiện ô nhập OTP
+
+                        // KHÔNG đổi mật khẩu ở bước này
+                        return View(model);
                     }
 
-                    // 5) Cập nhật mật khẩu mới (TODO: hash)
-                    const string sqlUpdate = @"UPDATE TAIKHOAN SET TK_PassWord = :p WHERE TK_MaTK = :id";
+                    // ========== BƯỚC 2: XÁC THỰC OTP + ĐỔI MẬT KHẨU ==========
+
+                    string key = "FP_OTP_" + tkId;
+                    string expKey = "FP_OTP_EXP_" + tkId;
+
+                    var otpInSession = Session[key] as string;
+                    DateTime? exp = null;
+                    if (Session[expKey] != null)
+                        exp = (DateTime)Session[expKey];
+
+                    if (string.IsNullOrEmpty(otpInSession) || !exp.HasValue)
+                    {
+                        ViewBag.Error = "Mã OTP không tồn tại hoặc đã hết hạn. Vui lòng yêu cầu gửi lại.";
+                        model.OtpSent = true;
+                        return View(model);
+                    }
+
+                    if (DateTime.UtcNow > exp.Value)
+                    {
+                        ViewBag.Error = "Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại.";
+                        model.OtpSent = true;
+                        return View(model);
+                    }
+
+                    if (!string.Equals(N(model.Otp), otpInSession))
+                    {
+                        ViewBag.Error = "Mã OTP không chính xác.";
+                        model.OtpSent = true;
+                        return View(model);
+                    }
+
+                    // OTP hợp lệ → Hash mật khẩu mới và cập nhật DB
+                    string hashedPassword = HashPassword(N(model.NewPassword), conn);
+
+                    const string sqlUpdate = @"
+                        UPDATE TAIKHOAN
+                        SET    TK_PassWord = :pPass
+                        WHERE  TK_MaTK = :pId";
+
                     using (var up = new OracleCommand(sqlUpdate, conn))
                     {
                         up.BindByName = true;
-                        up.Parameters.Add("p", N(newPassword));
-                        up.Parameters.Add("id", tkId);
+                        up.Parameters.Add("pPass", hashedPassword);
+                        up.Parameters.Add("pId", tkId);
                         up.ExecuteNonQuery();
                     }
-                }
 
-                TempData["Msg"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
-                return RedirectToAction("Login");
+                    // Xoá OTP khỏi Session sau khi dùng xong
+                    Session.Remove(key);
+                    Session.Remove(expKey);
+
+                    TempData["Msg"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
+                    return RedirectToAction("Login");
+                }
             }
             catch (OracleException ex)
             {
                 ViewBag.Error = $"Lỗi Oracle ORA-{ex.Number}: {ex.Message}";
-                return View();
+                model.OtpSent = true;
+                return View(model);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 ViewBag.Error = "Lỗi: " + ex.Message;
-                return View();
+                model.OtpSent = true;
+                return View(model);
             }
         }
 
+        // ================== HÀM HỖ TRỢ OTP & EMAIL ==================
+
+        private string GenerateOtpCode(int length)
+        {
+            var rnd = new Random();
+            var sb = new StringBuilder();
+            for (int i = 0; i < length; i++)
+            {
+                sb.Append(rnd.Next(0, 10)); // chỉ 0-9 => mã số
+            }
+            return sb.ToString();
+        }
+
+        private void SendOtpEmail(string toEmail, string userName, string otp)
+        {
+            // Đọc cấu hình SMTP từ web.config
+            string smtpUser = ConfigurationManager.AppSettings["SmtpUser"];
+            string smtpPass = ConfigurationManager.AppSettings["SmtpPass"];
+
+            var msg = new MailMessage();
+            msg.To.Add(new MailAddress(toEmail));
+            msg.From = new MailAddress(smtpUser, "UMC CARE");
+            msg.Subject = "Mã OTP đổi mật khẩu tài khoản UMC CARE";
+            msg.Body = $@"
+                        Chào {userName},
+
+                        Bạn vừa yêu cầu đổi mật khẩu cho tài khoản trên hệ thống UMC CARE.
+
+                        Mã OTP của bạn là: {otp}
+
+                        Mã này có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã cho bất kỳ ai.
+
+                        Trân trọng,
+                        UMC CARE";
+            msg.IsBodyHtml = false;
+
+            using (var client = new SmtpClient())
+            {
+                client.Host = "smtp.gmail.com";
+                client.Port = 587;
+                client.EnableSsl = true;
+                client.Credentials = new NetworkCredential(smtpUser, smtpPass);
+                client.Send(msg);
+            }
+        }
 
     }
+
 }

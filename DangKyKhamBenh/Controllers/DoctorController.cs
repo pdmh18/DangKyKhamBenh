@@ -38,13 +38,13 @@ namespace DangKyKhamBenh.Controllers
                 // 2) Lịch trực 7 ngày
                 var lich = new List<LichTrucItem>();
                 using (var cmd = new OracleCommand(@"
-                    SELECT pc.PC_NgayBatDau, pc.PC_CaTruc, pk.PK_TenPhong, k.K_TenKhoa, pk.PK_ViTri
+                    SELECT pc.PC_Ngay, pk.PK_TenPhong, k.K_TenKhoa, pk.PK_ViTri
                     FROM PHANCONG pc
                     JOIN PHONGKHAM pk ON pk.PK_MaPK = pc.PK_MaPK
                     JOIN KHOA k ON k.K_MaKhoa = pk.K_MaKhoa
                     WHERE pc.BS_MaBacSi = :ma
-                      AND pc.PC_NgayBatDau BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE)+6
-                    ORDER BY pc.PC_NgayBatDau, pc.PC_CaTruc", con))
+                      AND pc.PC_Ngay BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE)+6
+                    ORDER BY pc.PC_Ngay, pc.PC_CaTruc", con))
                 {
                     cmd.Parameters.Add(":ma", maBs);
                     using (var rd = await cmd.ExecuteReaderAsync())

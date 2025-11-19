@@ -172,6 +172,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\ForgotPasswordOtpViewModel.cs" />
     <Compile Include="Models\NguoiDung.cs" />
     <Compile Include="Models\TaiKhoan.cs" />
     <Compile Include="Models\ViewModels\BacSi.cs" />
@@ -268,7 +269,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>53723</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:53723/</IISUrl>
+          <IISUrl>http://localhost:55000/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
