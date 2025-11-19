@@ -47,7 +47,7 @@
                 <div class="p-3 text-white fw-bold">Admin Panel</div>
                 <nav class="nav flex-column">
                     <a class="nav-link @(active=="Home"?"active":"")" href="@Url.Action("Home","Admin")">🏠 Trang chủ</a>
-                    <a class="nav-link @(active=="Pending"?"active":"")" href="@Url.Action("Pending","Admin")">⏳ Duyệt tài khoản</a>
+                    @*<a class="nav-link @(active=="Pending"?"active":"")" href="@Url.Action("Pending","Admin")">⏳ Duyệt tài khoản</a>*@
                     <a class="nav-link @(active=="History"?"active":"")" href="@Url.Action("History","Admin")">🕘 Lịch sử tài khoản</a>
                     <a class="nav-link @(active=="CreateDoctor"?"active":"")" href="@Url.Action("CreateDoctor","Admin")">👨‍⚕️ Tạo bác sĩ</a>
                     <a class="nav-link @(active=="Patients"?"active":"")" href="@Url.Action("Patients","Admin")">🧑‍🤝‍🧑 Quản lý bệnh nhân</a>
@@ -81,10 +81,10 @@
                 </header>
 
                 <div class="py-3">
-                    @*@if (TempData["Msg"] != null)
+                    @if (TempData["Msg"] != null)
                     {<div class="alert alert-success">@TempData["Msg"]</div>}
                     @if (TempData["Err"] != null)
-                    {<div class="alert alert-danger">@TempData["Err"]</div>}*@
+                    {<div class="alert alert-danger">@TempData["Err"]</div>}
 
                     @RenderBody()
                 </div>
@@ -103,7 +103,7 @@
         <div class="offcanvas-body p-0">
             <nav class="nav flex-column">
                 <a class="nav-link @(active=="Home"?"active":"")" href="@Url.Action("Home","Admin")">🏠 Trang chủ</a>
-                <a class="nav-link @(active=="Pending"?"active":"")" href="@Url.Action("Pending","Admin")">⏳ Duyệt tài khoản</a>
+                @*<a class="nav-link @(active=="Pending"?"active":"")" href="@Url.Action("Pending","Admin")">⏳ Duyệt tài khoản</a>*@
                 <a class="nav-link @(active=="History"?"active":"")" href="@Url.Action("History","Admin")">🕘 Lịch sử tài khoản</a>
                 <a class="nav-link @(active=="CreateDoctor"?"active":"")" href="@Url.Action("CreateDoctor","Admin")">👨‍⚕️ Tạo bác sĩ</a>
                 <a class="nav-link @(active=="Patients"?"active":"")" href="@Url.Action("Patients","Admin")">🧑‍🤝‍🧑 Quản lý bệnh nhân</a>

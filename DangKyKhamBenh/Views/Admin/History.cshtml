@@ -3,14 +3,16 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewBag.Title = "Lịch sử tài khoản";
 }
-<table class="table table-bordered table-hover">
-    <thead class="table-light">
+<h3>Lịch sử đăng ký tài khoản</h3>
+
+<table class="table table-bordered table-striped">
+    <thead>
         <tr>
             <th>Mã TK</th>
             <th>Username</th>
-            <th>Trạng thái</th>
+            <th>Loại nhân sự</th>
             <th>Role</th>
-            <th>StaffType</th>
+            <th>Trạng thái</th>
             <th>Ngày tạo</th>
         </tr>
     </thead>
@@ -20,10 +22,10 @@
             <tr>
                 <td>@row["TK_MaTK"]</td>
                 <td>@row["TK_UserName"]</td>
-                <td>@row["TrangThai"]</td>
-                <td>@row["TK_Role"]</td>
                 <td>@row["TK_StaffType"]</td>
-                <td>@(row["TK_NgayTao"] is DBNull ? "" : Convert.ToDateTime(row["TK_NgayTao"]).ToString("dd/MM/yyyy HH:mm"))</td>
+                <td>@row["TK_Role"]</td>
+                <td>@row["TrangThai"]</td>
+                <td>@String.Format("{0:dd/MM/yyyy HH:mm}", row["TK_NgayTao"])</td>
             </tr>
         }
     </tbody>

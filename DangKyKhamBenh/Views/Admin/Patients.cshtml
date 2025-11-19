@@ -55,7 +55,7 @@
                 <th class="col-contact">Liên hệ</th>
                 <th style="width:115px;">Ngày sinh</th>
                 <th style="width:110px;">Trạng thái</th>
-                <th style="width:220px;">Thao tác</th>
+                <th style="width:260px;">Thao tác</th>
             </tr>
         </thead>
         <tbody>
@@ -111,7 +111,7 @@
 
                     <td>
                         <div class="d-grid gap-2 d-md-inline-flex">
-                            <a class="btn btn-outline-primary" 
+                            <a class="btn btn-outline-primary"
                                href="@Url.Action("EditPatient","Admin", new { id = b.BN_MaBenhNhan })">
                                 Sửa
                             </a>
@@ -129,6 +129,20 @@
                                 {
                                     <button class="btn btn-outline-success" type="submit">Mở</button>
                                 }
+                            }
+
+                            @using (Html.BeginForm("DeletePatient", "Admin", FormMethod.Post,
+                                   new
+                                   {
+                                       style = "display:inline-block",
+                                       onsubmit = "return confirm('Bạn có chắc chắn muốn xóa bệnh nhân này không? Hành động này không thể hoàn tác.');"
+                                   }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@b.BN_MaBenhNhan" />
+                                <button type="submit" class="btn btn-outline-danger">
+                                    Xóa
+                                </button>
                             }
                         </div>
                     </td>
