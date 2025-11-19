@@ -371,21 +371,6 @@ namespace DangKyKhamBenh.Controllers
                                 cmdBn.ExecuteNonQuery();
                             }
 
-
-                            // ========== B5: Insert BACSI (tạm thời rỗng, chỉ để không violate FK) ==========
-                        //    using (var cmdBs = new OracleCommand(@"
-                        //INSERT INTO BACSI
-                        //    (BS_MaBacSi, BS_ChuyenKhoa, BS_ChucDanh, BS_NamKinhNghiem, ND_IdNguoiDung)
-                        //VALUES
-                        //    (:bs, NULL, NULL, NULL, :nd)", conn))
-                        //    {
-                        //        cmdBs.Transaction = tx;
-                        //        cmdBs.BindByName = true;
-                        //        cmdBs.Parameters.Add("bs", bsId);
-                        //        cmdBs.Parameters.Add("nd", ndId);
-                        //        cmdBs.ExecuteNonQuery();
-                        //    }
-
                             // ========== B6: Insert TAIKHOAN (mã hoá username + hash password) ==========
                             using (var cmdTk = new OracleCommand(@"
                         INSERT INTO TAIKHOAN

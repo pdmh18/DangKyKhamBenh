@@ -2,31 +2,107 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewBag.Title = "Lịch sử tài khoản";
-}
-<h3>Lịch sử đăng ký tài khoản</h3>
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Mã TK</th>
-            <th>Username</th>
-            <th>Loại nhân sự</th>
-            <th>Role</th>
-            <th>Trạng thái</th>
-            <th>Ngày tạo</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (System.Data.DataRow row in Model.Rows)
-        {
+    string sortBy = ViewBag.SortBy as string ?? "date";
+    string sortDir = ViewBag.SortDir as string ?? "desc";
+    string keyword = ViewBag.Keyword as string ?? "";
+}
+
+<h3 class="mb-4">📜 Lịch sử đăng ký tài khoản</h3>
+
+<!-- Bộ lọc tìm kiếm -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+
+        <form method="get" class="row g-3 align-items-center d-flex justify-content-end">
+
+            <div class="col-md-4">
+                <input type="text"
+                       name="keyword"
+                       class="form-control"
+                       placeholder="Tìm theo username hoặc mã tài khoản..."
+                       value="@keyword" />
+            </div>
+
+            <div class="col-md-auto">
+                <button class="btn btn-primary px-4">Tìm kiếm</button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+
+<!-- Bảng dữ liệu -->
+<div class="table-responsive shadow-sm">
+    <table class="table table-hover table-bordered align-middle">
+        <thead class="table-primary">
             <tr>
-                <td>@row["TK_MaTK"]</td>
-                <td>@row["TK_UserName"]</td>
-                <td>@row["TK_StaffType"]</td>
-                <td>@row["TK_Role"]</td>
-                <td>@row["TrangThai"]</td>
-                <td>@String.Format("{0:dd/MM/yyyy HH:mm}", row["TK_NgayTao"])</td>
+                <th class="text-center">Mã TK</th>
+
+                <!-- Sắp xếp Username -->
+                <th>
+                    <a class="text-decoration-none fw-bold"
+                       href="@Url.Action("History", new { keyword = keyword, sortBy = "username", sortDir = sortDir })">
+                        Username
+                        @if (sortBy == "username")
+                        {
+                            <span>
+                                @(sortDir == "asc" ? "▲" : "▼")
+                            </span>
+                        }
+                    </a>
+                </th>
+
+                <th>Loại nhân sự</th>
+                <th>Role</th>
+                <th>Trạng thái</th>
+
+                <!-- Sắp xếp Ngày tạo -->
+                <th>
+                    <a class="text-decoration-none fw-bold"
+                       href="@Url.Action("History", new { keyword = keyword, sortBy = "date", sortDir = sortDir })">
+                        Ngày tạo
+                        @if (sortBy == "date")
+                        {
+                            <span>
+                                @(sortDir == "asc" ? "▲" : "▼")
+                            </span>
+                        }
+                    </a>
+                </th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+
+        <tbody>
+            @foreach (System.Data.DataRow row in Model.Rows)
+            {
+                <tr>
+                    <td class="text-center">@row["TK_MaTK"]</td>
+                    <td>@row["TK_UserName"]</td>
+                    <td>@row["TK_StaffType"]</td>
+                    <td>@row["TK_Role"]</td>
+
+                    <td>
+                        @if (row["TrangThai"].ToString() == "Active")
+                        {
+                            <span class="btn btn-secondary btn-sm py-0 px-2">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">@row["TrangThai"]</span>
+                        }
+                    </td>
+
+                    <td>@String.Format("{0:dd/MM/yyyy HH:mm}", row["TK_NgayTao"])</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Footer buttons -->
+<div class="mt-4">
+    <a class="btn btn-outline-secondary" href="@Url.Action("Home","Admin")">← Quay lại</a>
+</div>

@@ -1,6 +1,6 @@
 ﻿using DangKyKhamBenh.Filters;                       // Dùng attribute [AdminOnly] để khóa controller cho ADMIN
-using DangKyKhamBenh.Models.ViewModels;
 using DangKyKhamBenh.Models;
+using DangKyKhamBenh.Models.ViewModels;
 using DangKyKhamBenh.Services;
 using Oracle.ManagedDataAccess.Client;              
 using System;
@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Configuration;                         
 using System.Data;
 using System.Web.Mvc;
+using System.Web.Razor.Tokenizer.Symbols;
 using static System.Collections.Specialized.BitVector32;
 
 namespace DangKyKhamBenh.Controllers
@@ -35,19 +36,24 @@ namespace DangKyKhamBenh.Controllers
         }
 
 
-        // ====== D) LỊCH SỬ YÊU CẦU ĐĂNG KÝ ======
+        // ====== LỊCH SỬ ĐĂNG KÝ ======
         [AdminOnly]
-        public ActionResult History(DateTime? from = null, DateTime? to = null)
+        public ActionResult History(DateTime? from = null, DateTime? to = null, string keyword = null, string sortBy = "date", string sortDir = "desc")
         {
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
             var tb = new System.Data.DataTable();
 
-           
+            string orderClause = "ORDER BY ";
+            if (sortBy == "username")
+                orderClause += $"PKG_SECURITY.AES_DECRYPT_B64(tk.TK_UserName) {sortDir}";
+            else
+                orderClause += $"tk.TK_NgayTao {sortDir}";
+
 
             using (var conn = new OracleConnection(cs))
             {
                 conn.Open();
-                var sql = @"
+                var sql = $@"
             SELECT
                     tk.TK_MaTK                              AS TK_MaTK,
                     PKG_SECURITY.AES_DECRYPT_B64(tk.TK_UserName) AS TK_UserName,
@@ -57,21 +63,29 @@ namespace DangKyKhamBenh.Controllers
                     tk.TK_NgayTao                           AS TK_NgayTao
             FROM    TAIKHOAN tk
             WHERE (:d1 IS NULL OR tk.TK_NgayTao >= :d1)
-              AND (:d2 IS NULL OR tk.TK_NgayTao <  :d2 + 1)  -- lấy đến hết ngày :d2
-            ORDER BY tk.TK_NgayTao DESC";
+              AND (:d2 IS NULL OR tk.TK_NgayTao <  :d2 + 1)
+              AND (
+                    :kw IS NULL 
+                 OR PKG_SECURITY.AES_DECRYPT_B64(tk.TK_UserName) LIKE '%' || :kw || '%'
+                 OR tk.TK_MaTK LIKE '%' || :kw || '%'
+              )
+            {orderClause}";
 
                 using (var cmd = new OracleCommand(sql, conn))
                 {
                     cmd.BindByName = true;
                     cmd.Parameters.Add("d1", OracleDbType.Date).Value = (object)from ?? DBNull.Value;
                     cmd.Parameters.Add("d2", OracleDbType.Date).Value = (object)to ?? DBNull.Value;
+                    cmd.Parameters.Add("kw", OracleDbType.Varchar2).Value = (object)keyword ?? DBNull.Value;
 
                     using (var r = cmd.ExecuteReader())
                         tb.Load(r);
                 }
             }
+            ViewBag.SortBy = sortBy;
+            ViewBag.SortDir = sortDir == "asc" ? "desc" : "asc";
 
-            return View(tb); // History.cshtml: @model System.Data.DataTable
+            return View(tb);
         }
 
 
@@ -118,6 +132,7 @@ namespace DangKyKhamBenh.Controllers
                         string u = username.Trim();
                         string p = password.Trim();
 
+
                         // B1: Check trùng username t   heo ciphertext
                         using (var check = new OracleCommand(@"
                             SELECT COUNT(*)
@@ -139,7 +154,7 @@ namespace DangKyKhamBenh.Controllers
                         // B2: Sinh mã
                         string ndId = NextId(conn, tx, "NGUOIDUNG", "ND_IdNguoiDung", "ND");
                         string bsId = NextId(conn, tx, "BACSI", "BS_MaBacSi", "BS");
-                        string bnId = NextId(conn, tx, "BENHNHAN", "BN_MaBenhNhan", "BN");
+                        //string bnId = NextId(conn, tx, "BENHNHAN", "BN_MaBenhNhan", "BN");
                         string tkId = NextId(conn, tx, "TAIKHOAN", "TK_MaTK", "TK");
 
                         // B3: Insert NGUOIDUNG (chỉ có họ tên, còn lại null)
@@ -192,26 +207,26 @@ namespace DangKyKhamBenh.Controllers
                         }
 
                         // B5: Insert BENHNHAN dummy (nếu FK không cho NULL)
-                        using (var cmdBn = new OracleCommand(@"
-                            INSERT INTO BENHNHAN
-                                (BN_MaBenhNhan,
-                                 BN_SoBaoHiemYT,
-                                 BN_NhomMau,
-                                 BN_TieuSuBenhAn,
-                                 ND_IdNguoiDung)
-                            VALUES
-                                (:bn,
-                                 NULL,
-                                 NULL,
-                                 NULL,
-                                 :nd)", conn))
-                        {
-                            cmdBn.Transaction = tx;
-                            cmdBn.BindByName = true;
-                            cmdBn.Parameters.Add("bn", bnId);
-                            cmdBn.Parameters.Add("nd", ndId);
-                            cmdBn.ExecuteNonQuery();
-                        }
+                        //using (var cmdBn = new OracleCommand(@"
+                        //    INSERT INTO BENHNHAN
+                        //        (BN_MaBenhNhan,
+                        //         BN_SoBaoHiemYT,
+                        //         BN_NhomMau,
+                        //         BN_TieuSuBenhAn,
+                        //         ND_IdNguoiDung)
+                        //    VALUES
+                        //        (:bn,
+                        //         NULL,
+                        //         NULL,
+                        //         NULL,
+                        //         :nd)", conn))
+                        //{
+                        //    cmdBn.Transaction = tx;
+                        //    cmdBn.BindByName = true;
+                        //    cmdBn.Parameters.Add("bn", bnId);
+                        //    cmdBn.Parameters.Add("nd", ndId);
+                        //    cmdBn.ExecuteNonQuery();
+                        //}
 
                         // B6: Insert TAIKHOAN (mã hóa username + hash password)
                         using (var cmdTk = new OracleCommand(@"
@@ -232,7 +247,7 @@ namespace DangKyKhamBenh.Controllers
                                  :role,
                                  :status,
                                  :st,
-                                 :bn,
+                                 NULL,
                                  :bs,
                                  :nd)", conn))
                         {
@@ -244,7 +259,7 @@ namespace DangKyKhamBenh.Controllers
                             cmdTk.Parameters.Add("role", "User");
                             cmdTk.Parameters.Add("status", "ACTIVE");
                             cmdTk.Parameters.Add("st", "BacSi");
-                            cmdTk.Parameters.Add("bn", bnId);
+                            //cmdTk.Parameters.Add("bn", bnId);
                             cmdTk.Parameters.Add("bs", bsId);
                             cmdTk.Parameters.Add("nd", ndId);
                             cmdTk.ExecuteNonQuery();
@@ -587,18 +602,35 @@ namespace DangKyKhamBenh.Controllers
                 // Chú ý: StaffType có thể lưu 'Bệnh nhân' hoặc 'BenhNhan' tùy trước đó.
                 var sql = @"
                             SELECT  bn.BN_MaBenhNhan,
-                                    nd.ND_HoTen, nd.ND_SoDienThoai, nd.ND_Email, nd.ND_NgaySinh, nd.ND_DiaChiThuongChu,
-                                    tk.TK_UserName, NVL(tk.TK_TrangThai, 'PENDING') AS TK_TrangThai,
-                                    bn.BN_SoBaoHiemYT, bn.BN_NhomMau, bn.BN_TieuSuBenhAn
+                                    nd.ND_HoTen,
+                                    nd.ND_SoDienThoai,
+                                    nd.ND_Email,
+                                    nd.ND_NgaySinh,
+                                    nd.ND_DiaChiThuongChu,
+                                    PKG_SECURITY.AES_DECRYPT_B64(tk.TK_UserName) AS TK_UserName,
+                                    NVL(tk.TK_TrangThai, 'PENDING')             AS TK_TrangThai,
+                                    bn.BN_SoBaoHiemYT,
+                                    bn.BN_NhomMau,
+                                    bn.BN_TieuSuBenhAn
                             FROM    BENHNHAN bn
-                            JOIN    NGUOIDUNG nd ON nd.ND_IdNguoiDung = bn.ND_IdNguoiDung
-                            LEFT JOIN TAIKHOAN tk ON tk.BN_MaBenhNhan = bn.BN_MaBenhNhan
-                            WHERE   (:kw IS NULL OR :kw = '' OR
-                                    UPPER(nd.ND_HoTen)      LIKE UPPER('%' || :kw || '%') OR
-                                    UPPER(tk.TK_UserName)   LIKE UPPER('%' || :kw || '%') OR
-                                    UPPER(bn.BN_MaBenhNhan) LIKE UPPER('%' || :kw || '%'))
+                                    JOIN NGUOIDUNG nd
+                                        ON nd.ND_IdNguoiDung = bn.ND_IdNguoiDung
+                                    LEFT JOIN TAIKHOAN tk
+                                        ON tk.BN_MaBenhNhan = bn.BN_MaBenhNhan
+                            WHERE   -- 1) Không lấy bất kỳ BN nào gắn với tài khoản Admin
+                                    NOT EXISTS (
+                                        SELECT 1
+                                        FROM   TAIKHOAN tk2
+                                        WHERE  tk2.BN_MaBenhNhan = bn.BN_MaBenhNhan
+                                        AND    UPPER(tk2.TK_Role) = 'ADMIN'
+                                    )
+                              AND (  :kw IS NULL OR :kw = '' OR
+                                     UPPER(nd.ND_HoTen) LIKE UPPER('%' || :kw || '%') OR
+                                     UPPER(PKG_SECURITY.AES_DECRYPT_B64(tk.TK_UserName))
+                                            LIKE UPPER('%' || :kw || '%') OR
+                                     UPPER(bn.BN_MaBenhNhan) LIKE UPPER('%' || :kw || '%')
+                                  )
                             ORDER BY nd.ND_HoTen";
-
                 using (var cmd = new OracleCommand(sql, conn))
                 {
                     cmd.BindByName = true;
@@ -1103,6 +1135,7 @@ namespace DangKyKhamBenh.Controllers
 
 
         // xóa bs
+        // xóa bs
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteDoctor(string id)
@@ -1124,6 +1157,26 @@ namespace DangKyKhamBenh.Controllers
                     {
                         try
                         {
+                            // 0) Không cho xóa nếu BS này là admin
+                            using (var checkCmd = new OracleCommand(@"
+                        SELECT COUNT(*)
+                        FROM   TAIKHOAN
+                        WHERE  BS_MaBacSi = :id
+                        AND    UPPER(TK_Role) = 'ADMIN'", conn))
+                            {
+                                checkCmd.Transaction = tx;
+                                checkCmd.BindByName = true;
+                                checkCmd.Parameters.Add("id", id);
+
+                                var cnt = Convert.ToInt32(checkCmd.ExecuteScalar() ?? 0);
+                                if (cnt > 0)
+                                {
+                                    tx.Rollback();
+                                    TempData["Err"] = "Không thể xoá: đây là tài khoản Admin.";
+                                    return RedirectToAction("Doctors");
+                                }
+                            }
+
                             // 1) Lấy ND_IdNguoiDung của bác sĩ
                             string ndId = null;
                             using (var cmd = new OracleCommand(
@@ -1170,7 +1223,7 @@ namespace DangKyKhamBenh.Controllers
                                 cmd.ExecuteNonQuery();
                             }
 
-                            // 4) Xóa SLOTKHAM liên quan (FK tới PHANCONG)
+                            // 4) Xóa SLOTKHAM liên quan
                             using (var cmd = new OracleCommand(@"
                         DELETE FROM SLOTKHAM
                         WHERE PC_Id IN (
@@ -1193,7 +1246,7 @@ namespace DangKyKhamBenh.Controllers
                                 cmd.ExecuteNonQuery();
                             }
 
-                            // 6) Khoa nào đang dùng bác sĩ này làm trưởng khoa -> cho về NULL
+                            // 6) Khoa nào đang dùng bác sĩ này làm trưởng khoa -> NULL
                             using (var cmd = new OracleCommand(
                                 "UPDATE KHOA SET K_TruongKhoa = NULL WHERE K_TruongKhoa = :id", conn))
                             {
@@ -1203,10 +1256,10 @@ namespace DangKyKhamBenh.Controllers
                                 cmd.ExecuteNonQuery();
                             }
 
-                            // 7) Xóa tài khoản login liên quan
-                            using (var cmd = new OracleCommand(
-                                @"DELETE FROM TAIKHOAN
-                          WHERE BS_MaBacSi = :id OR ND_IdNguoiDung = :nd", conn))
+                            // 7) Xóa tài khoản login
+                            using (var cmd = new OracleCommand(@"
+                        DELETE FROM TAIKHOAN
+                        WHERE BS_MaBacSi = :id OR ND_IdNguoiDung = :nd", conn))
                             {
                                 cmd.Transaction = tx;
                                 cmd.BindByName = true;
@@ -1225,11 +1278,11 @@ namespace DangKyKhamBenh.Controllers
                                 cmd.ExecuteNonQuery();
                             }
 
-                            // 9) (Tùy chọn) Xóa luôn NGUOIDUNG nếu không còn liên kết ở đâu
+                            // 9) Xóa NGUOIDUNG nếu không còn liên kết
                             using (var cmd = new OracleCommand(@"
                         DELETE FROM NGUOIDUNG nd
                         WHERE nd.ND_IdNguoiDung = :nd
-                          AND NOT EXISTS (SELECT 1 FROM BACSI    b WHERE b.ND_IdNguoiDung = nd.ND_IdNguoiDung)
+                          AND NOT EXISTS (SELECT 1 FROM BACSI    b  WHERE b.ND_IdNguoiDung = nd.ND_IdNguoiDung)
                           AND NOT EXISTS (SELECT 1 FROM BENHNHAN bn WHERE bn.ND_IdNguoiDung = nd.ND_IdNguoiDung)
                           AND NOT EXISTS (SELECT 1 FROM TAIKHOAN tk WHERE tk.ND_IdNguoiDung = nd.ND_IdNguoiDung)", conn))
                             {
