@@ -282,26 +282,37 @@ namespace DangKyKhamBenh.Controllers
 
 
         // ====== E) TẠO TÀI KHOẢN BÁC SĨ (ADMIN TỰ TẠO) ======
-        [HttpGet] // Form nhập thông tin bác sĩ
+        [HttpGet]
         public ActionResult CreateDoctor()
         {
-            return View();   
+            return View();
         }
 
-        [HttpPost]     // Nhận dữ liệu form tạo bác sĩ
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateDoctor(string username, string password, string fullName,
-                                         string chuyenKhoa, string chucDanh, int? namKinhNghiem,
-                                         string email, string phone, DateTime? ngaySinh, string diaChi)
+        public ActionResult CreateDoctor(string username, string password, string fullName, string chuyenKhoa)
         {
-            // Validate tối thiểu:
+            // Validate tối thiểu
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
                 TempData["Err"] = "Vui lòng nhập Username và Password.";
                 return RedirectToAction("CreateDoctor");
             }
 
+            if (string.IsNullOrWhiteSpace(fullName))
+            {
+                TempData["Err"] = "Vui lòng nhập Họ tên bác sĩ.";
+                return RedirectToAction("CreateDoctor");
+            }
+
+            if (string.IsNullOrWhiteSpace(chuyenKhoa))
+            {
+                TempData["Err"] = "Vui lòng nhập Chuyên khoa.";
+                return RedirectToAction("CreateDoctor");
+            }
+
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+
             using (var conn = new OracleConnection(cs))
             {
                 conn.Open();
@@ -309,13 +320,19 @@ namespace DangKyKhamBenh.Controllers
                 {
                     try
                     {
-                        // Kiểm tra trùng username
+                        string u = username.Trim();
+                        string p = password.Trim();
+
+                        // B1: Check trùng username t   heo ciphertext
                         using (var check = new OracleCommand(@"
-                                SELECT COUNT(*) FROM TAIKHOAN WHERE UPPER(TRIM(TK_UserName)) = UPPER(TRIM(:u))", conn))
+                            SELECT COUNT(*)
+                            FROM   TAIKHOAN
+                            WHERE  TK_UserName = PKG_SECURITY.AES_ENCRYPT_B64(:u)", conn))
                         {
                             check.Transaction = tx;
                             check.BindByName = true;
-                            check.Parameters.Add("u", username);
+                            check.Parameters.Add("u", u);
+
                             if (Convert.ToInt32(check.ExecuteScalar()) > 0)
                             {
                                 tx.Rollback();
@@ -324,103 +341,183 @@ namespace DangKyKhamBenh.Controllers
                             }
                         }
 
-                        // 1) NGUOIDUNG
-                        var ndId = NextId(conn, tx, "NGUOIDUNG", "ND_IdNguoiDung", "ND");
-                        using (var insND = new OracleCommand(@"
-                                INSERT INTO NGUOIDUNG (ND_IdNguoiDung, ND_HoTen, ND_SoDienThoai, ND_Email, ND_NgaySinh, ND_DiaChiThuongChu)
-                                VALUES (:id, :hoten, :sdt, :email, :dob, :addr)", conn))
+                        // B2: Sinh mã
+                        string ndId = NextId(conn, tx, "NGUOIDUNG", "ND_IdNguoiDung", "ND");
+                        string bsId = NextId(conn, tx, "BACSI", "BS_MaBacSi", "BS");
+                        string bnId = NextId(conn, tx, "BENHNHAN", "BN_MaBenhNhan", "BN");
+                        string tkId = NextId(conn, tx, "TAIKHOAN", "TK_MaTK", "TK");
+
+                        // B3: Insert NGUOIDUNG (chỉ có họ tên, còn lại null)
+                        using (var cmdNd = new OracleCommand(@"
+                            INSERT INTO NGUOIDUNG
+                                (ND_IdNguoiDung,
+                                 ND_HoTen,
+                                 ND_SoDienThoai,
+                                 ND_Email,
+                                 ND_NgaySinh,
+                                 ND_DiaChiThuongChu)
+                            VALUES
+                                (:id,
+                                 :hoten,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL)", conn))
                         {
-                            insND.Transaction = tx;
-                            insND.BindByName = true;
-                            insND.Parameters.Add("id", ndId);
-                            insND.Parameters.Add("hoten", (object)fullName ?? username);
-                            insND.Parameters.Add("sdt", (object)phone ?? DBNull.Value);
-                            insND.Parameters.Add("email", (object)email ?? DBNull.Value);
-                            insND.Parameters.Add("dob", (object)ngaySinh ?? DBNull.Value);
-                            insND.Parameters.Add("addr", (object)diaChi ?? DBNull.Value);
-                            insND.ExecuteNonQuery();
+                            cmdNd.Transaction = tx;
+                            cmdNd.BindByName = true;
+                            cmdNd.Parameters.Add("id", ndId);
+                            cmdNd.Parameters.Add("hoten", fullName.Trim());
+                            cmdNd.ExecuteNonQuery();
                         }
 
-                        // 2) BÁC SĨ
-                        var bsId = NextId(conn, tx, "BACSI", "BS_MaBacSi", "BS");
-                        using (var insBS = new OracleCommand(@"
-                                INSERT INTO BACSI (BS_MaBacSi, BS_ChuyenKhoa, BS_ChucDanh, BS_NamKinhNghiem, ND_IdNguoiDung)
-                                VALUES (:id, :ck, :cd, :nam, :nd)", conn))
+                        // B4: Insert BACSI
+                        using (var cmdBs = new OracleCommand(@"
+                            INSERT INTO BACSI
+                                (BS_MaBacSi,
+                                 BS_ChuyenKhoa,
+                                 BS_ChucDanh,
+                                 BS_NamKinhNghiem,
+                                 ND_IdNguoiDung)
+                            VALUES
+                                (:bs,
+                                 :ck,
+                                 :cd,
+                                 :nam,
+                                 :nd)", conn))
                         {
-                            insBS.Transaction = tx;
-                            insBS.BindByName = true;
-                            insBS.Parameters.Add("id", bsId);
-                            insBS.Parameters.Add("ck", (object)chuyenKhoa ?? "Tổng quát");
-                            insBS.Parameters.Add("cd", (object)chucDanh ?? "BS");
-                            insBS.Parameters.Add("nam", (object)namKinhNghiem ?? 0);
-                            insBS.Parameters.Add("nd", ndId);
-                            insBS.ExecuteNonQuery();
+                            cmdBs.Transaction = tx;
+                            cmdBs.BindByName = true;
+                            cmdBs.Parameters.Add("bs", bsId);
+                            cmdBs.Parameters.Add("ck", chuyenKhoa.Trim());
+                            cmdBs.Parameters.Add("cd", "BS");
+                            cmdBs.Parameters.Add("nam", OracleDbType.Int32).Value = 0;
+                            cmdBs.Parameters.Add("nd", ndId);
+                            cmdBs.ExecuteNonQuery();
                         }
 
-                        // 3) TÀI KHOẢN: DOCTOR + ACTIVE
-                        var tkId = NextId(conn, tx, "TAIKHOAN", "TK_MaTK", "TK");
-                        using (var insTK = new OracleCommand(@"
-                                    INSERT INTO TAIKHOAN
-                                    (TK_MaTK, TK_UserName, TK_PassWord, TK_Role, TK_TrangThai, TK_StaffType,
-                                     BN_MaBenhNhan, BS_MaBacSi, ND_IdNguoiDung)
-                                    VALUES
-                                    (:tk, :u, :p, :r, :tt, :st, :bn, :bs, :nd)", conn))
+                        // B5: Insert BENHNHAN dummy (nếu FK không cho NULL)
+                        using (var cmdBn = new OracleCommand(@"
+                            INSERT INTO BENHNHAN
+                                (BN_MaBenhNhan,
+                                 BN_SoBaoHiemYT,
+                                 BN_NhomMau,
+                                 BN_TieuSuBenhAn,
+                                 ND_IdNguoiDung)
+                            VALUES
+                                (:bn,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 :nd)", conn))
                         {
-                            insTK.Transaction = tx;
-                            insTK.BindByName = true;
-                            insTK.Parameters.Add("tk", tkId);
-                            insTK.Parameters.Add("u", username.Trim());
-                            insTK.Parameters.Add("p", password.Trim()); // TODO: hash mật khẩu
-                            insTK.Parameters.Add("r", "DOCTOR");  // Role bác sĩ
-                            insTK.Parameters.Add("tt", "ACTIVE");  // Active ngay
-                            insTK.Parameters.Add("st", "Bác sĩ");   // StaffType hiển thị
-                            insTK.Parameters.Add("bn", DBNull.Value);   // Không phải BN
-                            insTK.Parameters.Add("bs", bsId);  // Liên kết BS
-                            insTK.Parameters.Add("nd", ndId);   // Liên kết ND
-                            insTK.ExecuteNonQuery();
+                            cmdBn.Transaction = tx;
+                            cmdBn.BindByName = true;
+                            cmdBn.Parameters.Add("bn", bnId);
+                            cmdBn.Parameters.Add("nd", ndId);
+                            cmdBn.ExecuteNonQuery();
                         }
 
-                        tx.Commit(); // Thành công → commit
-                        TempData["Msg"] = "Tạo bác sĩ thành công.";
-                        return RedirectToAction("CreateDoctor"); // Quay lại form (hoặc chuyển sang danh sách bác sĩ tùy bạn)
+                        // B6: Insert TAIKHOAN (mã hóa username + hash password)
+                        using (var cmdTk = new OracleCommand(@"
+                            INSERT INTO TAIKHOAN
+                                (TK_MaTK,
+                                 TK_UserName,
+                                 TK_PassWord,
+                                 TK_Role,
+                                 TK_TrangThai,
+                                 TK_StaffType,
+                                 BN_MaBenhNhan,
+                                 BS_MaBacSi,
+                                 ND_IdNguoiDung)
+                            VALUES
+                                (:tkId,
+                                 PKG_SECURITY.AES_ENCRYPT_B64(:u),
+                                 PKG_SECURITY.HASH_PASSWORD(:p),
+                                 :role,
+                                 :status,
+                                 :st,
+                                 :bn,
+                                 :bs,
+                                 :nd)", conn))
+                        {
+                            cmdTk.Transaction = tx;
+                            cmdTk.BindByName = true;
+                            cmdTk.Parameters.Add("tkId", tkId);
+                            cmdTk.Parameters.Add("u", u);
+                            cmdTk.Parameters.Add("p", p);
+                            cmdTk.Parameters.Add("role", "User");
+                            cmdTk.Parameters.Add("status", "ACTIVE");
+                            cmdTk.Parameters.Add("st", "BacSi");
+                            cmdTk.Parameters.Add("bn", bnId);
+                            cmdTk.Parameters.Add("bs", bsId);
+                            cmdTk.Parameters.Add("nd", ndId);
+                            cmdTk.ExecuteNonQuery();
+                        }
+
+                        tx.Commit();
+                        TempData["Msg"] = "Tạo tài khoản bác sĩ thành công.";
+                        return RedirectToAction("CreateDoctor");
+                    }
+                    catch (ArgumentOutOfRangeException ex)
+                    {
+                        tx.Rollback();
+                        System.Diagnostics.Debug.WriteLine("===== ARGUMENT OUT OF RANGE =====");
+                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                        TempData["Err"] = "Lỗi tạo bác sĩ (ArgumentOutOfRangeException): " + ex.Message;
+                        return RedirectToAction("CreateDoctor");
                     }
                     catch (Exception ex)
                     {
-                        tx.Rollback();  // Lỗi → rollback
-                        TempData["Err"] = "Lỗi tạo bác sĩ: " + ex.Message;
+                        tx.Rollback();
+                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                        TempData["Err"] = "Lỗi tạo bác sĩ (" + ex.GetType().Name + "): " + ex.Message;
                         return RedirectToAction("CreateDoctor");
                     }
                 }
             }
         }
 
+        // ==============================================================
+        // HÀM PHỤ: Sinh mã ID theo prefix (ND, BN, BS, TK)
+        // ==============================================================
 
-
-
-
-        // ====== HÀM PHỤ: Sinh mã ID theo prefix ======
-        private static string NextId(OracleConnection conn, OracleTransaction tx, string table, string idColumn, string prefix)
-        {   // Khoá bảng để tránh race-condition khi nhiều admin duyệt cùng lúc
+        private static string NextId(
+            OracleConnection conn,
+            OracleTransaction tx,
+            string table,
+            string idColumn,
+            string prefix)
+        {
             using (var lockCmd = new OracleCommand($"LOCK TABLE {table} IN EXCLUSIVE MODE", conn))
             {
                 lockCmd.Transaction = tx;
                 lockCmd.ExecuteNonQuery();
             }
 
-            // Lấy max 8 chữ số đuôi của cột idColumn (định dạng PREFIX########)
-            var sqlMax = $@"SELECT NVL(MAX(TO_NUMBER(SUBSTR({idColumn}, -8))), 0) FROM {table}";
+            var sqlMax = $@"
+                SELECT NVL(MAX(TO_NUMBER(SUBSTR({idColumn}, -8))), 0)
+                FROM   {table}
+                WHERE  {idColumn} LIKE :pfx";
+
             decimal maxTail;
+
             using (var cmd = new OracleCommand(sqlMax, conn))
             {
                 cmd.Transaction = tx;
+                cmd.BindByName = true;
+                cmd.Parameters.Add("pfx", OracleDbType.Varchar2).Value = prefix + "%";
+
                 var ret = cmd.ExecuteScalar();
                 maxTail = Convert.ToDecimal(ret);
             }
 
-            // +1 và ghép lại theo format
             var next = maxTail + 1;
-            return prefix + next.ToString("00000000");
+            return prefix + next.ToString("00000000");   // ND00000001, BS00000001,...
         }
+
+
+
 
         // ==============================================================
         // ====== F) SỬA THÔNG TIN BÁC SĨ ======
