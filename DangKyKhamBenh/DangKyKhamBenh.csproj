@@ -167,6 +167,7 @@
     <Compile Include="Controllers\DoctorController.cs" />
     <Compile Include="Controllers\DoctorOnlyAttribute.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\HoSoBacSiController.cs" />
     <Compile Include="Controllers\HoSoController.cs" />
     <Compile Include="Filters\AdminOnlyAttribute.cs" />
     <Compile Include="Global.asax.cs">
@@ -244,6 +245,7 @@
     <Content Include="Views\HoSo\CapNhatHoSo.cshtml" />
     <Content Include="Views\DangKyKham\ChonChuyenKhoa.cshtml" />
     <Content Include="Views\DangKyKham\ChonNgayKham.cshtml" />
+    <Content Include="Views\HoSoBacSi\CreateHoSoBacSi.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

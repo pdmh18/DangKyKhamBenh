@@ -111,6 +111,10 @@
                     <span>UMC CARE — Bảng điều khiển Bác sĩ</span>
                 </div>
                 <div class="user">
+                    <a href="@Url.Action("CreateHoSoBacSi","HoSoBacSi")"
+                       class="btn btn-outline-light btn-sm me-3">
+                        <i class="fa-regular fa-id-badge me-1"></i> Hồ sơ
+                    </a>
                     <span class="me-3">
                         Xin chào, <strong>@((Model != null ? Model.TenBacSi : null) ?? "Bác sĩ")</strong>
                         (@((Model != null ? Model.BS_MaBacSi : null) ?? "—"))

@@ -92,32 +92,72 @@ namespace DangKyKhamBenh.Controllers
 
 
         // ====== E) TẠO TÀI KHOẢN BÁC SĨ (ADMIN TỰ TẠO) ======
+        private void LoadKhoaDropDown(string selected = null)
+        {
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            var list = new List<SelectListItem>();
+
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+                using (var cmd = new OracleCommand(
+                    "SELECT K_MaKhoa, K_TenKhoa FROM KHOA ORDER BY K_TenKhoa", conn))
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        var ma = r["K_MaKhoa"]?.ToString();
+                        var ten = r["K_TenKhoa"]?.ToString();
+
+                        list.Add(new SelectListItem
+                        {
+                            Value = ma,
+                            Text = ten,
+                            Selected = (selected != null && selected == ma)
+                        });
+                    }
+                }
+            }
+
+            ViewBag.KhoaList = list;
+        }
+
         [HttpGet]
         public ActionResult CreateDoctor()
         {
+            ViewBag.Title = "Tạo tài khoản bác sĩ";
+            ViewBag.Active = "CreateDoctor";
+            LoadKhoaDropDown();
             return View();
         }
 
+        [AdminOnly]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateDoctor(string username, string password, string fullName, string chuyenKhoa)
+        public ActionResult CreateDoctor(string username, string password, string fullName, string kMaKhoa)
         {
             // Validate tối thiểu
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
                 TempData["Err"] = "Vui lòng nhập Username và Password.";
+                LoadKhoaDropDown();
+
                 return RedirectToAction("CreateDoctor");
             }
 
             if (string.IsNullOrWhiteSpace(fullName))
             {
                 TempData["Err"] = "Vui lòng nhập Họ tên bác sĩ.";
+                LoadKhoaDropDown();
+
                 return RedirectToAction("CreateDoctor");
             }
 
-            if (string.IsNullOrWhiteSpace(chuyenKhoa))
+            if (string.IsNullOrWhiteSpace(kMaKhoa))
             {
-                TempData["Err"] = "Vui lòng nhập Chuyên khoa.";
+                TempData["Err"] = "Vui lòng chọn khoa.";
+                LoadKhoaDropDown();
+
                 return RedirectToAction("CreateDoctor");
             }
 
@@ -151,6 +191,17 @@ namespace DangKyKhamBenh.Controllers
                                 return RedirectToAction("CreateDoctor");
                             }
                         }
+                        string tenKhoa = null;
+                        using (var cmdTen = new OracleCommand(
+                            "SELECT K_TenKhoa FROM KHOA WHERE K_MaKhoa = :ma", conn))
+                        {
+                            cmdTen.Transaction = tx;
+                            cmdTen.BindByName = true;
+                            cmdTen.Parameters.Add("ma", kMaKhoa);
+                            var o = cmdTen.ExecuteScalar();
+                            if (o != null && o != DBNull.Value)
+                                tenKhoa = o.ToString();
+                        }
 
                         // B2: Sinh mã
                         string ndId = NextId(conn, tx, "NGUOIDUNG", "ND_IdNguoiDung", "ND");
@@ -161,19 +212,15 @@ namespace DangKyKhamBenh.Controllers
                         // B3: Insert NGUOIDUNG (chỉ có họ tên, còn lại null)
                         using (var cmdNd = new OracleCommand(@"
                             INSERT INTO NGUOIDUNG
-                                (ND_IdNguoiDung,
-                                 ND_HoTen,
-                                 ND_SoDienThoai,
-                                 ND_Email,
-                                 ND_NgaySinh,
-                                 ND_DiaChiThuongChu)
-                            VALUES
-                                (:id,
-                                 :hoten,
-                                 NULL,
-                                 NULL,
-                                 NULL,
-                                 NULL)", conn))
+                        (ND_IdNguoiDung, ND_HoTen,
+                         ND_SoDienThoai, ND_Email, ND_CCCD, ND_NgaySinh,
+                         ND_GioiTinh, ND_QuocGia, ND_DanToc, ND_NgheNghiep,
+                         ND_TinhThanh, ND_QuanHuyen, ND_PhuongXa, ND_DiaChiThuongChu)
+                    VALUES
+                        (:id, :hoten,
+                         NULL, NULL, NULL, NULL,
+                         NULL, NULL, NULL, NULL,
+                         NULL, NULL, NULL, NULL)", conn))
                         {
                             cmdNd.Transaction = tx;
                             cmdNd.BindByName = true;
@@ -189,45 +236,28 @@ namespace DangKyKhamBenh.Controllers
                                  BS_ChuyenKhoa,
                                  BS_ChucDanh,
                                  BS_NamKinhNghiem,
-                                 ND_IdNguoiDung)
+                                 ND_IdNguoiDung,
+                                 K_MaKhoa)
                             VALUES
                                 (:bs,
                                  :ck,
                                  :cd,
                                  :nam,
-                                 :nd)", conn))
+                                 :nd,
+                                 :khoa)", conn))
                         {
                             cmdBs.Transaction = tx;
                             cmdBs.BindByName = true;
                             cmdBs.Parameters.Add("bs", bsId);
-                            cmdBs.Parameters.Add("ck", chuyenKhoa.Trim());
+                            cmdBs.Parameters.Add("ck", (object)tenKhoa ?? DBNull.Value);   // hiển thị trên UI
                             cmdBs.Parameters.Add("cd", "BS");
                             cmdBs.Parameters.Add("nam", OracleDbType.Int32).Value = 0;
                             cmdBs.Parameters.Add("nd", ndId);
+                            cmdBs.Parameters.Add("khoa", kMaKhoa);
                             cmdBs.ExecuteNonQuery();
                         }
 
-                        // B5: Insert BENHNHAN dummy (nếu FK không cho NULL)
-                        //using (var cmdBn = new OracleCommand(@"
-                        //    INSERT INTO BENHNHAN
-                        //        (BN_MaBenhNhan,
-                        //         BN_SoBaoHiemYT,
-                        //         BN_NhomMau,
-                        //         BN_TieuSuBenhAn,
-                        //         ND_IdNguoiDung)
-                        //    VALUES
-                        //        (:bn,
-                        //         NULL,
-                        //         NULL,
-                        //         NULL,
-                        //         :nd)", conn))
-                        //{
-                        //    cmdBn.Transaction = tx;
-                        //    cmdBn.BindByName = true;
-                        //    cmdBn.Parameters.Add("bn", bnId);
-                        //    cmdBn.Parameters.Add("nd", ndId);
-                        //    cmdBn.ExecuteNonQuery();
-                        //}
+                        
 
                         // B6: Insert TAIKHOAN (mã hóa username + hash password)
                         using (var cmdTk = new OracleCommand(@"

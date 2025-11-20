@@ -1,4 +1,4 @@
-﻿@model DangKyKhamBenh.Models.TaiKhoan
+﻿﻿@model DangKyKhamBenh.Models.TaiKhoan
 @{
     Layout = null;
     ViewBag.Title = "Đăng ký";
@@ -22,9 +22,7 @@
 
         body {
             min-height: 100vh;
-            background: radial-gradient(1200px 800px at 20% 10%, #e8f7ee 0%, transparent 50%),
-                        radial-gradient(900px 700px at 100% 0, #f0fff4 0%, transparent 55%),
-                        linear-gradient(180deg, #f8fbf9 0%, #eef6f1 100%);
+            background: radial-gradient(1200px 800px at 20% 10%, #e8f7ee 0%, transparent 50%), radial-gradient(900px 700px at 100% 0, #f0fff4 0%, transparent 55%), linear-gradient(180deg, #f8fbf9 0%, #eef6f1 100%);
         }
 
         .auth-card {
@@ -46,7 +44,9 @@
             background: #fff;
         }
 
-        .form-label { font-weight: 600; }
+        .form-label {
+            font-weight: 600;
+        }
 
         .form-control {
             border-radius: 10px;
@@ -55,15 +55,17 @@
             transition: all .2s ease;
         }
 
-        .input-icon { position: relative; }
-        .input-icon .fa {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: .6;
+        .input-icon {
+            position: relative;
         }
-        .input-icon input { padding-left: 40px; }
+
+            .input-icon .fa {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                opacity: .6;
+            }
 
         .btn-success {
             background: var(--pri);
@@ -88,15 +90,8 @@
             border-color: #dc3545 !important;
         }
 
-        /* Toast lỗi đầu form */
-        #error-toast {
-            display: none;
-            animation: slideDown 0.4s ease;
-        }
-
-        keyframes slideDown {
-            0% { opacity: 0; transform: translateY(-20px); }
-            100% { opacity: 1; transform: translateY(0); }
+        .input-icon input {
+            padding-left: 40px;
         }
     </style>
 </head>
@@ -110,21 +105,7 @@
                 </div>
             </div>
             <div class="auth-body">
-
-                <!-- Toast lỗi xuất hiện đầu form -->
-                <div id="error-toast" class="mb-3">
-                    <div class="p-3 rounded-3 shadow-lg bg-danger text-white d-flex align-items-start">
-                        <div class="me-2"><i class="fa-solid fa-circle-exclamation me-1"></i></div>
-                        <div class="flex-grow-1">
-                            <div class="fw-semibold mb-1">Thông báo lỗi</div>
-                            <div id="error-toast-body" style="font-size:0.9rem;"></div>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-light ms-2" id="error-toast-close">×</button>
-                    </div>
-                </div>
-
                 @Html.ValidationSummary(false, "", new { @class = "d-none", id = "validation-summary" })
-
                 @if (pendingOk)
                 {
                     <div class="alert alert-success" role="alert">
@@ -152,68 +133,79 @@
                     using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @id = "frmRegister", @class = "needs-validation", novalidate = "novalidate" }))
                     {
                         @Html.AntiForgeryToken()
-
                         <div class="row g-3">
-                            <!-- Các input form giống như cũ -->
                             <!-- Tên đăng nhập -->
                             <div class="col-md-6">
                                 <label class="form-label">Tên đăng nhập</label>
-                                <div class="input-icon">
-                                    <i class="fa-solid fa-user"></i>
-                                    @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Tên đăng nhập", required = "required" })
-                                    @Html.ValidationMessageFor(m => m.Username, "", new { @class = "invalid-feedback" })
+                                <div class="input-group">
+                                    <div class="input-icon">
+                                        <i class="fa-solid fa-user"></i>
+                                        @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Tên đăng nhập", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.Username, "", new { @class = "invalid-feedback" })
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Mật khẩu -->
                             <div class="col-md-6">
                                 <label class="form-label">Mật khẩu</label>
-                                <div class="input-icon">
-                                    <i class="fa-solid fa-lock"></i>
-                                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Mật khẩu", required = "required", id = "Password" })
-                                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "invalid-feedback", id = "password-error" })
+                                <div class="input-group">
+                                    <div class="input-icon">
+                                        <i class="fa-solid fa-lock"></i>
+                                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Mật khẩu", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "invalid-feedback", id = "password-error" })
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Xác nhận mật khẩu -->
                             <div class="col-md-6">
                                 <label class="form-label">Xác nhận mật khẩu</label>
-                                <div class="input-icon">
-                                    <i class="fa-solid fa-key"></i>
-                                    @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", placeholder = "Xác nhận mật khẩu", required = "required" })
-                                    @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "invalid-feedback", id = "confirm-error" })
+                                <div class="input-group">
+                                    <div class="input-icon">
+                                        <i class="fa-solid fa-key"></i>
+                                        @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", placeholder = "Xác nhận mật khẩu", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "invalid-feedback", id = "confirm-error" })
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Email -->
                             <div class="col-md-6">
                                 <label class="form-label">Email</label>
-                                <div class="input-icon">
-                                    <i class="fa-solid fa-envelope"></i>
-                                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Email", required = "required" })
-                                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "invalid-feedback", id = "email-error" })
+                                <div class="input-group">
+                                    <div class="input-icon">
+                                        <i class="fa-solid fa-envelope"></i>
+                                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Email", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "invalid-feedback", id = "email-error" })
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Số điện thoại -->
                             <div class="col-md-6">
                                 <label class="form-label">Số điện thoại</label>
-                                <div class="input-icon">
-                                    <i class="fa-solid fa-phone"></i>
-                                    @Html.TextBoxFor(m => m.PhoneNumber, new { @class = "form-control", placeholder = "Số điện thoại", required = "required" })
-                                    @Html.ValidationMessageFor(m => m.PhoneNumber, "", new { @class = "invalid-feedback", id = "phone-error" })
+                                <div class="input-group">
+                                    <div class="input-icon">
+                                        <i class="fa-solid fa-phone"></i>
+                                        @Html.TextBoxFor(m => m.PhoneNumber, new { @class = "form-control", placeholder = "Số điện thoại", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.PhoneNumber, "", new { @class = "invalid-feedback", id = "phone-error" })
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Ngày sinh -->
                             <div class="col-md-6">
                                 <label class="form-label">Ngày sinh</label>
-                                <div class="input-icon">
-                                    <i class="fa-regular fa-calendar"></i>
-                                    @Html.TextBoxFor(m => m.DateOfBirth, new { type = "date", @class = "form-control", required = "required" })
-                                    @Html.ValidationMessageFor(m => m.DateOfBirth, "", new { @class = "invalid-feedback", id = "dob-error" })
+                                <div class="input-group">
+                                    <div class="input-icon">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        @Html.TextBoxFor(m => m.DateOfBirth, new { type = "date", @class = "form-control", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.DateOfBirth, "", new { @class = "invalid-feedback", id = "dob-error" })
+                                    </div>
                                 </div>
                             </div>
+
                         </div>
 
                         <div class="divider"></div>
@@ -232,5 +224,67 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="~/js/register.js"></script>
+    <script>
+        // Hàm hiện toast lỗi
+        function showErrorToast(messageHtml) {
+            const $toast = $('#error-toast');
+            $('#error-toast-body').html(messageHtml);
+
+            $toast.stop(true, true).fadeIn(200);
+
+            // Tự ẩn sau 15s
+            setTimeout(function () {
+                $toast.fadeOut(300);
+            }, 15000);
+        }
+
+        $(function () {
+            // 1. Lấy lỗi từ ValidationSummary (server-side)
+            const $vs = $('#validation-summary');
+
+            if ($vs.length) {
+                const items = [];
+                $vs.find('li').each(function () {
+                    const text = $(this).text().trim();
+                    if (text.length) {
+                        items.push(text);
+                    }
+                });
+
+                if (items.length > 0) {
+                    // Ghép các lỗi thành <ul> nhỏ trong toast
+                    const html = '<ul class="mb-0 ps-3">' +
+                        items.map(t => '<li>' + t + '</li>').join('') +
+                        '</ul>';
+
+                    showErrorToast(html);
+                }
+            }
+
+            // 2. Nút đóng toast
+            $('#error-toast-close').on('click', function () {
+                $('#error-toast').fadeOut(200);
+            });
+        });
+    </script>
+
+    <div id="error-toast"
+         class="position-fixed start-0 bottom-0 m-3"
+         style="min-width:260px; z-index: 2000; display:none;">
+        <div class="p-3 rounded-3 shadow-lg bg-danger text-white d-flex">
+            <div class="me-2">
+                <i class="fa-solid fa-circle-exclamation me-1"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-semibold mb-1">Thông báo lỗi</div>
+                <div id="error-toast-body" style="font-size:0.9rem;"></div>
+            </div>
+            <button type="button" class="btn btn-sm btn-light ms-2"
+                    id="error-toast-close">
+                ×
+            </button>
+        </div>
+    </div>
+
 </body>
 </html>
