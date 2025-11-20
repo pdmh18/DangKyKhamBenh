@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;                         
 using System.Data;
+using System.Reflection;
 using System.Web.Mvc;
 using System.Web.Razor.Tokenizer.Symbols;
 using static System.Collections.Specialized.BitVector32;
@@ -334,16 +335,21 @@ namespace DangKyKhamBenh.Controllers
         [HttpGet]
         public ActionResult EditDoctor(string id)
         {
-            var vm = new BacSi();
+            if (string.IsNullOrWhiteSpace(id)) return RedirectToAction("Doctors");
+            ViewBag.Title = "Sửa bác sĩ";
+            ViewBag.Active = "Doctors"; 
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
-
+            BacSi vm = null;
             using (var conn = new OracleConnection(cs))
             {
                 conn.Open();
                 var sql = @"
                 SELECT b.BS_MaBacSi, b.BS_ChuyenKhoa, b.BS_ChucDanh, b.BS_NamKinhNghiem,
-                       nd.ND_HoTen, nd.ND_SoDienThoai, nd.ND_Email, nd.ND_NgaySinh, nd.ND_DiaChiThuongChu,
-                       tk.TK_UserName, NVL(tk.TK_TrangThai,'ACTIVE') as TrangThai
+                       nd.ND_HoTen, nd.ND_SoDienThoai, nd.ND_Email,nd.ND_CCCD, nd.ND_NgaySinh,nd.ND_GioiTinh,
+                       nd.ND_QuocGia,nd.ND_DanToc,nd.ND_NgheNghiep,nd.ND_TinhThanh,nd.ND_QuanHuyen,
+                       nd.ND_PhuongXa,nd.ND_DiaChiThuongChu,
+                       PKG_SECURITY.AES_DECRYPT_B64(tk.TK_UserName) AS TK_UserName,
+                       NVL(tk.TK_TrangThai, 'PENDING')              AS TK_TrangThai
                   FROM BACSI b
                   JOIN NGUOIDUNG nd ON nd.ND_IdNguoiDung = b.ND_IdNguoiDung
                   JOIN TAIKHOAN tk ON tk.BS_MaBacSi = b.BS_MaBacSi
@@ -356,26 +362,44 @@ namespace DangKyKhamBenh.Controllers
 
                     using (var r = cmd.ExecuteReader())
                     {
-                        if (!r.Read()) return HttpNotFound();
+                        
+                        if (r.Read())
+                        {
+                            vm = new BacSi()
+                            {
+                                BS_MaBacSi = r["BS_MaBacSi"]?.ToString(),
+                                ND_HoTen = r["ND_HoTen"]?.ToString(),
+                                ND_SoDienThoai = r["ND_SoDienThoai"]?.ToString(),
+                                ND_Email = r["ND_Email"]?.ToString(),
+                                ND_CCCD = r["ND_CCCD"]?.ToString(),
+                                ND_NgaySinh = r.IsDBNull(r.GetOrdinal("ND_NgaySinh")) ? (DateTime?)null : r.GetDateTime(r.GetOrdinal("ND_NgaySinh")),
+                                ND_GioiTinh = r.IsDBNull(r.GetOrdinal("ND_GioiTinh")) ? (string)null : r.GetString(r.GetOrdinal("ND_GioiTinh")),
+                                ND_QuocGia = r["ND_QuocGia"]?.ToString(),
+                                ND_DanToc = r["ND_DanToc"]?.ToString(),
+                                ND_NgheNghiep = r["ND_NgheNghiep"]?.ToString(),
+                                ND_TinhThanh = r["ND_TinhThanh"]?.ToString(),
+                                ND_QuanHuyen = r["ND_QuanHuyen"]?.ToString(),
+                                ND_PhuongXa = r["ND_PhuongXa"]?.ToString(),
+                                ND_DiaChiThuongChu = r["ND_DiaChiThuongChu"]?.ToString(),
+                                TK_UserName = r["TK_UserName"]?.ToString(),
+                                TK_TrangThai = r["TK_TrangThai"]?.ToString(),
+                                BS_NamKinhNghiem = r.IsDBNull(r.GetOrdinal("BS_NamKinhNghiem"))
+                                               ? (int?)null
+                                               : Convert.ToInt32(r.GetDecimal(r.GetOrdinal("BS_NamKinhNghiem"))),
+                                BS_ChuyenKhoa = r["BS_ChuyenKhoa"]?.ToString(),
+                                BS_ChucDanh = r["BS_ChucDanh"]?.ToString()
 
-                        vm.BS_MABACSI = r.GetString(0);
-                        vm.BS_CHUYENKHOA = r.IsDBNull(1) ? null : r.GetString(1);
-                        vm.BS_CHUCDANH = r.IsDBNull(2) ? null : r.GetString(2);
-                        vm.BS_NAMKINHNGHIEM = r.IsDBNull(3) ? (int?)null : Convert.ToInt32(r.GetDecimal(3));
-                        vm.ND_HOTEN = r.IsDBNull(4) ? null : r.GetString(4);
-                        vm.ND_SODIENTHOAI = r.IsDBNull(5) ? null : r.GetString(5);
-                        vm.ND_EMAIL = r.IsDBNull(6) ? null : r.GetString(6);
-                        vm.ND_NGAYSINH = r.IsDBNull(7) ? (DateTime?)null : r.GetDateTime(7);
-                        vm.ND_DIACHITHUONGCHU = r.IsDBNull(8) ? null : r.GetString(8);
-                        vm.UserName = r.GetString(9);
-                        vm.TrangThai = r.GetString(10);
+
+                                
+                            };
+                        }
+
                     }
                 }
             }
-
-            ViewBag.Title = "Sửa bác sĩ";
-            ViewBag.Active = "CreateDoctor"; // hoặc "Doctors"
-            return View(vm);                  // Views/Admin/EditDoctor.cshtml
+            if (vm == null) return RedirectToAction("Doctors");
+            
+            return View(vm);         
         }
 
         [HttpPost, ValidateAntiForgeryToken]
@@ -401,66 +425,95 @@ namespace DangKyKhamBenh.Controllers
                         {
                             cmd.Transaction = tx;
                             cmd.BindByName = true;
-                            cmd.Parameters.Add("ck", (object)vm.BS_CHUYENKHOA ?? DBNull.Value);
-                            cmd.Parameters.Add("cd", (object)vm.BS_CHUCDANH ?? DBNull.Value);
-                            cmd.Parameters.Add("nam", (object)vm.BS_NAMKINHNGHIEM ?? DBNull.Value);
-                            cmd.Parameters.Add("id", vm.BS_MABACSI);
+                            cmd.Parameters.Add("ck", (object)vm.BS_ChuyenKhoa ?? DBNull.Value);
+                            cmd.Parameters.Add("cd", (object)vm.BS_ChucDanh ?? DBNull.Value);
+                            cmd.Parameters.Add("nam", vm.BS_NamKinhNghiem.HasValue
+                                                                        ? (object)vm.BS_NamKinhNghiem.Value
+                                                                        : DBNull.Value);
+                            cmd.Parameters.Add("id", vm.BS_MaBacSi);
                             cmd.ExecuteNonQuery();
                         }
 
                         // Update NGUOIDUNG
-                        using (var cmd = new OracleCommand(@"
-                        UPDATE NGUOIDUNG nd
-                           SET nd.ND_HoTen          = :ten,
-                               nd.ND_SoDienThoai    = :sdt,
-                               nd.ND_Email          = :email,
-                               nd.ND_NgaySinh       = :ns,
-                               nd.ND_DiaChiThuongChu= :dc
-                         WHERE nd.ND_IdNguoiDung = (
-                               SELECT ND_IdNguoiDung FROM BACSI WHERE BS_MaBacSi=:id)", conn))
+                        var sqlND = @"
+                                        UPDATE NGUOIDUNG nd
+                                        SET nd.ND_HoTen          = :hoten,
+                                            nd.ND_SoDienThoai    = :sdt,
+                                            nd.ND_Email          = :email,
+                                            nd.ND_CCCD          = :cccd,
+                                            nd.ND_NgaySinh       = :ngaysinh,
+                                            nd.ND_GioiTinh          = :gioitinh,
+                                            nd.ND_QuocGia          = :quocgia,
+                                            nd.ND_DanToc          = :dantoc,
+                                            nd.ND_NgheNghiep          = :nghenghiep,
+                                            nd.ND_TinhThanh          = :tinhthanh,
+                                            nd.ND_QuanHuyen          = :quanhuyen,
+                                            nd.ND_PhuongXa          = :phuongxa,
+                                            nd.ND_DiaChiThuongChu= :diachi
+                                        WHERE nd.ND_IdNguoiDung = (SELECT ND_IdNguoiDung FROM BENHNHAN WHERE BN_MaBenhNhan = :bnid)";
+
+                        using (var cmd = new OracleCommand(sqlND, conn))
                         {
-                            cmd.Transaction = tx;
-                            cmd.BindByName = true;
-                            cmd.Parameters.Add("ten", (object)vm.ND_HOTEN ?? DBNull.Value);
-                            cmd.Parameters.Add("sdt", (object)vm.ND_SODIENTHOAI ?? DBNull.Value);
-                            cmd.Parameters.Add("email", (object)vm.ND_EMAIL ?? DBNull.Value);
-                            cmd.Parameters.Add("ns", (object)vm.ND_NGAYSINH ?? DBNull.Value);
-                            cmd.Parameters.Add("dc", (object)vm.ND_DIACHITHUONGCHU ?? DBNull.Value);
-                            cmd.Parameters.Add("id", vm.BS_MABACSI);
+                            cmd.Transaction = tx; cmd.BindByName = true;
+                            cmd.Parameters.Add("hoten", (object)vm.ND_HoTen ?? DBNull.Value);
+                            cmd.Parameters.Add("sdt", (object)vm.ND_SoDienThoai ?? DBNull.Value);
+                            cmd.Parameters.Add("email", (object)vm.ND_Email ?? DBNull.Value);
+                            cmd.Parameters.Add("cccd", (object)vm.ND_CCCD ?? DBNull.Value);
+                            cmd.Parameters.Add("gioitinh", (object)vm.ND_GioiTinh ?? DBNull.Value);
+                            cmd.Parameters.Add("quocgia", (object)vm.ND_QuocGia ?? DBNull.Value);
+                            cmd.Parameters.Add("dantoc", (object)vm.ND_DanToc ?? DBNull.Value);
+                            cmd.Parameters.Add("nghenghiep", (object)vm.ND_NgheNghiep ?? DBNull.Value);
+                            cmd.Parameters.Add("tinhthanh", (object)vm.ND_TinhThanh ?? DBNull.Value);
+                            cmd.Parameters.Add("quanhuyen", (object)vm.ND_QuanHuyen ?? DBNull.Value);
+                            cmd.Parameters.Add("phuongxa", (object)vm.ND_PhuongXa ?? DBNull.Value);
+                            cmd.Parameters.Add("ngaysinh", (object)vm.ND_NgaySinh ?? DBNull.Value);
+                            cmd.Parameters.Add("diachi", (object)vm.ND_DiaChiThuongChu ?? DBNull.Value);
+                            cmd.Parameters.Add("bnid", vm.BS_MaBacSi);
                             cmd.ExecuteNonQuery();
                         }
 
                         // Update TAIKHOAN (trạng thái, đổi pass nếu nhập)
+                        //using (var cmd = new OracleCommand(@"
+                        //UPDATE TAIKHOAN
+                        //   SET TK_TrangThai = :tt
+                        // WHERE BS_MaBacSi   = :id", conn))
+                        //{
+                        //    cmd.Transaction = tx;
+                        //    cmd.BindByName = true;
+                        //    cmd.Parameters.Add("tt", (object)vm.TK_TrangThai ?? "ACTIVE");
+                        //    cmd.Parameters.Add("id", vm.BS_MaBaSi);
+                        //    cmd.ExecuteNonQuery();
+                        //}
                         using (var cmd = new OracleCommand(@"
-                        UPDATE TAIKHOAN
-                           SET TK_TrangThai = :tt
-                         WHERE BS_MaBacSi   = :id", conn))
+                            UPDATE TAIKHOAN
+                               SET TK_TrangThai = :tt
+                             WHERE BS_MaBacSi   = :id", conn))
                         {
                             cmd.Transaction = tx;
                             cmd.BindByName = true;
-                            cmd.Parameters.Add("tt", (object)vm.TrangThai ?? "ACTIVE");
-                            cmd.Parameters.Add("id", vm.BS_MABACSI);
+                            cmd.Parameters.Add("tt", (object)vm.TK_TrangThai ?? "ACTIVE");
+                            cmd.Parameters.Add("id", vm.BS_MaBacSi);
                             cmd.ExecuteNonQuery();
                         }
 
-                        if (!string.IsNullOrWhiteSpace(vm.NewPassword))
-                        {
-                            using (var cmd = new OracleCommand(@"
-                            UPDATE TAIKHOAN
-                               SET TK_PassWord = :p
-                             WHERE BS_MaBacSi  = :id", conn))
-                            {
-                                cmd.Transaction = tx;
-                                cmd.BindByName = true;
-                                cmd.Parameters.Add("p", vm.NewPassword.Trim()); // TODO: hash
-                                cmd.Parameters.Add("id", vm.BS_MABACSI);
-                                cmd.ExecuteNonQuery();
-                            }
-                        }
+                        //if (!string.IsNullOrWhiteSpace(vm.NewPassword))
+                        //{
+                        //    using (var cmd = new OracleCommand(@"
+                        //    UPDATE TAIKHOAN
+                        //       SET TK_PassWord = :p
+                        //     WHERE BS_MaBacSi  = :id", conn))
+                        //    {
+                        //        cmd.Transaction = tx;
+                        //        cmd.BindByName = true;
+                        //        cmd.Parameters.Add("p", vm.NewPassword.Trim()); // TODO: hash
+                        //        cmd.Parameters.Add("id", vm.BS_MaBaSi);
+                        //        cmd.ExecuteNonQuery();
+                        //    }
+                        //}
 
                         tx.Commit();
                         TempData["Msg"] = "Cập nhật bác sĩ thành công.";
-                        return RedirectToAction("EditDoctor", new { id = vm.BS_MABACSI });
+                        return RedirectToAction("EditDoctor", new { id = vm.BS_MaBacSi });
                     }
                     catch (Exception ex)
                     {
@@ -529,16 +582,16 @@ namespace DangKyKhamBenh.Controllers
                         {
                             list.Add(new BacSi
                             {
-                                BS_MABACSI = r.IsDBNull(cMaBS) ? null : r.GetString(cMaBS),
-                                ND_HOTEN = r.IsDBNull(cHoTen) ? null : r.GetString(cHoTen),
-                                BS_CHUYENKHOA = r.IsDBNull(cCK) ? null : r.GetString(cCK),
-                                BS_CHUCDANH = r.IsDBNull(cCD) ? null : r.GetString(cCD),
+                                BS_MaBacSi = r.IsDBNull(cMaBS) ? null : r.GetString(cMaBS),
+                                ND_HoTen = r.IsDBNull(cHoTen) ? null : r.GetString(cHoTen),
+                                BS_ChuyenKhoa = r.IsDBNull(cCK) ? null : r.GetString(cCK),
+                                BS_ChucDanh = r.IsDBNull(cCD) ? null : r.GetString(cCD),
                                 // Oracle NUMBER -> đọc decimal, rồi Convert.ToInt32
-                                BS_NAMKINHNGHIEM = r.IsDBNull(cKN) ? (int?)null : Convert.ToInt32(r.GetDecimal(cKN)),
-                                UserName = r.IsDBNull(cUser) ? null : r.GetString(cUser),
-                                TrangThai = r.IsDBNull(cTrang) ? null : r.GetString(cTrang),
-                                ND_SODIENTHOAI = r.IsDBNull(cSdt) ? null : r.GetString(cSdt),
-                                ND_EMAIL = r.IsDBNull(cEmail) ? null : r.GetString(cEmail),
+                                BS_NamKinhNghiem = r.IsDBNull(cKN) ? (int?)null : Convert.ToInt32(r.GetDecimal(cKN)),
+                                TK_UserName = r.IsDBNull(cUser) ? null : r.GetString(cUser),
+                                TK_TrangThai = r.IsDBNull(cTrang) ? null : r.GetString(cTrang),
+                                ND_SoDienThoai = r.IsDBNull(cSdt) ? null : r.GetString(cSdt),
+                                ND_Email = r.IsDBNull(cEmail) ? null : r.GetString(cEmail),
                             });
                         }
                     }

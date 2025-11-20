@@ -88,46 +88,46 @@
                 @foreach (var d in Model)
                 {
                     <tr>
-                        <td class="truncate-1" title="@d.BS_MABACSI">@d.BS_MABACSI</td>
-                        <td class="truncate-1" title="@d.ND_HOTEN">@d.ND_HOTEN</td>
-                        <td class="truncate-1 d-none d-md-table-cell" title="@d.BS_CHUYENKHOA">@d.BS_CHUYENKHOA</td>
-                        <td class="d-none d-lg-table-cell">@d.BS_CHUCDANH</td>
-                        <td class="text-center d-none d-lg-table-cell">@d.BS_NAMKINHNGHIEM</td>
-                        <td class="truncate-1" title="@d.UserName">@d.UserName</td>
+                        <td class="truncate-1" title="@d.BS_MaBacSi">@d.BS_MaBacSi</td>
+                        <td class="truncate-1" title="@d.ND_HoTen">@d.ND_HoTen</td>
+                        <td class="truncate-1 d-none d-md-table-cell" title="@d.BS_ChuyenKhoa">@d.BS_ChuyenKhoa</td>
+                        <td class="d-none d-lg-table-cell">@d.BS_ChucDanh</td>
+                        <td class="text-center d-none d-lg-table-cell">@d.BS_NamKinhNghiem</td>
+                        <td class="truncate-1" title="@d.TK_UserName">@d.TK_UserName</td>
 
                         <td>
-                            @if (d.TrangThai?.ToUpper() == "ACTIVE")
+                            @if (d.TK_TrangThai?.ToUpper() == "ACTIVE")
                             {
                                 <span class="badge bg-success px-3 py-2">ACTIVE</span>
                             }
-                            else if (d.TrangThai?.ToUpper() == "LOCKED")
+                            else if (d.TK_TrangThai?.ToUpper() == "LOCKED")
                             {
                                 <span class="badge bg-danger px-3 py-2">LOCKED</span>
                             }
                             else
                             {
-                                <span class="badge bg-secondary px-3 py-2">@d.TrangThai</span>
+                                <span class="badge bg-secondary px-3 py-2">@d.TK_TrangThai</span>
                             }
                         </td>
 
                         <td class="d-none d-md-table-cell">
-                            <div class="truncate-1" title="@d.ND_SODIENTHOAI">@d.ND_SODIENTHOAI</div>
-                            <div class="text-muted truncate-1" title="@d.ND_EMAIL">@d.ND_EMAIL</div>
+                            <div class="truncate-1" title="@d.ND_SoDienThoai">@d.ND_SoDienThoai</div>
+                            <div class="text-muted truncate-1" title="@d.ND_Email">@d.ND_Email</div>
                         </td>
 
                         <td>
                             <div class="action-btns d-flex flex-wrap gap-2">
 
                                 <a class="btn btn-sm btn-outline-primary"
-                                   href="@Url.Action("EditDoctor","Admin", new { id = d.BS_MABACSI })">
+                                   href="@Url.Action("EditDoctor","Admin", new { id = d.BS_MaBacSi })">
                                     Sửa
                                 </a>
 
                                 @using (Html.BeginForm("ToggleDoctorStatus", "Admin", FormMethod.Post))
                                 {
                                     @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@d.BS_MABACSI" />
-                                    if (d.TrangThai?.ToUpper() == "ACTIVE")
+                                    <input type="hidden" name="id" value="@d.BS_MaBacSi" />
+                                    if (d.TK_TrangThai?.ToUpper() == "ACTIVE")
                                     {
                                         <button class="btn btn-sm btn-outline-warning" type="submit">Khóa</button>
                                     }
@@ -141,7 +141,7 @@
                                     new { onsubmit = "return confirm('Bạn có chắc muốn xóa bác sĩ này?');" }))
                                 {
                                     @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@d.BS_MABACSI" />
+                                    <input type="hidden" name="id" value="@d.BS_MaBacSi" />
                                     <button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button>
                                 }
 
