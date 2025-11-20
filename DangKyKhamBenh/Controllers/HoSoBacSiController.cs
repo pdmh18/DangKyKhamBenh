@@ -23,57 +23,6 @@ namespace DangKyKhamBenh.Controllers
             _hybridService = new HybridService();
         }
 
-        //[HttpGet]
-        //public ActionResult CreateHoSoBacSi()
-        //{
-        //    var userId = Session["ND_IdNguoiDung"]?.ToString();
-        //    if (string.IsNullOrEmpty(userId))
-        //    {
-        //        ViewBag.ErrorMessage = "Không xác định được người dùng.";
-        //        return View(new BacSi());
-        //    }
-
-        //    var maBacSi = Session["MaBacSi"] as string;
-
-        //    var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
-        //    using (var conn = new OracleConnection(cs))
-        //    {
-        //        conn.Open();
-
-        //        // Nếu Session chưa có thì thử tra từ DB theo ND_IdNguoiDung
-        //        if (string.IsNullOrEmpty(maBacSi))
-        //        {
-        //            using (var cmd = new OracleCommand(@"
-        //        SELECT BS_MaBacSi 
-        //        FROM   BACSI 
-        //        WHERE  ND_IdNguoiDung = :id", conn))
-        //            {
-        //                cmd.BindByName = true;
-        //                cmd.Parameters.Add("id", userId);
-        //                var o = cmd.ExecuteScalar();
-        //                if (o != null && o != DBNull.Value)
-        //                {
-        //                    maBacSi = o.ToString();
-        //                    // lưu lại cho các chỗ khác dùng
-        //                    Session["MaBacSi"] = maBacSi;
-        //                }
-        //            }
-        //        }
-        //    }
-
-
-        //    var model = new BacSi
-        //    {
-        //        ND_IdNguoiDung = userId,
-        //        BS_MaBacSi = maBacSi
-        //    };
-
-
-        //    //var model = new BenhNhan { ND_IdNguoiDung = userId };
-        //    return View(model);
-
-
-        //}
         [HttpGet]
         public ActionResult CreateHoSoBacSi()
         {
