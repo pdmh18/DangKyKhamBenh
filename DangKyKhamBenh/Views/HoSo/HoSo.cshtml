@@ -131,9 +131,13 @@
                         <input type="number" id="ND_SoDienThoai" name="ND_SoDienThoai" class="form-control" required />
                     </div>
 
+                    @*<div class="form-group">
+            <label for="ND_Email">Email</label>
+            <input type="email" id="ND_Email" name="ND_Email" class="form-control" required />
+        </div>*@
                     <div class="form-group">
-                        <label for="ND_Email">Email</label>
-                        <input type="email" id="ND_Email" name="ND_Email" class="form-control" required />
+                        @Html.LabelFor(m => m.ND_Email, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.ND_Email, new { @class = "form-control", @readonly = "readonly" })
                     </div>
 
                     <div class="form-group">

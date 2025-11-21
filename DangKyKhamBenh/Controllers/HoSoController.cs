@@ -23,7 +23,58 @@ namespace DangKyKhamBenh.Controllers
 
 
 
-        // Hàm mã hóa Hồ Sơ và lưu vào cơ sở dữ liệu Oracle
+        //// Hàm mã hóa Hồ Sơ và lưu vào cơ sở dữ liệu Oracle
+        //[HttpGet]
+        //public ActionResult HoSo()
+        //{
+        //    var userId = Session["ND_IdNguoiDung"]?.ToString();
+        //    if (string.IsNullOrEmpty(userId))
+        //    {
+        //        ViewBag.ErrorMessage = "Không xác định được người dùng.";
+        //        return View(new BenhNhan());
+        //    }
+
+        //    var maBenhNhan = Session["MaBenhNhan"] as string;
+
+        //    var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+        //    using (var conn = new OracleConnection(cs))
+        //    {
+        //        conn.Open();
+
+        //        // Nếu Session chưa có thì thử tra từ DB theo ND_IdNguoiDung
+        //        if (string.IsNullOrEmpty(maBenhNhan))
+        //        {
+        //            using (var cmd = new OracleCommand(@"
+        //        SELECT BN_MaBenhNhan 
+        //        FROM   BENHNHAN 
+        //        WHERE  ND_IdNguoiDung = :id", conn))
+        //            {
+        //                cmd.BindByName = true;
+        //                cmd.Parameters.Add("id", userId);
+        //                var o = cmd.ExecuteScalar();
+        //                if (o != null && o != DBNull.Value)
+        //                {
+        //                    maBenhNhan = o.ToString();
+        //                    // lưu lại cho các chỗ khác dùng
+        //                    Session["MaBenhNhan"] = maBenhNhan;
+        //                }
+        //            }
+        //        }
+        //    }
+
+
+        //    var model = new BenhNhan
+        //    {
+        //        ND_IdNguoiDung = userId,
+        //        BN_MaBenhNhan = maBenhNhan
+        //    };
+
+
+        //    //var model = new BenhNhan { ND_IdNguoiDung = userId };
+        //    return View(model);
+
+
+        //}
         [HttpGet]
         public ActionResult HoSo()
         {
@@ -35,13 +86,18 @@ namespace DangKyKhamBenh.Controllers
             }
 
             var maBenhNhan = Session["MaBenhNhan"] as string;
-
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+
+            var model = new BenhNhan
+            {
+                ND_IdNguoiDung = userId
+            };
+
             using (var conn = new OracleConnection(cs))
             {
                 conn.Open();
 
-                // Nếu Session chưa có thì thử tra từ DB theo ND_IdNguoiDung
+                // 1) Nếu Session chưa có BN_MaBenhNhan thì lấy từ DB
                 if (string.IsNullOrEmpty(maBenhNhan))
                 {
                     using (var cmd = new OracleCommand(@"
@@ -50,31 +106,58 @@ namespace DangKyKhamBenh.Controllers
                 WHERE  ND_IdNguoiDung = :id", conn))
                     {
                         cmd.BindByName = true;
-                        cmd.Parameters.Add("id", userId);
+                        cmd.Parameters.Add("id", OracleDbType.Varchar2).Value = userId;
+
                         var o = cmd.ExecuteScalar();
                         if (o != null && o != DBNull.Value)
                         {
                             maBenhNhan = o.ToString();
-                            // lưu lại cho các chỗ khác dùng
                             Session["MaBenhNhan"] = maBenhNhan;
                         }
                     }
                 }
+
+                model.BN_MaBenhNhan = maBenhNhan;
+
+                // 2) Lấy thông tin NGUOIDUNG (email đang mã hoá) và giải mã
+                using (var cmd = new OracleCommand(@"
+            SELECT ND_HoTen,
+                   ND_Email,
+                   ND_NgaySinh,
+                   ND_DiaChiThuongChu,
+                   ND_SoDienThoai
+            FROM   NGUOIDUNG
+            WHERE  ND_IdNguoiDung = :id", conn))
+                {
+                    cmd.BindByName = true;
+                    cmd.Parameters.Add("id", OracleDbType.Varchar2).Value = userId;
+
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        if (r.Read())
+                        {
+                            model.ND_HoTen = r["ND_HoTen"] as string;
+
+                            if (r["ND_NgaySinh"] != DBNull.Value)
+                                model.ND_NgaySinh = Convert.ToDateTime(r["ND_NgaySinh"]);
+
+                            // --- Quan trọng: giải mã email đã mã hoá lúc đăng ký ---
+                            var encEmail = r["ND_Email"] as string;
+                            if (!string.IsNullOrEmpty(encEmail) && !string.IsNullOrEmpty(maBenhNhan))
+                            {
+                                // Giả sử HybridService có hàm Decrypt(cipher, keyId)
+                                model.ND_Email = _hybridService.Decrypt(encEmail, maBenhNhan);
+                            }
+
+                            // Nếu sau này muốn giải mã SĐT / Địa chỉ thì làm tương tự
+                        }
+                    }
+                }
             }
-            
 
-            var model = new BenhNhan
-            {
-                ND_IdNguoiDung = userId,
-                BN_MaBenhNhan = maBenhNhan
-            };
-
-
-            //var model = new BenhNhan { ND_IdNguoiDung = userId };
             return View(model);
-            
-
         }
+
 
 
         [HttpPost]
@@ -97,7 +180,7 @@ namespace DangKyKhamBenh.Controllers
                 model.ND_DiaChiThuongChu = _rsaService.Encrypt(model.ND_DiaChiThuongChu);
                 model.BN_TieuSuBenhAn = _rsaService.Encrypt( model.BN_TieuSuBenhAn);
 
-                model.ND_Email = _hybridService.Encrypt(model.ND_Email, model.BN_MaBenhNhan);
+                //model.ND_Email = _hybridService.Encrypt(model.ND_Email, model.BN_MaBenhNhan);
                 model.ND_CCCD = _hybridService.Encrypt( model.ND_CCCD, model.BN_MaBenhNhan);
                 model.BN_SoBaoHiemYT = _hybridService.Encrypt( model.BN_SoBaoHiemYT, model.BN_MaBenhNhan);
 
@@ -117,6 +200,21 @@ namespace DangKyKhamBenh.Controllers
                     if (nguoiDungTonTai)
                     {
                         // UPDATE NGUOIDUNG
+                        //    using (var cmd = new OracleCommand(@"
+                        //UPDATE NGUOIDUNG SET
+                        //    ND_HoTen           = :ht,
+                        //    ND_CCCD = :cccd,
+                        //    ND_GioiTinh = :gt,
+                        //    ND_QuocGia = :qg,
+                        //    ND_DanToc = :dt,
+                        //    ND_NgheNghiep = :nn,
+                        //    ND_TinhThanh = :tt,
+                        //    ND_QuanHuyen = :qh,
+                        //    ND_PhuongXa = :px,
+                        //    ND_DiaChiThuongChu = :dc,
+                        //    ND_Email = :email,
+                        //    ND_SoDienThoai = :sdt
+                        //WHERE ND_IdNguoiDung = :id", conn))
                         using (var cmd = new OracleCommand(@"
                     UPDATE NGUOIDUNG SET
                         ND_HoTen           = :ht,
@@ -129,7 +227,6 @@ namespace DangKyKhamBenh.Controllers
                         ND_QuanHuyen = :qh,
                         ND_PhuongXa = :px,
                         ND_DiaChiThuongChu = :dc,
-                        ND_Email = :email,
                         ND_SoDienThoai = :sdt
                     WHERE ND_IdNguoiDung = :id", conn))
                         {
@@ -144,7 +241,7 @@ namespace DangKyKhamBenh.Controllers
                             cmd.Parameters.Add(":qh", model.ND_QuanHuyen);
                             cmd.Parameters.Add(":px", model.ND_PhuongXa);
                             cmd.Parameters.Add(":dc", model.ND_DiaChiThuongChu);
-                            cmd.Parameters.Add(":email", model.ND_Email);
+                            //cmd.Parameters.Add(":email", model.ND_Email);
                             cmd.Parameters.Add(":sdt", model.ND_SoDienThoai);
                             cmd.Parameters.Add(":id", model.ND_IdNguoiDung);
                             cmd.ExecuteNonQuery();
