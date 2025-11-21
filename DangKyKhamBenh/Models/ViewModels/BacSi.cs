@@ -10,9 +10,10 @@ namespace DangKyKhamBenh.Models.ViewModels
     {
         // Khóa/định danh
         [Required]
-        public string BS_MaBacSi { get; set; }         
+        public string BS_MaBacSi { get; set; }
 
         // ----------- Thông tin NGUOIDUNG ------------
+        public string ND_IdNguoiDung { get; set; }
         [Required, StringLength(100)]
         [Display(Name = "Họ tên")]
         public string ND_HoTen { get; set; }           
@@ -48,6 +49,8 @@ namespace DangKyKhamBenh.Models.ViewModels
 
         [Range(0, 80), Display(Name = "Năm kinh nghiệm")]
         public int? BS_NamKinhNghiem { get; set; }       
+
+        public string K_MaKhoa { get; set; }
 
         // -------------- Thông tin TAIKHOAN -----------
         [Required, Display(Name = "Tài khoản")]

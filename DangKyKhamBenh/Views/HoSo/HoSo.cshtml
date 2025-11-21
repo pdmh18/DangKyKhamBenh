@@ -100,12 +100,20 @@
 
         <form method="post" action="@Url.Action("HoSo", "HoSo")">
             <input type="hidden" name="ND_IdNguoiDung" value="@Model.ND_IdNguoiDung" />
+            <small style="color:forestgreen">
+                Mã bệnh nhân được hệ thống cấp tự động khi tạo tài khoản.
+            </small>
 
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="BN_MaBenhNhan">Mã Bệnh Nhân</label>
-                        <input type="text" id="BN_MaBenhNhan" name="BN_MaBenhNhan" class="form-control" required />
+                        <input type="text"
+                               id="BN_MaBenhNhan"
+                               name="BN_MaBenhNhan"
+                               class="form-control"
+                               value="@Model.BN_MaBenhNhan"
+                               readonly />
                     </div>
 
                     <div class="form-group">

@@ -53,29 +53,35 @@
             {
                 @Html.AntiForgeryToken()
 
-                <div class="row g-3">
+            <div class="row g-3">
 
-                    <div class="col-md-6">
-                        <label class="form-label">Username (đăng nhập) *</label>
-                        <input name="username" class="form-control" placeholder="Nhập username..." required />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Mật khẩu *</label>
-                        <input name="password" type="password" class="form-control" placeholder="Nhập mật khẩu..." required />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Họ tên bác sĩ *</label>
-                        <input name="fullName" class="form-control" placeholder="VD: Nguyễn Văn A" required />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Chuyên khoa *</label>
-                        <input name="chuyenKhoa" class="form-control" placeholder="VD: Tim mạch, Nội, Ngoại..." required />
-                    </div>
-
+                <div class="col-md-6">
+                    <label class="form-label">Username (đăng nhập) *</label>
+                    <input name="username" class="form-control" placeholder="Nhập username..." required />
                 </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Mật khẩu *</label>
+                    <input name="password" type="password" class="form-control" placeholder="Nhập mật khẩu..." required />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Họ tên bác sĩ *</label>
+                    <input name="fullName" class="form-control" placeholder="VD: Nguyễn Văn A" required />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="kMaKhoa" class="form-label">Khoa / Chuyên khoa</label>
+                    @Html.DropDownList(
+                        "kMaKhoa",
+                        (IEnumerable<SelectListItem>)ViewBag.KhoaList,
+                        "-- Chọn khoa --",
+                        new { @class = "form-control", required = "required" }
+                    )
+                </div>
+
+
+            </div>
 
                 <div class="mt-4 d-flex gap-3">
                     <button class="btn btn-primary">✔️ Tạo bác sĩ</button>

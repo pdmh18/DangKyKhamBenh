@@ -167,6 +167,7 @@
     <Compile Include="Controllers\DoctorController.cs" />
     <Compile Include="Controllers\DoctorOnlyAttribute.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\HoSoBacSiController.cs" />
     <Compile Include="Controllers\HoSoController.cs" />
     <Compile Include="Filters\AdminOnlyAttribute.cs" />
     <Compile Include="Global.asax.cs">
@@ -228,7 +229,6 @@
     <Content Include="Views\web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Account\Logout.cshtml" />
-    <Content Include="Views\Admin\Pending.cshtml" />
     <Content Include="Views\Admin\History.cshtml" />
     <Content Include="Views\Admin\CreateDoctor.cshtml" />
     <Content Include="Views\Shared\_AdminLayout.cshtml" />
@@ -247,6 +247,7 @@
     <Content Include="Views\DangKyKham\ChonNgayKham.cshtml" />
     <Content Include="Views\Doctor\ScheduleDetail.cshtml" />
     <Content Include="Views\Admin\DoctorSchedule.cshtml" />
+    <Content Include="Views\HoSoBacSi\CreateHoSoBacSi.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

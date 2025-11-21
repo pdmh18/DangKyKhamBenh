@@ -34,8 +34,43 @@ namespace DangKyKhamBenh.Controllers
                 return View(new BenhNhan());
             }
 
+            var maBenhNhan = Session["MaBenhNhan"] as string;
 
-            var model = new BenhNhan { ND_IdNguoiDung = userId };
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+
+                // Nếu Session chưa có thì thử tra từ DB theo ND_IdNguoiDung
+                if (string.IsNullOrEmpty(maBenhNhan))
+                {
+                    using (var cmd = new OracleCommand(@"
+                SELECT BN_MaBenhNhan 
+                FROM   BENHNHAN 
+                WHERE  ND_IdNguoiDung = :id", conn))
+                    {
+                        cmd.BindByName = true;
+                        cmd.Parameters.Add("id", userId);
+                        var o = cmd.ExecuteScalar();
+                        if (o != null && o != DBNull.Value)
+                        {
+                            maBenhNhan = o.ToString();
+                            // lưu lại cho các chỗ khác dùng
+                            Session["MaBenhNhan"] = maBenhNhan;
+                        }
+                    }
+                }
+            }
+            
+
+            var model = new BenhNhan
+            {
+                ND_IdNguoiDung = userId,
+                BN_MaBenhNhan = maBenhNhan
+            };
+
+
+            //var model = new BenhNhan { ND_IdNguoiDung = userId };
             return View(model);
             
 
@@ -45,7 +80,7 @@ namespace DangKyKhamBenh.Controllers
         [HttpPost]
         public ActionResult HoSo(BenhNhan model)
         {
-            if (model == null || model == null || string.IsNullOrEmpty(model.ND_IdNguoiDung))
+            if (model == null || string.IsNullOrEmpty(model.ND_IdNguoiDung))
             {
                 ViewBag.ErrorMessage = "Dữ liệu không hợp lệ hoặc thiếu ID người dùng.";
                 return View(new BenhNhan());
@@ -84,6 +119,7 @@ namespace DangKyKhamBenh.Controllers
                         // UPDATE NGUOIDUNG
                         using (var cmd = new OracleCommand(@"
                     UPDATE NGUOIDUNG SET
+                        ND_HoTen           = :ht,
                         ND_CCCD = :cccd,
                         ND_GioiTinh = :gt,
                         ND_QuocGia = :qg,
@@ -98,6 +134,7 @@ namespace DangKyKhamBenh.Controllers
                     WHERE ND_IdNguoiDung = :id", conn))
                         {
                             //cmd.Parameters.Add(":cccd", encCCCD);
+                            cmd.Parameters.Add(":ht", model.ND_HoTen);
                             cmd.Parameters.Add(":cccd", model.ND_CCCD);
                             cmd.Parameters.Add(":gt", model.ND_GioiTinh);
                             cmd.Parameters.Add(":qg", model.ND_QuocGia);
