@@ -1364,6 +1364,100 @@ namespace DangKyKhamBenh.Controllers
             return RedirectToAction("Doctors");
         }
 
+        // ====== G) LỊCH LÀM CỦA BÁC SĨ ======
+        [AdminOnly]
+        [HttpGet]
+        public ActionResult DoctorSchedule(string kw = null, DateTime? ngay = null)
+        {
+            ViewBag.Title = "Lịch làm của bác sĩ";
+            ViewBag.Active = "DoctorSchedule";
+
+            kw = (kw ?? "").Trim();
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            var list = new List<LichBacSi>();
+
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+
+                var sql = @"
+            SELECT
+                pc.PC_Id,
+                pc.PC_Ngay,
+                pc.PC_CaTruc,
+                b.BS_MaBacSi,
+                b.BS_ChuyenKhoa,
+                nd.ND_HoTen       AS TEN_BAC_SI,
+                pk.PK_TenPhong    AS TEN_PHONG_KHAM,
+                k.K_TenKhoa       AS TEN_KHOA,
+                NVL(SUM(sl.SLOT_GioiHan), 0) AS TONG_SLOT,
+                NVL(SUM(sl.SLOT_SoDaDK), 0)  AS SO_DA_DK
+            FROM PHANCONG pc
+            JOIN BACSI b       ON b.BS_MaBacSi      = pc.BS_MaBacSi
+            JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = b.ND_IdNguoiDung
+            JOIN PHONGKHAM pk  ON pk.PK_MaPK        = pc.PK_MaPK
+            LEFT JOIN KHOA k   ON k.K_MaKhoa        = pk.K_MaKhoa
+            LEFT JOIN SLOTKHAM sl ON sl.PC_Id       = pc.PC_Id
+            WHERE (:kw IS NULL OR :kw = '' OR
+                   UPPER(b.BS_MaBacSi) LIKE '%'||UPPER(:kw)||'%' OR
+                   UPPER(nd.ND_HoTen)  LIKE '%'||UPPER(:kw)||'%')
+              AND (:ngay IS NULL OR TRUNC(pc.PC_Ngay) = TRUNC(:ngay))
+            GROUP BY
+                pc.PC_Id,
+                pc.PC_Ngay,
+                pc.PC_CaTruc,
+                b.BS_MaBacSi,
+                b.BS_ChuyenKhoa,
+                nd.ND_HoTen,
+                pk.PK_TenPhong,
+                k.K_TenKhoa
+            ORDER BY pc.PC_Ngay, nd.ND_HoTen, pc.PC_CaTruc";
+
+                using (var cmd = new OracleCommand(sql, conn))
+                {
+                    cmd.BindByName = true;
+                    cmd.Parameters.Add("kw", string.IsNullOrEmpty(kw) ? (object)DBNull.Value : kw);
+                    cmd.Parameters.Add("ngay", OracleDbType.Date).Value = (object)ngay ?? DBNull.Value;
+
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        int cPCId = r.GetOrdinal("PC_ID");
+                        int cNgay = r.GetOrdinal("PC_NGAY");
+                        int cCa = r.GetOrdinal("PC_CATRUC");
+                        int cMaBS = r.GetOrdinal("BS_MABACSI");
+                        int cCK = r.GetOrdinal("BS_CHUYENKHOA");
+                        int cTen = r.GetOrdinal("TEN_BAC_SI");
+                        int cPhong = r.GetOrdinal("TEN_PHONG_KHAM");
+                        int cKhoa = r.GetOrdinal("TEN_KHOA");
+                        int cTongSlot = r.GetOrdinal("TONG_SLOT");
+                        int cSoDaDK = r.GetOrdinal("SO_DA_DK");
+
+                        while (r.Read())
+                        {
+                            list.Add(new LichBacSi
+                            {
+                                PC_Id = r.IsDBNull(cPCId) ? null : r.GetString(cPCId),
+                                PC_Ngay = r.GetDateTime(cNgay),
+                                CaTruc = r.IsDBNull(cCa) ? null : r.GetString(cCa),
+                                BS_MaBacSi = r.IsDBNull(cMaBS) ? null : r.GetString(cMaBS),
+                                ChuyenKhoa = r.IsDBNull(cCK) ? null : r.GetString(cCK),
+                                TenBacSi = r.IsDBNull(cTen) ? null : r.GetString(cTen),
+                                TenPhongKham = r.IsDBNull(cPhong) ? null : r.GetString(cPhong),
+                                TenKhoa = r.IsDBNull(cKhoa) ? null : r.GetString(cKhoa),
+                                TongSoSlot = r.IsDBNull(cTongSlot) ? 0 : Convert.ToInt32(r.GetDecimal(cTongSlot)),
+                                SoDaDangKy = r.IsDBNull(cSoDaDK) ? 0 : Convert.ToInt32(r.GetDecimal(cSoDaDK))
+                            });
+                        }
+                    }
+                }
+            }
+
+            ViewBag.Keyword = kw;
+            ViewBag.Ngay = ngay;
+
+            return View(list);
+        }
 
     }
 }

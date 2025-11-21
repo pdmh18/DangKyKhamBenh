@@ -1,0 +1,203 @@
+﻿@using System.Linq
+@model List<DangKyKhamBenh.Models.ViewModels.LichBacSi>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Lịch làm của bác sĩ";
+
+    var totalShift = Model?.Count ?? 0;
+    var totalDoctor = Model?.Select(m => m.BS_MaBacSi).Distinct().Count() ?? 0;
+    var totalSlots = Model?.Sum(m => m.TongSoSlot) ?? 0;
+    var totalUsedSlots = Model?.Sum(m => m.SoDaDangKy) ?? 0;
+}
+
+<h3 class="mb-3">
+    <i class="fa-solid fa-calendar-days me-1"></i>
+    Lịch làm của bác sĩ
+</h3>
+
+@if (TempData["Msg"] != null)
+{
+    <div class="alert alert-success">@TempData["Msg"]</div>
+}
+@if (TempData["Err"] != null)
+{
+    <div class="alert alert-danger">@TempData["Err"]</div>
+}
+
+<!-- Stats nhỏ phía trên -->
+<div class="row g-3 mb-3">
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body py-2">
+                <div class="text-muted small">Tổng ca trực</div>
+                <div class="fw-bold fs-5">@totalShift</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body py-2">
+                <div class="text-muted small">Số bác sĩ</div>
+                <div class="fw-bold fs-5">@totalDoctor</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body py-2">
+                <div class="text-muted small">Tổng slot</div>
+                <div class="fw-bold fs-5">@totalSlots</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body py-2">
+                <div class="text-muted small">Đã đặt</div>
+                <div class="fw-bold fs-5">@totalUsedSlots</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-0 pb-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="fw-semibold">
+                <i class="fa-solid fa-filter me-1 text-secondary"></i>
+                Bộ lọc lịch làm
+            </div>
+            <div class="small text-muted">
+                Màu thanh tiến độ:
+                <span class="badge bg-success">Còn nhiều</span>
+                <span class="badge bg-warning text-dark">Sắp đầy</span>
+                <span class="badge bg-danger">Đã đầy</span>
+            </div>
+        </div>
+    </div>
+    <div class="card-body pt-3">
+        <form class="row g-2 mb-3" method="get" action="@Url.Action("DoctorSchedule","Admin")">
+            <div class="col-md-4">
+                <input type="text"
+                       name="kw"
+                       value="@((string)ViewBag.Keyword ?? "")"
+                       class="form-control"
+                       placeholder="Tìm theo mã / tên bác sĩ..." />
+            </div>
+            <div class="col-md-3">
+                <input type="date"
+                       name="ngay"
+                       value="@(ViewBag.Ngay != null ? ((DateTime)ViewBag.Ngay).ToString("yyyy-MM-dd") : "")"
+                       class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary me-1" type="submit">
+                    <i class="fa-solid fa-magnifying-glass me-1"></i>Lọc
+                </button>
+                <a class="btn btn-outline-secondary" href="@Url.Action("DoctorSchedule","Admin")">
+                    Xóa lọc
+                </a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ngày</th>
+                        <th>Ca trực</th>
+                        <th>Mã bác sĩ</th>
+                        <th>Tên bác sĩ</th>
+                        <th>Chuyên khoa</th>
+                        <th>Khoa</th>
+                        <th>Phòng khám</th>
+                        <th class="text-end">Đã đặt / Tổng slot</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        foreach (var item in Model)
+                        {
+                            var percent = item.TongSoSlot > 0
+                                ? (int)Math.Round(item.SoDaDangKy * 100.0 / item.TongSoSlot)
+                                : 0;
+
+                            var barClass = "bg-success";
+                            if (percent >= 100)
+                            {
+                                barClass = "bg-danger";
+                            }
+                            else if (percent >= 70)
+                            {
+                                barClass = "bg-warning";
+                            }
+
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        @item.PC_Ngay.ToString("dd/MM/yyyy")
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        @item.CaTruc
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold">@item.BS_MaBacSi</span>
+                                </td>
+                                <td>@item.TenBacSi</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.ChuyenKhoa))
+                                    {
+                                        <span class="badge bg-info text-dark">@item.ChuyenKhoa</span>
+                                    }
+                                </td>
+                                <td>@item.TenKhoa</td>
+                                <td>@item.TenPhongKham</td>
+                                <td class="text-end" style="min-width:160px;">
+                                    <div class="d-flex flex-column">
+                                        <div class="small fw-semibold mb-1">
+                                            @item.SoDaDangKy / @item.TongSoSlot
+                                            @if (percent >= 100)
+                                            {
+                                                <span class="badge bg-danger ms-1">Full</span>
+                                            }
+                                            else if (percent >= 70)
+                                            {
+                                                <span class="badge bg-warning text-dark ms-1">Gần đầy</span>
+                                            }
+                                            else if (percent > 0)
+                                            {
+                                                <span class="badge bg-success ms-1">Còn chỗ</span>
+                                            }
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar @barClass"
+                                                 role="progressbar"
+                                                 style="width:@percent%"
+                                                 aria-valuenow="@percent"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                Chưa có lịch trực nào (hoặc không khớp bộ lọc).
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

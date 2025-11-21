@@ -15,12 +15,20 @@ using System.Globalization;
 using System.Text;
 using System.Net;
 using System.Net.Mail;
+using DangKyKhamBenh.Services;
 
 
 namespace DangKyKhamBenh.Controllers
 {
     public class AccountController : Controller
     {
+
+        private readonly HybridService _hybridService;
+
+        public AccountController()
+        {
+            _hybridService = new HybridService();
+        }
         // GET: Account     
         [HttpGet, AllowAnonymous]
         public ActionResult Login(string returnUrl = null)
@@ -313,25 +321,38 @@ namespace DangKyKhamBenh.Controllers
                             //string bsId = NextId(conn, tx, "BACSI", "BS_MaBacSi", "BS");
                             string tkId = NextId(conn, tx, "TAIKHOAN", "TK_MaTK", "TK");
 
+                            // ====== Mã hoá EMAIL bằng HybridService, key dựa trên BN_MaBenhNhan ======
+                            string emailPlain = string.IsNullOrWhiteSpace(model.Email)
+                                                    ? null
+                                                    : model.Email.Trim();
+
+                            string encEmail = emailPlain == null
+                                ? null
+                                : _hybridService.Encrypt(emailPlain, bnId);
+
 
                             // ========== B3: Insert NGUOIDUNG (mã hoá Email / SĐT / Địa chỉ) ==========
                             using (var cmdNd = new OracleCommand(@"
-                        INSERT INTO NGUOIDUNG
-                            (ND_IdNguoiDung, ND_HoTen, ND_SoDienThoai, ND_Email, ND_NgaySinh, ND_DiaChiThuongChu)
-                        VALUES
-                            (:id,
-                             :hoten,
-                             PKG_SECURITY.RSA_ENCRYPT_B64(:sdt),     -- *** ĐÃ ĐỔI ***
-                             PKG_SECURITY.RSA_ENCRYPT_B64(:email),   -- *** ĐÃ ĐỔI ***
-                             :ns,
-                             PKG_SECURITY.AES_ENCRYPT_B64(:diachi)   -- *** ĐÃ ĐỔI ***
-                            )", conn))
+                                INSERT INTO NGUOIDUNG
+                                    (ND_IdNguoiDung,
+                                     ND_HoTen,
+                                     ND_SoDienThoai,
+                                     ND_Email,
+                                     ND_NgaySinh,
+                                     ND_DiaChiThuongChu)
+                                VALUES
+                                    (:id,
+                                     :hoten,
+                                     PKG_SECURITY.RSA_ENCRYPT_B64(:sdt),      -- GIỮ NGUYÊN
+                                     :email,                                  -- EMAIL ĐÃ MÃ HOÁ SẴN BẰNG HybridService
+                                     :ns,
+                                     PKG_SECURITY.AES_ENCRYPT_B64(:diachi)    -- GIỮ NGUYÊN
+                                    )", conn))
                             {
                                 cmdNd.Transaction = tx;
                                 cmdNd.BindByName = true;
 
                                 cmdNd.Parameters.Add("id", ndId);
-                                // Form chưa có Họ tên => để NULL
                                 cmdNd.Parameters.Add("hoten", DBNull.Value);
 
                                 cmdNd.Parameters.Add("sdt",
@@ -339,10 +360,9 @@ namespace DangKyKhamBenh.Controllers
                                         ? (object)DBNull.Value
                                         : model.PhoneNumber.Trim());
 
+                                // dùng ciphertext từ HybridService
                                 cmdNd.Parameters.Add("email",
-                                    string.IsNullOrWhiteSpace(model.Email)
-                                        ? (object)DBNull.Value
-                                        : model.Email.Trim());
+                                    (object)encEmail ?? DBNull.Value);
 
                                 cmdNd.Parameters.Add("ns",
                                     model.DateOfBirth.HasValue
@@ -356,6 +376,7 @@ namespace DangKyKhamBenh.Controllers
 
                                 cmdNd.ExecuteNonQuery();
                             }
+
 
                             // ========== B4: Insert BENHNHAN ==========
                             using (var cmdBn = new OracleCommand(@"
@@ -555,21 +576,26 @@ namespace DangKyKhamBenh.Controllers
                     // Mã hoá username để so khớp với TK_UserName đã lưu (AES_ENCRYPT_B64)
                     string encryptedUser = EncryptUser(N(model.UserName), conn);
 
-                    // Tìm TK_MaTK theo username + email (email đang lưu RSA_ENCRYPT_B64)
-                    const string sqlFind = @"
-                        SELECT tk.TK_MaTK
-                        FROM   TAIKHOAN tk
-                        JOIN   NGUOIDUNG nd ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
-                        WHERE  tk.TK_UserName = :pUser
-                          AND  nd.ND_Email   = PKG_SECURITY.RSA_ENCRYPT_B64(:pEmail)";
+                    // Lấy TK_MaTK + email đã mã hoá (HybridService) + BN_MaBenhNhan
+                            const string sqlFind = @"
+                    SELECT tk.TK_MaTK,
+                           nd.ND_Email,
+                           bn.BN_MaBenhNhan
+                    FROM   TAIKHOAN tk
+                    JOIN   NGUOIDUNG nd
+                           ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
+                    JOIN   BENHNHAN bn
+                           ON bn.ND_IdNguoiDung = nd.ND_IdNguoiDung
+                    WHERE  tk.TK_UserName = :pUser";
 
                     string tkId = null;
+                    string encEmailDb = null;
+                    string bnId = null;
 
                     using (var cmd = new OracleCommand(sqlFind, conn))
                     {
                         cmd.BindByName = true;
                         cmd.Parameters.Add("pUser", encryptedUser);
-                        cmd.Parameters.Add("pEmail", N(model.Email));
 
                         using (var r = cmd.ExecuteReader())
                         {
@@ -579,8 +605,35 @@ namespace DangKyKhamBenh.Controllers
                                 model.OtpSent = false;
                                 return View(model);
                             }
+
                             tkId = r.GetString(0);
+                            encEmailDb = r.IsDBNull(1) ? null : r.GetString(1);
+                            bnId = r.IsDBNull(2) ? null : r.GetString(2);
                         }
+                    }
+
+                    // Giải mã email bằng HybridService
+                    string emailFromDbPlain = null;
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(encEmailDb) && !string.IsNullOrEmpty(bnId))
+                        {
+                            emailFromDbPlain = _hybridService.Decrypt(encEmailDb, bnId);
+                        }
+                    }
+                    catch (Exception exDec)
+                    {
+                        ViewBag.Error = "Lỗi giải mã email trong hệ thống: " + exDec.Message;
+                        model.OtpSent = false;
+                        return View(model);
+                    }
+
+                    // So khớp email người dùng nhập
+                    if (!string.Equals(emailFromDbPlain ?? "", N(model.Email), StringComparison.OrdinalIgnoreCase))
+                    {
+                        ViewBag.Error = "Không tìm thấy tài khoản với Username và Email này.";
+                        model.OtpSent = false;
+                        return View(model);
                     }
 
                     // ========== BƯỚC 1: GỬI OTP ========== 
