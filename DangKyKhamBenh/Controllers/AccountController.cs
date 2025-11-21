@@ -534,7 +534,7 @@ namespace DangKyKhamBenh.Controllers
         [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
         public ActionResult ForgotPassword(ForgotPasswordOtpViewModel model)
         {
-            // Xác định đang ở bước nào qua việc user đã nhập OTP hay chưa
+            // Xác định đang ở bước nào: nhập OTP hay chưa
             bool isVerifyPhase = !string.IsNullOrWhiteSpace(model.Otp);
 
             // Validate cơ bản: luôn cần Username + Email
@@ -576,21 +576,23 @@ namespace DangKyKhamBenh.Controllers
                     // Mã hoá username để so khớp với TK_UserName đã lưu (AES_ENCRYPT_B64)
                     string encryptedUser = EncryptUser(N(model.UserName), conn);
 
-                    // Lấy TK_MaTK + email đã mã hoá (HybridService) + BN_MaBenhNhan
-                            const string sqlFind = @"
-                    SELECT tk.TK_MaTK,
-                           nd.ND_Email,
-                           bn.BN_MaBenhNhan
-                    FROM   TAIKHOAN tk
-                    JOIN   NGUOIDUNG nd
-                           ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
-                    JOIN   BENHNHAN bn
-                           ON bn.ND_IdNguoiDung = nd.ND_IdNguoiDung
-                    WHERE  tk.TK_UserName = :pUser";
+                    // Lấy TK_MaTK + email đã mã hoá + BN_MaBenhNhan + BS_MaBacSi + StaffType
+                    const string sqlFind = @"
+                SELECT tk.TK_MaTK,
+                       nd.ND_Email,
+                       tk.BN_MaBenhNhan,
+                       tk.BS_MaBacSi,
+                       tk.TK_StaffType
+                FROM   TAIKHOAN tk
+                JOIN   NGUOIDUNG nd
+                       ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
+                WHERE  tk.TK_UserName = :pUser";
 
                     string tkId = null;
                     string encEmailDb = null;
                     string bnId = null;
+                    string bsId = null;
+                    string staffTypeDb = null;
 
                     using (var cmd = new OracleCommand(sqlFind, conn))
                     {
@@ -609,16 +611,31 @@ namespace DangKyKhamBenh.Controllers
                             tkId = r.GetString(0);
                             encEmailDb = r.IsDBNull(1) ? null : r.GetString(1);
                             bnId = r.IsDBNull(2) ? null : r.GetString(2);
+                            bsId = r.IsDBNull(3) ? null : r.GetString(3);
+                            staffTypeDb = r.IsDBNull(4) ? null : r.GetString(4);
                         }
+                    }
+
+                    // Chọn key để giải mã email: BN_MaBenhNhan (bệnh nhân) hoặc BS_MaBacSi (bác sĩ)
+                    string keyForEmail = null;
+                    if (!string.IsNullOrWhiteSpace(staffTypeDb) && IsDoctor(staffTypeDb))
+                    {
+                        // Tài khoản bác sĩ → email mã hoá bằng BS_MaBacSi
+                        keyForEmail = bsId;
+                    }
+                    else
+                    {
+                        // Tài khoản bệnh nhân (hoặc mặc định) → email mã hoá bằng BN_MaBenhNhan
+                        keyForEmail = bnId;
                     }
 
                     // Giải mã email bằng HybridService
                     string emailFromDbPlain = null;
                     try
                     {
-                        if (!string.IsNullOrEmpty(encEmailDb) && !string.IsNullOrEmpty(bnId))
+                        if (!string.IsNullOrEmpty(encEmailDb) && !string.IsNullOrEmpty(keyForEmail))
                         {
-                            emailFromDbPlain = _hybridService.Decrypt(encEmailDb, bnId);
+                            emailFromDbPlain = _hybridService.Decrypt(encEmailDb, keyForEmail);
                         }
                     }
                     catch (Exception exDec)
@@ -636,7 +653,7 @@ namespace DangKyKhamBenh.Controllers
                         return View(model);
                     }
 
-                    // ========== BƯỚC 1: GỬI OTP ========== 
+                    // ================= BƯỚC 1: GỬI OTP =================
                     if (!isVerifyPhase)
                     {
                         string otp = GenerateOtpCode(6); // ví dụ 6 chữ số
@@ -656,7 +673,7 @@ namespace DangKyKhamBenh.Controllers
                         return View(model);
                     }
 
-                    // ========== BƯỚC 2: XÁC THỰC OTP + ĐỔI MẬT KHẨU ==========
+                    // ================= BƯỚC 2: XÁC THỰC OTP + ĐỔI MẬT KHẨU =================
 
                     string key = "FP_OTP_" + tkId;
                     string expKey = "FP_OTP_EXP_" + tkId;
@@ -691,9 +708,9 @@ namespace DangKyKhamBenh.Controllers
                     string hashedPassword = HashPassword(N(model.NewPassword), conn);
 
                     const string sqlUpdate = @"
-                        UPDATE TAIKHOAN
-                        SET    TK_PassWord = :pPass
-                        WHERE  TK_MaTK = :pId";
+                UPDATE TAIKHOAN
+                SET    TK_PassWord = :pPass
+                WHERE  TK_MaTK = :pId";
 
                     using (var up = new OracleCommand(sqlUpdate, conn))
                     {
@@ -724,6 +741,7 @@ namespace DangKyKhamBenh.Controllers
                 return View(model);
             }
         }
+
 
         // ================== HÀM HỖ TRỢ OTP & EMAIL ==================
 
