@@ -9,54 +9,88 @@
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <style>
+        .page-title {
+            font-weight: 700;
+            font-size: 1.6rem;
+        }
+
+        .card-custom {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            padding-left: 28px;
+            padding-right: 28px;
+            border-radius: 10px;
+        }
+
+        .btn-outline-secondary {
+            border-radius: 10px;
+        }
+    </style>
 </head>
+
 <body class="bg-light">
+
     <div class="container py-4">
-        <h3 class="mb-3">Tạo tài khoản Bác sĩ</h3>
+        <h3 class="page-title mb-4">👨‍⚕️ Tạo tài khoản Bác sĩ</h3>
 
-        @if (TempData["Msg"] != null)
-        {
-            <div class="alert alert-success">@TempData["Msg"]</div>
-        }
-
-        @if (TempData["Err"] != null)
-        {
-            <div class="alert alert-danger">@TempData["Err"]</div>
-        }
-
-        <div class="alert alert-info">
-            Chỉ quản trị viên (Admin) được phép tạo tài khoản bác sĩ.
+        <div class="alert alert-info d-flex align-items-center">
+            <span class="me-2">ℹ️</span>
+            <span>Chỉ quản trị viên (Admin) được phép tạo tài khoản bác sĩ.</span>
         </div>
 
-        @using (Html.BeginForm("CreateDoctor", "Admin", FormMethod.Post))
-        {
-            @Html.AntiForgeryToken()
+        <div class="card card-custom p-4">
+            @using (Html.BeginForm("CreateDoctor", "Admin", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
 
             <div class="row g-3">
+
                 <div class="col-md-6">
                     <label class="form-label">Username (đăng nhập) *</label>
-                    <input name="username" class="form-control" required />
+                    <input name="username" class="form-control" placeholder="Nhập username..." required />
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Mật khẩu *</label>
-                    <input name="password" type="password" class="form-control" required />
+                    <input name="password" type="password" class="form-control" placeholder="Nhập mật khẩu..." required />
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Họ tên bác sĩ *</label>
-                    <input name="fullName" class="form-control" required />
+                    <input name="fullName" class="form-control" placeholder="VD: Nguyễn Văn A" required />
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Chuyên khoa *</label>
-                    <input name="chuyenKhoa" class="form-control" placeholder="VD: Tim mạch, Nội, Ngoại..." required />
+                    <label for="kMaKhoa" class="form-label">Khoa / Chuyên khoa</label>
+                    @Html.DropDownList(
+                        "kMaKhoa",
+                        (IEnumerable<SelectListItem>)ViewBag.KhoaList,
+                        "-- Chọn khoa --",
+                        new { @class = "form-control", required = "required" }
+                    )
                 </div>
+
+
             </div>
 
-            <button class="btn btn-primary mt-3">Tạo bác sĩ</button>
-            <a class="btn btn-outline-secondary mt-3" href="@Url.Action("Home","Admin")">Về trang Admin</a>
-        }
+                <div class="mt-4 d-flex gap-3">
+                    <button class="btn btn-primary">✔️ Tạo bác sĩ</button>
+                    <a class="btn btn-outline-secondary" href="@Url.Action("Home","Admin")">← Về trang Admin</a>
+                </div>
+            }
+        </div>
+
     </div>
+
 </body>
 </html>

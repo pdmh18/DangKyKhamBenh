@@ -5,15 +5,15 @@
 }
 
 <div class="row g-3">
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body" style="height:150px">
-                <div class="fw-bold mb-1">Tài khoản chờ duyệt</div>
-                <p class="text-muted">Xem & phê duyệt các tài khoản người dùng mới.</p>
-                <a class="btn btn-primary btn-sm" href="@Url.Action("Pending","Admin")">Đi tới danh sách</a>
+    @*<div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body" style="height:150px">
+                    <div class="fw-bold mb-1">Tài khoản chờ duyệt</div>
+                    <p class="text-muted">Xem & phê duyệt các tài khoản người dùng mới.</p>
+                    <a class="btn btn-primary btn-sm" href="@Url.Action("Pending","Admin")">Đi tới danh sách</a>
+                </div>
             </div>
-        </div>
-    </div>
+        </div>*@
     <div class="col-md-4">
         <div class="card shadow-sm">
             <div class="card-body" style="height:150px">
@@ -50,5 +50,18 @@
             </div>
         </div>
     </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm" style="height:150px">
+            <div class="card-body">
+                <div class="fw-bold mb-1">Lịch làm của Bác sĩ</div>
+                <p class="text-muted">Xem danh sách các bác sĩ đang có ca trực.</p>
+                <a class="btn btn-primary btn-sm" href="@Url.Action("DoctorSchedule","Admin")">
+                    Xem lịch làm
+                </a>
+            </div>
+        </div>
+    </div>
+
 </div>
 

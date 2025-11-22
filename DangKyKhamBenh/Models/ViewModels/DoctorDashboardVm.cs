@@ -25,12 +25,14 @@ namespace DangKyKhamBenh.Models.ViewModels
 
     public class LichTrucItem
     {
+        public string PC_Id { get; set; }      // <-- thêm
         public DateTime Ngay { get; set; }
         public string CaTruc { get; set; }
         public string PhongKham { get; set; }
         public string Khoa { get; set; }
         public string ViTri { get; set; }
     }
+
 
     public class ThongKeBlock
     {
@@ -43,4 +45,26 @@ namespace DangKyKhamBenh.Models.ViewModels
         public decimal DonGiaTrungBinh { get; set; }
         public int TiLeCLS { get; set; }
     }
+    public class SlotKhamItem
+    {
+        public string SlotId { get; set; }
+        public string GioBD { get; set; }    // "HH:mm"
+        public string GioKT { get; set; }
+        public int GioiHan { get; set; }
+        public int SoDaDK { get; set; }
+    }
+
+    public class ScheduleDetailVm
+    {
+        public string PC_Id { get; set; }
+        public DateTime Ngay { get; set; }
+        public string CaTruc { get; set; }
+
+        public string PhongKham { get; set; }
+        public string Khoa { get; set; }
+        public string ViTri { get; set; }
+
+        public IList<SlotKhamItem> Slots { get; set; } = new List<SlotKhamItem>();
+    }
+
 }

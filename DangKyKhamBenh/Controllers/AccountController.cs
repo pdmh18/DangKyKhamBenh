@@ -15,12 +15,20 @@ using System.Globalization;
 using System.Text;
 using System.Net;
 using System.Net.Mail;
+using DangKyKhamBenh.Services;
 
 
 namespace DangKyKhamBenh.Controllers
 {
     public class AccountController : Controller
     {
+
+        private readonly HybridService _hybridService;
+
+        public AccountController()
+        {
+            _hybridService = new HybridService();
+        }
         // GET: Account     
         [HttpGet, AllowAnonymous]
         public ActionResult Login(string returnUrl = null)
@@ -304,31 +312,47 @@ namespace DangKyKhamBenh.Controllers
                                     return View(model);
                                 }
                             }
+                            var staffType = string.IsNullOrEmpty(model.StaffType) ? "BenhNhan" : model.StaffType;
+                            bool isDoctor = string.Equals(staffType, "BacSi", StringComparison.OrdinalIgnoreCase);
 
                             // ========== B2: Sinh mã ==========
                             string ndId = NextId(conn, tx, "NGUOIDUNG", "ND_IdNguoiDung", "ND");
                             string bnId = NextId(conn, tx, "BENHNHAN", "BN_MaBenhNhan", "BN");
-                            string bsId = NextId(conn, tx, "BACSI", "BS_MaBacSi", "BS");
+                            //string bsId = NextId(conn, tx, "BACSI", "BS_MaBacSi", "BS");
                             string tkId = NextId(conn, tx, "TAIKHOAN", "TK_MaTK", "TK");
+
+                            // ====== Mã hoá EMAIL bằng HybridService, key dựa trên BN_MaBenhNhan ======
+                            string emailPlain = string.IsNullOrWhiteSpace(model.Email)
+                                                    ? null
+                                                    : model.Email.Trim();
+
+                            string encEmail = emailPlain == null
+                                ? null
+                                : _hybridService.Encrypt(emailPlain, bnId);
+
 
                             // ========== B3: Insert NGUOIDUNG (mã hoá Email / SĐT / Địa chỉ) ==========
                             using (var cmdNd = new OracleCommand(@"
-                        INSERT INTO NGUOIDUNG
-                            (ND_IdNguoiDung, ND_HoTen, ND_SoDienThoai, ND_Email, ND_NgaySinh, ND_DiaChiThuongChu)
-                        VALUES
-                            (:id,
-                             :hoten,
-                             PKG_SECURITY.RSA_ENCRYPT_B64(:sdt),     -- *** ĐÃ ĐỔI ***
-                             PKG_SECURITY.RSA_ENCRYPT_B64(:email),   -- *** ĐÃ ĐỔI ***
-                             :ns,
-                             PKG_SECURITY.AES_ENCRYPT_B64(:diachi)   -- *** ĐÃ ĐỔI ***
-                            )", conn))
+                                INSERT INTO NGUOIDUNG
+                                    (ND_IdNguoiDung,
+                                     ND_HoTen,
+                                     ND_SoDienThoai,
+                                     ND_Email,
+                                     ND_NgaySinh,
+                                     ND_DiaChiThuongChu)
+                                VALUES
+                                    (:id,
+                                     :hoten,
+                                     PKG_SECURITY.RSA_ENCRYPT_B64(:sdt),      -- GIỮ NGUYÊN
+                                     :email,                                  -- EMAIL ĐÃ MÃ HOÁ SẴN BẰNG HybridService
+                                     :ns,
+                                     PKG_SECURITY.AES_ENCRYPT_B64(:diachi)    -- GIỮ NGUYÊN
+                                    )", conn))
                             {
                                 cmdNd.Transaction = tx;
                                 cmdNd.BindByName = true;
 
                                 cmdNd.Parameters.Add("id", ndId);
-                                // Form chưa có Họ tên => để NULL
                                 cmdNd.Parameters.Add("hoten", DBNull.Value);
 
                                 cmdNd.Parameters.Add("sdt",
@@ -336,10 +360,9 @@ namespace DangKyKhamBenh.Controllers
                                         ? (object)DBNull.Value
                                         : model.PhoneNumber.Trim());
 
+                                // dùng ciphertext từ HybridService
                                 cmdNd.Parameters.Add("email",
-                                    string.IsNullOrWhiteSpace(model.Email)
-                                        ? (object)DBNull.Value
-                                        : model.Email.Trim());
+                                    (object)encEmail ?? DBNull.Value);
 
                                 cmdNd.Parameters.Add("ns",
                                     model.DateOfBirth.HasValue
@@ -353,6 +376,7 @@ namespace DangKyKhamBenh.Controllers
 
                                 cmdNd.ExecuteNonQuery();
                             }
+
 
                             // ========== B4: Insert BENHNHAN ==========
                             using (var cmdBn = new OracleCommand(@"
@@ -368,25 +392,11 @@ namespace DangKyKhamBenh.Controllers
                                 cmdBn.ExecuteNonQuery();
                             }
 
-                            // ========== B5: Insert BACSI (tạm thời rỗng, chỉ để không violate FK) ==========
-                            using (var cmdBs = new OracleCommand(@"
-                        INSERT INTO BACSI
-                            (BS_MaBacSi, BS_ChuyenKhoa, BS_ChucDanh, BS_NamKinhNghiem, ND_IdNguoiDung)
-                        VALUES
-                            (:bs, NULL, NULL, NULL, :nd)", conn))
-                            {
-                                cmdBs.Transaction = tx;
-                                cmdBs.BindByName = true;
-                                cmdBs.Parameters.Add("bs", bsId);
-                                cmdBs.Parameters.Add("nd", ndId);
-                                cmdBs.ExecuteNonQuery();
-                            }
-
                             // ========== B6: Insert TAIKHOAN (mã hoá username + hash password) ==========
                             using (var cmdTk = new OracleCommand(@"
                         INSERT INTO TAIKHOAN
                             (TK_MaTK, TK_UserName, TK_PassWord, TK_Role, TK_TrangThai, TK_StaffType,
-                             BN_MaBenhNhan, BS_MaBacSi, ND_IdNguoiDung)
+                             BN_MaBenhNhan, BS_MaBacSi, ND_IdNguoiDung, TK_NgayTao)
                         VALUES
                             (:tkId,
                              PKG_SECURITY.AES_ENCRYPT_B64(:u),       -- *** ĐÃ ĐỔI: username mã hoá đối xứng
@@ -396,7 +406,8 @@ namespace DangKyKhamBenh.Controllers
                              :st,
                              :bn,
                              :bs,
-                             :nd)", conn))
+                             :nd,
+                            SYSDATE)", conn))
                             {
                                 cmdTk.Transaction = tx;
                                 cmdTk.BindByName = true;
@@ -413,7 +424,7 @@ namespace DangKyKhamBenh.Controllers
                                     string.IsNullOrEmpty(model.StaffType) ? "BenhNhan" : model.StaffType);
 
                                 cmdTk.Parameters.Add("bn", bnId);
-                                cmdTk.Parameters.Add("bs", bsId);
+                                cmdTk.Parameters.Add("bs", DBNull.Value);
                                 cmdTk.Parameters.Add("nd", ndId);
 
                                 cmdTk.ExecuteNonQuery();
@@ -513,137 +524,6 @@ namespace DangKyKhamBenh.Controllers
         }
 
 
-
-        //    // Hiển thị form quên mật khẩu
-        //    [HttpGet, AllowAnonymous]
-        //    public ActionResult ForgotPassword()
-        //    {
-        //        return View();
-        //    }
-
-        //    // Xử lý đổi mật khẩu khi quên
-        //    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
-        //    public ActionResult ForgotPassword(string user, string email, string phone,
-        //                               string newPassword, string confirmPassword)
-        //    {
-        //        // 1) Validate cơ bản
-        //        if (string.IsNullOrWhiteSpace(user))
-        //        {
-        //            ViewBag.Error = "Vui lòng nhập tài khoản (Username).";
-        //            return View();
-        //        }
-        //        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(phone))
-        //        {
-        //            ViewBag.Error = "Nhập email hoặc số điện thoại đã đăng ký để xác minh.";
-        //            return View();
-        //        }
-        //        if (string.IsNullOrWhiteSpace(newPassword) ||
-        //            !string.Equals(newPassword?.Trim(), confirmPassword?.Trim()))
-        //        {
-        //            ViewBag.Error = "Mật khẩu mới và xác nhận không khớp.";
-        //            return View();
-        //        }
-
-        //        // Hàm chuẩn hoá
-        //        string N(string s) => (s ?? "").Trim();
-        //        string NormPhone(string s) => Regex.Replace(N(s), "[^0-9]", ""); // bỏ mọi ký tự không phải số
-
-        //        try
-        //        {
-        //            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
-        //            using (var conn = new OracleConnection(cs))
-        //            {
-        //                conn.Open();
-
-        //                // 2) Lấy thông tin email/phone theo username
-        //                const string sqlFind = @"
-        //                                            SELECT tk.TK_MaTK,
-        //                                                   NVL(tk.TK_TrangThai,'PENDING') AS TrangThai,
-        //                                                   nd.ND_Email,
-        //                                                   nd.ND_SoDienThoai
-        //                                            FROM   TAIKHOAN tk
-        //                                            JOIN   NGUOIDUNG nd ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
-        //                                            WHERE  TRIM(UPPER(tk.TK_UserName)) = TRIM(UPPER(:u))";
-
-        //                string tkId = null, status = null, dbEmail = null, dbPhone = null;
-
-        //                using (var cmd = new OracleCommand(sqlFind, conn))
-        //                {
-        //                    cmd.BindByName = true;
-        //                    cmd.Parameters.Add("u", N(user).ToUpperInvariant());
-        //                    using (var r = cmd.ExecuteReader())
-        //                    {
-        //                        if (!r.Read())
-        //                        {
-        //                            ViewBag.Error = "Không tìm thấy tài khoản.";
-        //                            return View();
-        //                        }
-        //                        tkId = r["TK_MaTK"]?.ToString();
-        //                        status = r["TrangThai"]?.ToString();
-        //                        dbEmail = r["ND_Email"]?.ToString();
-        //                        dbPhone = r["ND_SoDienThoai"]?.ToString();
-        //                    }
-        //                }
-
-        //                // 3) (Tùy chọn) ràng buộc trạng thái
-        //                // if (!string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
-        //                // {
-        //                //     ViewBag.Error = "Tài khoản chưa sẵn sàng (không ở trạng thái ACTIVE).";
-        //                //     return View();
-        //                // }
-
-        //                // 4) So khớp theo trường người dùng đã nhập
-        //                bool emailProvided = !string.IsNullOrWhiteSpace(email);
-        //                bool phoneProvided = !string.IsNullOrWhiteSpace(phone);
-
-        //                bool okEmail = !emailProvided
-        //                               || string.Equals(N(dbEmail).ToUpperInvariant(),
-        //                                                N(email).ToUpperInvariant());
-        //                bool okPhone = !phoneProvided
-        //                               || string.Equals(NormPhone(dbPhone), NormPhone(phone));
-
-        //                if (!okEmail || !okPhone)
-        //                {
-        //                    // Gợi ý lỗi rõ ràng hơn
-        //                    if (emailProvided && !okEmail && phoneProvided && !okPhone)
-        //                        ViewBag.Error = "Email và số điện thoại xác minh đều không khớp.";
-        //                    else if (emailProvided && !okEmail)
-        //                        ViewBag.Error = "Email xác minh không khớp.";
-        //                    else if (phoneProvided && !okPhone)
-        //                        ViewBag.Error = "Số điện thoại xác minh không khớp.";
-        //                    else
-        //                        ViewBag.Error = "Thông tin xác minh không khớp.";
-        //                    return View();
-        //                }
-
-        //                // 5) Cập nhật mật khẩu mới (TODO: hash)
-        //                const string sqlUpdate = @"UPDATE TAIKHOAN SET TK_PassWord = :p WHERE TK_MaTK = :id";
-        //                using (var up = new OracleCommand(sqlUpdate, conn))
-        //                {
-        //                    up.BindByName = true;
-        //                    up.Parameters.Add("p", N(newPassword));
-        //                    up.Parameters.Add("id", tkId);
-        //                    up.ExecuteNonQuery();
-        //                }
-        //            }
-
-        //            TempData["Msg"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
-        //            return RedirectToAction("Login");
-        //        }
-        //        catch (OracleException ex)
-        //        {
-        //            ViewBag.Error = $"Lỗi Oracle ORA-{ex.Number}: {ex.Message}";
-        //            return View();
-        //        }
-        //        catch (System.Exception ex)
-        //        {
-        //            ViewBag.Error = "Lỗi: " + ex.Message;
-        //            return View();
-        //        }
-        //    }
-
-
-
         [HttpGet, AllowAnonymous]
         public ActionResult ForgotPassword()
         {
@@ -654,7 +534,7 @@ namespace DangKyKhamBenh.Controllers
         [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
         public ActionResult ForgotPassword(ForgotPasswordOtpViewModel model)
         {
-            // Xác định đang ở bước nào qua việc user đã nhập OTP hay chưa
+            // Xác định đang ở bước nào: nhập OTP hay chưa
             bool isVerifyPhase = !string.IsNullOrWhiteSpace(model.Otp);
 
             // Validate cơ bản: luôn cần Username + Email
@@ -696,21 +576,28 @@ namespace DangKyKhamBenh.Controllers
                     // Mã hoá username để so khớp với TK_UserName đã lưu (AES_ENCRYPT_B64)
                     string encryptedUser = EncryptUser(N(model.UserName), conn);
 
-                    // Tìm TK_MaTK theo username + email (email đang lưu RSA_ENCRYPT_B64)
+                    // Lấy TK_MaTK + email đã mã hoá + BN_MaBenhNhan + BS_MaBacSi + StaffType
                     const string sqlFind = @"
-                        SELECT tk.TK_MaTK
-                        FROM   TAIKHOAN tk
-                        JOIN   NGUOIDUNG nd ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
-                        WHERE  tk.TK_UserName = :pUser
-                          AND  nd.ND_Email   = PKG_SECURITY.RSA_ENCRYPT_B64(:pEmail)";
+                SELECT tk.TK_MaTK,
+                       nd.ND_Email,
+                       tk.BN_MaBenhNhan,
+                       tk.BS_MaBacSi,
+                       tk.TK_StaffType
+                FROM   TAIKHOAN tk
+                JOIN   NGUOIDUNG nd
+                       ON nd.ND_IdNguoiDung = tk.ND_IdNguoiDung
+                WHERE  tk.TK_UserName = :pUser";
 
                     string tkId = null;
+                    string encEmailDb = null;
+                    string bnId = null;
+                    string bsId = null;
+                    string staffTypeDb = null;
 
                     using (var cmd = new OracleCommand(sqlFind, conn))
                     {
                         cmd.BindByName = true;
                         cmd.Parameters.Add("pUser", encryptedUser);
-                        cmd.Parameters.Add("pEmail", N(model.Email));
 
                         using (var r = cmd.ExecuteReader())
                         {
@@ -720,11 +607,53 @@ namespace DangKyKhamBenh.Controllers
                                 model.OtpSent = false;
                                 return View(model);
                             }
+
                             tkId = r.GetString(0);
+                            encEmailDb = r.IsDBNull(1) ? null : r.GetString(1);
+                            bnId = r.IsDBNull(2) ? null : r.GetString(2);
+                            bsId = r.IsDBNull(3) ? null : r.GetString(3);
+                            staffTypeDb = r.IsDBNull(4) ? null : r.GetString(4);
                         }
                     }
 
-                    // ========== BƯỚC 1: GỬI OTP ========== 
+                    // Chọn key để giải mã email: BN_MaBenhNhan (bệnh nhân) hoặc BS_MaBacSi (bác sĩ)
+                    string keyForEmail = null;
+                    if (!string.IsNullOrWhiteSpace(staffTypeDb) && IsDoctor(staffTypeDb))
+                    {
+                        // Tài khoản bác sĩ → email mã hoá bằng BS_MaBacSi
+                        keyForEmail = bsId;
+                    }
+                    else
+                    {
+                        // Tài khoản bệnh nhân (hoặc mặc định) → email mã hoá bằng BN_MaBenhNhan
+                        keyForEmail = bnId;
+                    }
+
+                    // Giải mã email bằng HybridService
+                    string emailFromDbPlain = null;
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(encEmailDb) && !string.IsNullOrEmpty(keyForEmail))
+                        {
+                            emailFromDbPlain = _hybridService.Decrypt(encEmailDb, keyForEmail);
+                        }
+                    }
+                    catch (Exception exDec)
+                    {
+                        ViewBag.Error = "Lỗi giải mã email trong hệ thống: " + exDec.Message;
+                        model.OtpSent = false;
+                        return View(model);
+                    }
+
+                    // So khớp email người dùng nhập
+                    if (!string.Equals(emailFromDbPlain ?? "", N(model.Email), StringComparison.OrdinalIgnoreCase))
+                    {
+                        ViewBag.Error = "Không tìm thấy tài khoản với Username và Email này.";
+                        model.OtpSent = false;
+                        return View(model);
+                    }
+
+                    // ================= BƯỚC 1: GỬI OTP =================
                     if (!isVerifyPhase)
                     {
                         string otp = GenerateOtpCode(6); // ví dụ 6 chữ số
@@ -744,7 +673,7 @@ namespace DangKyKhamBenh.Controllers
                         return View(model);
                     }
 
-                    // ========== BƯỚC 2: XÁC THỰC OTP + ĐỔI MẬT KHẨU ==========
+                    // ================= BƯỚC 2: XÁC THỰC OTP + ĐỔI MẬT KHẨU =================
 
                     string key = "FP_OTP_" + tkId;
                     string expKey = "FP_OTP_EXP_" + tkId;
@@ -779,9 +708,9 @@ namespace DangKyKhamBenh.Controllers
                     string hashedPassword = HashPassword(N(model.NewPassword), conn);
 
                     const string sqlUpdate = @"
-                        UPDATE TAIKHOAN
-                        SET    TK_PassWord = :pPass
-                        WHERE  TK_MaTK = :pId";
+                UPDATE TAIKHOAN
+                SET    TK_PassWord = :pPass
+                WHERE  TK_MaTK = :pId";
 
                     using (var up = new OracleCommand(sqlUpdate, conn))
                     {
@@ -812,6 +741,7 @@ namespace DangKyKhamBenh.Controllers
                 return View(model);
             }
         }
+
 
         // ================== HÀM HỖ TRỢ OTP & EMAIL ==================
 

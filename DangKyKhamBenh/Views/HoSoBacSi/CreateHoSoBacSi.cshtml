@@ -1,0 +1,273 @@
+﻿@model DangKyKhamBenh.Models.ViewModels.BacSi
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hồ sơ Bác sĩ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .form-container {
+            max-width: 950px;
+            margin: 40px auto;
+            background: #ffffff;
+            padding: 40px 50px;
+            border-radius: 18px;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            color: #0d6efd;
+            font-weight: 700;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 1px solid #d0d7e2;
+            font-size: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 20px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+            .btn-primary:hover {
+                background-color: #0a58ca;
+            }
+
+        .btn-outline-secondary {
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-weight: 500;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 30px;
+            margin-top: 3px;
+        }
+
+        /* Căn đều 2 cột */
+        .col-gap {
+            padding-right: 20px;
+        }
+
+        .alert {
+            border-radius: 12px;
+            font-size: 15px;
+        }
+
+        /* Kết quả */
+        .result {
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 25px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .result-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .result-error {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="form-container">
+
+        @if (TempData["Success"] != null)
+        {
+            <script>
+                alert('@TempData["Success"]');
+                window.location.href = '@Url.Action("Dashboard", "Doctor")';
+            </script>
+        }
+
+
+        <h2>
+            <i class="fa-solid fa-user-doctor"></i>
+            Hồ Sơ Bác Sĩ
+        </h2>
+
+        <form method="post" action="@Url.Action("CreateHoSoBacSi", "HoSoBacSi")">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ND_IdNguoiDung" value="@Model.ND_IdNguoiDung" />
+
+            <small class="text-success">Mã bác sĩ được hệ thống cấp tự động.</small>
+
+            <div class="row mt-3">
+                <div class="col-md-6 col-gap">
+
+                    <div class="form-group">
+                        <label>Mã Bác Sĩ</label>
+                        <input class="form-control"
+                               name="BS_MaBacSi"
+                               value="@Model.BS_MaBacSi"
+                               readonly />
+                    </div>
+
+
+                    <div class="form-group">
+                        <label>Họ Tên</label>
+                        <input class="form-control" name="ND_HoTen" value="@Model.ND_HoTen" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Chức Danh</label>
+                        <input class="form-control" name="BS_ChucDanh" value="@Model.BS_ChucDanh" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số năm kinh nghiệm</label>
+                        <input type="number" class="form-control" name="BS_NamKinhNghiem"
+                               value="@(Model.BS_NamKinhNghiem ?? 0)" min="0" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số điện thoại</label>
+                        <input class="form-control" name="ND_SoDienThoai" value="@Model.ND_SoDienThoai" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input class="form-control" name="ND_Email" type="email" value="@Model.ND_Email" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>CCCD</label>
+                        <input class="form-control" name="ND_CCCD" value="@Model.ND_CCCD" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ngày Sinh</label>
+                        <input type="date" class="form-control" name="ND_NgaySinh"
+                               value="@(Model.ND_NgaySinh.HasValue ? Model.ND_NgaySinh.Value.ToString("yyyy-MM-dd") : "")" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Giới Tính</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="ND_GioiTinh" value="Nam" @(Model.ND_GioiTinh == "Nam" ? "checked" : "") /> Nam</label>
+                            <label><input type="radio" name="ND_GioiTinh" value="Nu" @(Model.ND_GioiTinh == "Nu" ? "checked" : "") /> Nữ</label>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="K_MaKhoa">Khoa làm việc</label>
+                        @Html.DropDownListFor(m => m.K_MaKhoa,
+                            (IEnumerable<SelectListItem>)ViewBag.KhoaList,
+                            "-- Chọn khoa --",
+                            new { @class = "form-control" })
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quốc Gia</label>
+                        <input class="form-control" name="ND_QuocGia" value="@Model.ND_QuocGia" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Dân Tộc</label>
+                        <input class="form-control" name="ND_DanToc" value="@Model.ND_DanToc" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nghề Nghiệp</label>
+                        <input class="form-control" name="ND_NgheNghiep" value="@Model.ND_NgheNghiep" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tỉnh Thành</label>
+                        <input class="form-control" name="ND_TinhThanh" value="@Model.ND_TinhThanh" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quận Huyện</label>
+                        <input class="form-control" name="ND_QuanHuyen" value="@Model.ND_QuanHuyen" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phường Xã</label>
+                        <input class="form-control" name="ND_PhuongXa" value="@Model.ND_PhuongXa" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Địa chỉ thường trú</label>
+                        <input class="form-control" name="ND_DiaChiThuongChu" value="@Model.ND_DiaChiThuongChu" required />
+                    </div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-3">
+                <i class="fa-solid fa-floppy-disk me-1"></i> Lưu Hồ Sơ Bác Sĩ
+            </button>
+        </form>
+
+        <div class="mt-4">
+            <a class="btn btn-outline-secondary" href="@Url.Action("Dashboard","Doctor")">Hủy</a>
+        </div>
+
+        @if (ViewBag.SuccessMessage != null)
+        {
+            <div class="result result-success"><i class="fa-solid fa-circle-check me-1"></i>@ViewBag.SuccessMessage</div>
+        }
+
+        @if (ViewBag.ErrorMessage != null)
+        {
+            <div class="result result-error"><i class="fa-solid fa-circle-exclamation me-1"></i>@ViewBag.ErrorMessage</div>
+        }
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+
+</html>
