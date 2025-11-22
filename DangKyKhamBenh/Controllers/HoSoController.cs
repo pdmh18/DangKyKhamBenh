@@ -21,60 +21,6 @@ namespace DangKyKhamBenh.Controllers
             _hybridService = new HybridService();
         }
 
-
-
-        //// Hàm mã hóa Hồ Sơ và lưu vào cơ sở dữ liệu Oracle
-        //[HttpGet]
-        //public ActionResult HoSo()
-        //{
-        //    var userId = Session["ND_IdNguoiDung"]?.ToString();
-        //    if (string.IsNullOrEmpty(userId))
-        //    {
-        //        ViewBag.ErrorMessage = "Không xác định được người dùng.";
-        //        return View(new BenhNhan());
-        //    }
-
-        //    var maBenhNhan = Session["MaBenhNhan"] as string;
-
-        //    var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
-        //    using (var conn = new OracleConnection(cs))
-        //    {
-        //        conn.Open();
-
-        //        // Nếu Session chưa có thì thử tra từ DB theo ND_IdNguoiDung
-        //        if (string.IsNullOrEmpty(maBenhNhan))
-        //        {
-        //            using (var cmd = new OracleCommand(@"
-        //        SELECT BN_MaBenhNhan 
-        //        FROM   BENHNHAN 
-        //        WHERE  ND_IdNguoiDung = :id", conn))
-        //            {
-        //                cmd.BindByName = true;
-        //                cmd.Parameters.Add("id", userId);
-        //                var o = cmd.ExecuteScalar();
-        //                if (o != null && o != DBNull.Value)
-        //                {
-        //                    maBenhNhan = o.ToString();
-        //                    // lưu lại cho các chỗ khác dùng
-        //                    Session["MaBenhNhan"] = maBenhNhan;
-        //                }
-        //            }
-        //        }
-        //    }
-
-
-        //    var model = new BenhNhan
-        //    {
-        //        ND_IdNguoiDung = userId,
-        //        BN_MaBenhNhan = maBenhNhan
-        //    };
-
-
-        //    //var model = new BenhNhan { ND_IdNguoiDung = userId };
-        //    return View(model);
-
-
-        //}
         [HttpGet]
         public ActionResult HoSo()
         {

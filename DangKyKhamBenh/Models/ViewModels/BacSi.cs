@@ -41,7 +41,7 @@ namespace DangKyKhamBenh.Models.ViewModels
         public string ND_DiaChiThuongChu { get; set; }         
 
         // -------------- Thông tin BACSI --------------
-        [Required, Display(Name = "Chuyên khoa")]
+        //[Required, Display(Name = "Chuyên khoa")]
         public string BS_ChuyenKhoa { get; set; }      
 
         [Display(Name = "Chức danh")]

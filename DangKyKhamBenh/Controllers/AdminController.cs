@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;                         
 using System.Data;
+using System.Linq;
 using System.Reflection;
 using System.Web.Mvc;
 using System.Web.Razor.Tokenizer.Symbols;
@@ -490,11 +491,19 @@ namespace DangKyKhamBenh.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    TempData["Err"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+                    //TempData["Err"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+                    //LoadKhoaDropDown(vm.K_MaKhoa);
+                    //return View(vm);
+                    var errors = ModelState
+                                       .Where(x => x.Value.Errors.Count > 0)
+                                       .Select(x => x.Key + ": " + x.Value.Errors.First().ErrorMessage)
+                                       .ToList();
+
+                    TempData["Err"] = string.Join("<br>", errors);
+
                     LoadKhoaDropDown(vm.K_MaKhoa);
                     return View(vm);
                 }
-
                 try
                 {
                     // Mã hóa lại trước khi lưu
@@ -516,20 +525,20 @@ namespace DangKyKhamBenh.Controllers
                             try
                             {
                                 // 1) Lấy tên khoa từ K_MaKhoa
-                                string tenKhoa = null;
-                                if (!string.IsNullOrWhiteSpace(vm.K_MaKhoa))
-                                {
-                                    using (var cmdTen = new OracleCommand(
-                                        "SELECT K_TenKhoa FROM KHOA WHERE K_MaKhoa = :ma", conn))
-                                    {
-                                        cmdTen.Transaction = tx;
-                                        cmdTen.BindByName = true;
-                                        cmdTen.Parameters.Add("ma", vm.K_MaKhoa);
-                                        var o = cmdTen.ExecuteScalar();
-                                        if (o != null && o != DBNull.Value)
-                                            tenKhoa = o.ToString();
-                                    }
-                                }
+                                //string tenKhoa = null;
+                                //if (!string.IsNullOrWhiteSpace(vm.K_MaKhoa))
+                                //{
+                                //    using (var cmdTen = new OracleCommand(
+                                //        "SELECT K_TenKhoa FROM KHOA WHERE K_MaKhoa = :ma", conn))
+                                //    {
+                                //        cmdTen.Transaction = tx;
+                                //        cmdTen.BindByName = true;
+                                //        cmdTen.Parameters.Add("ma", vm.K_MaKhoa);
+                                //        var o = cmdTen.ExecuteScalar();
+                                //        if (o != null && o != DBNull.Value)
+                                //            tenKhoa = o.ToString();
+                                //    }
+                                //}
 
                                 // 2) Update BACSI
                                 using (var cmd = new OracleCommand(@"
@@ -542,11 +551,17 @@ namespace DangKyKhamBenh.Controllers
                                 {
                                     cmd.Transaction = tx;
                                     cmd.BindByName = true;
-                                    cmd.Parameters.Add("ck", (object)(tenKhoa ?? vm.BS_ChuyenKhoa) ?? DBNull.Value);
+                                    //cmd.Parameters.Add("ck", (object)(tenKhoa ?? vm.BS_ChuyenKhoa) ?? DBNull.Value);
+                                    //cmd.Parameters.Add("cd", (object)vm.BS_ChucDanh ?? DBNull.Value);
+                                    //cmd.Parameters.Add("nam", vm.BS_NamKinhNghiem.HasValue ? (object)vm.BS_NamKinhNghiem.Value : DBNull.Value);
+                                    //cmd.Parameters.Add("khoa", (object)vm.K_MaKhoa ?? DBNull.Value);
+                                    //cmd.Parameters.Add("id", vm.BS_MaBacSi);
+                                    cmd.Parameters.Add("ck", (object)vm.BS_ChuyenKhoa ?? DBNull.Value);
                                     cmd.Parameters.Add("cd", (object)vm.BS_ChucDanh ?? DBNull.Value);
                                     cmd.Parameters.Add("nam", vm.BS_NamKinhNghiem.HasValue ? (object)vm.BS_NamKinhNghiem.Value : DBNull.Value);
                                     cmd.Parameters.Add("khoa", (object)vm.K_MaKhoa ?? DBNull.Value);
                                     cmd.Parameters.Add("id", vm.BS_MaBacSi);
+
                                     cmd.ExecuteNonQuery();
                                 }
 
@@ -625,11 +640,198 @@ namespace DangKyKhamBenh.Controllers
                     LoadKhoaDropDown(vm.K_MaKhoa);
                     return View(vm);
                 }
+
             }
+
 
             // Nếu action không phải Save / Decrypt thì quay về danh sách
             return RedirectToAction("Doctors");
         }
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public ActionResult EditDoctor(BacSi vm, string action)
+        //{
+        //    var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+        //    if (action == "Decrypt")
+        //    {
+        //        try
+        //        {
+        //            // Caesar
+        //            if (!string.IsNullOrEmpty(vm.ND_TinhThanh))
+        //                vm.ND_TinhThanh = _caesarCipher.Decrypt(vm.ND_TinhThanh, 15);
+        //            if (!string.IsNullOrEmpty(vm.ND_QuanHuyen))
+        //                vm.ND_QuanHuyen = _caesarCipher.Decrypt(vm.ND_QuanHuyen, 15);
+        //            if (!string.IsNullOrEmpty(vm.ND_PhuongXa))
+        //                vm.ND_PhuongXa = _caesarCipher.Decrypt(vm.ND_PhuongXa, 15);
+
+        //            // RSA
+        //            if (!string.IsNullOrEmpty(vm.ND_SoDienThoai))
+        //                vm.ND_SoDienThoai = _rsaService.Decrypt(vm.ND_SoDienThoai);
+
+        //            if (!string.IsNullOrEmpty(vm.ND_DiaChiThuongChu))
+        //                vm.ND_DiaChiThuongChu = _rsaService.Decrypt(vm.ND_DiaChiThuongChu);
+
+        //            // Hybrid (key = BS_MaBacSi, giống lúc em mã hóa bên HoSoBacSi)
+        //            if (!string.IsNullOrEmpty(vm.BS_MaBacSi))
+        //            {
+        //                if (!string.IsNullOrEmpty(vm.ND_Email))
+        //                    vm.ND_Email = _hybridService.Decrypt(vm.ND_Email, vm.BS_MaBacSi);
+
+        //                if (!string.IsNullOrEmpty(vm.ND_CCCD))
+        //                    vm.ND_CCCD = _hybridService.Decrypt(vm.ND_CCCD, vm.BS_MaBacSi);
+        //            }
+
+        //            TempData["Msg"] = "Giải mã thành công.";
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            TempData["Err"] = "Lỗi giải mã: " + ex.Message;
+        //        }
+
+        //        // load lại dropdown Khoa
+        //        LoadKhoaDropDown(vm.K_MaKhoa);
+
+        //        // Xóa ModelState để Razor lấy value mới từ vm thay vì value cũ
+        //        ModelState.Clear();
+        //        return View(vm);
+        //    }
+
+
+        //    if (action == "Save")
+        //    {
+        //        // 1) Kiểm tra hợp lệ
+        //        if (!ModelState.IsValid)
+        //        {
+        //            //TempData["Err"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+        //            //LoadKhoaDropDown(vm.K_MaKhoa);
+        //            //return View(vm);
+        //            var errors = ModelState
+        //                                .Where(x => x.Value.Errors.Count > 0)
+        //                                .Select(x => x.Key + ": " + x.Value.Errors.First().ErrorMessage)
+        //                                .ToList();
+
+        //            TempData["Err"] = string.Join("<br>", errors);
+
+        //            LoadKhoaDropDown(vm.K_MaKhoa);
+        //            return View(vm);
+        //        }
+        //        vm.ND_TinhThanh = _caesarCipher.Encrypt(vm.ND_TinhThanh, 15);
+        //        vm.ND_QuanHuyen = _caesarCipher.Encrypt(vm.ND_QuanHuyen, 15);
+        //        vm.ND_PhuongXa = _caesarCipher.Encrypt(vm.ND_PhuongXa, 15);
+
+        //        vm.ND_SoDienThoai = _rsaService.Encrypt(vm.ND_SoDienThoai);
+        //        vm.ND_DiaChiThuongChu = _rsaService.Encrypt(vm.ND_DiaChiThuongChu);
+
+        //        vm.ND_Email = _hybridService.Encrypt(vm.ND_Email, vm.BS_MaBacSi);
+        //        vm.ND_CCCD = _hybridService.Encrypt(vm.ND_CCCD, vm.BS_MaBacSi);
+
+        //        // 2) Bắt đầu update
+        //        using (var conn = new OracleConnection(cs))
+        //        {
+        //            conn.Open();
+        //            using (var tx = conn.BeginTransaction())
+        //            {
+        //                try
+        //                {
+        //                    // =============================
+        //                    //  UPDATE NGUOIDUNG
+        //                    // =============================
+        //                    using (var cmd = new OracleCommand(@"
+        //            UPDATE NGUOIDUNG
+        //            SET 
+        //                ND_HoTen = :hoten,
+        //                ND_SoDienThoai = :sdt,
+        //                ND_Email = :email,
+        //                ND_NgaySinh = :ngaysinh,
+        //                ND_CCCD = :cccd,
+        //                ND_GioiTinh = :gt,
+        //                ND_QuocGia = :qg,
+        //                ND_DanToc = :dt,
+        //                ND_NgheNghiep = :nn,
+        //                ND_TinhThanh = :tt,
+        //                ND_QuanHuyen = :qh,
+        //                ND_PhuongXa = :px,
+        //                ND_DiaChiThuongChu = :dc
+        //            WHERE ND_IdNguoiDung = :id", conn))
+        //                    {
+        //                        cmd.Transaction = tx;
+        //                        cmd.BindByName = true;
+
+        //                        cmd.Parameters.Add("hoten", vm.ND_HoTen);
+        //                        cmd.Parameters.Add("sdt", vm.ND_SoDienThoai);
+        //                        cmd.Parameters.Add("email", vm.ND_Email);
+        //                        cmd.Parameters.Add("ngaysinh", (object)vm.ND_NgaySinh ?? DBNull.Value);
+        //                        cmd.Parameters.Add("cccd", vm.ND_CCCD);
+        //                        cmd.Parameters.Add("gt", vm.ND_GioiTinh);
+        //                        cmd.Parameters.Add("qg", vm.ND_QuocGia);
+        //                        cmd.Parameters.Add("dt", vm.ND_DanToc);
+        //                        cmd.Parameters.Add("nn", vm.ND_NgheNghiep);
+        //                        cmd.Parameters.Add("tt", vm.ND_TinhThanh);
+        //                        cmd.Parameters.Add("qh", vm.ND_QuanHuyen);
+        //                        cmd.Parameters.Add("px", vm.ND_PhuongXa);
+        //                        cmd.Parameters.Add("dc", vm.ND_DiaChiThuongChu);
+        //                        cmd.Parameters.Add("id", vm.ND_IdNguoiDung);
+
+        //                        cmd.ExecuteNonQuery();
+        //                    }
+
+        //                    // =============================
+        //                    //  UPDATE BACSI
+        //                    // =============================
+        //                    using (var cmd = new OracleCommand(@"
+        //            UPDATE BACSI
+        //            SET 
+        //                BS_ChucDanh = :cd,
+        //                BS_NamKinhNghiem = :nk,
+        //                K_MaKhoa = :khoa
+        //            WHERE BS_MaBacSi = :ma", conn))
+        //                    {
+        //                        cmd.Transaction = tx;
+        //                        cmd.BindByName = true;
+
+        //                        cmd.Parameters.Add("cd", vm.BS_ChucDanh);
+        //                        cmd.Parameters.Add("nk", (object)vm.BS_NamKinhNghiem ?? DBNull.Value);
+        //                        cmd.Parameters.Add("khoa", vm.K_MaKhoa);
+        //                        cmd.Parameters.Add("ma", vm.BS_MaBacSi);
+
+        //                        cmd.ExecuteNonQuery();
+        //                    }
+
+        //                    // =============================
+        //                    //  UPDATE TAIKHOAN
+        //                    // =============================
+        //                    using (var cmd = new OracleCommand(@"
+        //            UPDATE TAIKHOAN
+        //            SET TK_UserName = :user,
+        //                TK_TrangThai = :tt
+        //            WHERE ND_IdNguoiDung = :id", conn))
+        //                    {
+        //                        cmd.Transaction = tx;
+        //                        cmd.BindByName = true;
+
+        //                        cmd.Parameters.Add("user", vm.TK_UserName);
+        //                        cmd.Parameters.Add("tt", vm.TK_TrangThai);
+        //                        cmd.Parameters.Add("id", vm.ND_IdNguoiDung);
+
+        //                        cmd.ExecuteNonQuery();
+        //                    }
+
+        //                    tx.Commit();
+        //                    TempData["Success"] = "Cập nhật thông tin bác sĩ thành công!";
+        //                    return RedirectToAction("Doctors");
+        //                }
+        //                catch (Exception ex)
+        //                {
+        //                    tx.Rollback();
+        //                    TempData["Err"] = "Lỗi: " + ex.Message;
+        //                    LoadKhoaDropDown(vm.K_MaKhoa);
+        //                    return View(vm);
+        //                }
+        //            }
+        //        }
+        //    }
+        //    return View(vm);
+        //}
 
 
 

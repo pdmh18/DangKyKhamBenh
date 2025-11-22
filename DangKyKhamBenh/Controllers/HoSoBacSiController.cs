@@ -210,21 +210,21 @@ namespace DangKyKhamBenh.Controllers
                     if (nguoiDungTonTai)
                     {
                         using (var cmd = new OracleCommand(@"
-                    UPDATE NGUOIDUNG SET
-                        ND_HoTen           = :ht,
-                        ND_CCCD            = :cccd,
-                        ND_GioiTinh        = :gt,
-                        ND_QuocGia         = :qg,
-                        ND_DanToc          = :dt,
-                        ND_NgheNghiep      = :nn,
-                        ND_TinhThanh       = :tt,
-                        ND_QuanHuyen       = :qh,
-                        ND_PhuongXa        = :px,
-                        ND_DiaChiThuongChu = :dc,
-                        ND_Email           = :email,
-                        ND_SoDienThoai     = :sdt,
-                        ND_NgaySinh = : ns
-                    WHERE ND_IdNguoiDung = :id", conn))
+                            UPDATE NGUOIDUNG SET
+                                ND_HoTen           = :ht,
+                                ND_CCCD            = :cccd,
+                                ND_GioiTinh        = :gt,
+                                ND_QuocGia         = :qg,
+                                ND_DanToc          = :dt,
+                                ND_NgheNghiep      = :nn,
+                                ND_TinhThanh       = :tt,
+                                ND_QuanHuyen       = :qh,
+                                ND_PhuongXa        = :px,
+                                ND_DiaChiThuongChu = :dc,
+                                ND_Email           = :email,
+                                ND_SoDienThoai     = :sdt,
+                                ND_NgaySinh = : ns
+                            WHERE ND_IdNguoiDung = :id", conn))
                         {
                             cmd.BindByName = true;
                             cmd.Parameters.Add("ht", model.ND_HoTen);
