@@ -190,6 +190,7 @@
     <Compile Include="Services\HoSoHelper.cs" />
     <Compile Include="Services\HybridService.cs" />
     <Compile Include="Services\KeyDerivationService.cs" />
+    <Compile Include="Services\MaHoa_GiaiMa_Sql.cs" />
     <Compile Include="Services\RsaKeyManager.cs" />
     <Compile Include="Services\RsaService.cs" />
   </ItemGroup>

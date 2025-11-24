@@ -7,32 +7,28 @@
     string sortDir = ViewBag.SortDir as string ?? "desc";
     string keyword = ViewBag.Keyword as string ?? "";
 }
+<div style="margin:10px 10px 10px 0">
+    <a class="btn btn-outline-secondary" href="@Url.Action("Home","Admin")">←</a>
+</div>
 
-<h3 class="mb-4">📜 Lịch sử đăng ký tài khoản</h3>
 
-<!-- Bộ lọc tìm kiếm -->
 <div class="card shadow-sm mb-4">
     <div class="card-body">
-
-        <form method="get" class="row g-3 align-items-center d-flex justify-content-end">
-
-            <div class="col-md-4">
+        <form method="get" class="row g-3 d-flex align-items-center">
+            <div class="col-md-6 align-items-center">
+                <h3 class="mb-0 me-3">📜 Lịch sử đăng ký tài khoản</h3>
+            </div>
+            <div class="col-md-6 d-flex">
                 <input type="text"
                        name="keyword"
                        class="form-control"
                        placeholder="Tìm theo username hoặc mã tài khoản..."
                        value="@keyword" />
+                <button class="btn btn-primary px-4" style="width:200px">Tìm kiếm</button>
             </div>
-
-            <div class="col-md-auto">
-                <button class="btn btn-primary px-4">Tìm kiếm</button>
-            </div>
-
         </form>
-
     </div>
 </div>
-
 
 <!-- Bảng dữ liệu -->
 <div class="table-responsive shadow-sm">
@@ -85,13 +81,13 @@
                     <td>@row["TK_Role"]</td>
 
                     <td>
-                        @if (row["TrangThai"].ToString() == "Active")
+                        @if (string.Equals(row["TrangThai"].ToString().Trim(), "ACTIVE", StringComparison.OrdinalIgnoreCase))
                         {
-                            <span class="btn btn-secondary btn-sm py-0 px-2">Active</span>
+                            <span class="btn btn-success btn-sm py-0 px-2">Active</span>
                         }
                         else
                         {
-                            <span class="badge bg-success">@row["TrangThai"]</span>
+                            <span class="badge bg-secondary">@row["TrangThai"]</span>
                         }
                     </td>
 
@@ -99,10 +95,7 @@
                 </tr>
             }
         </tbody>
+
     </table>
 </div>
 
-<!-- Footer buttons -->
-<div class="mt-4">
-    <a class="btn btn-outline-secondary" href="@Url.Action("Home","Admin")">← Quay lại</a>
-</div>

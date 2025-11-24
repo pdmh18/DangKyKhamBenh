@@ -38,6 +38,117 @@
                 margin-right: 6px;
             }
 
+        .footer {
+            background-color: #96e1b4;
+            color: white;
+            padding: 40px;
+            font-family: Arial, sans-serif;
+            text-align: left;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .footer-left, .footer-center, .footer-right {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .footer-logo img {
+            width: 400px;
+        }
+
+        .footer-left h3 {
+            font-size: 22px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .footer-left p, .footer-center ul li {
+            font-size: 14px;
+        }
+
+        .footer-center h4 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .footer-center ul {
+            list-style: none;
+            padding: 0;
+        }
+
+            .footer-center ul li {
+                margin-bottom: 8px;
+            }
+
+                .footer-center ul li a {
+                    color: white;
+                    text-decoration: none;
+                }
+
+                    .footer-center ul li a:hover {
+                        text-decoration: underline;
+                    }
+
+        .footer-right h4 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .footer-social a {
+            color: white;
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+            .footer-social a:hover {
+                color: #ffcc00;
+            }
+
+        .footer-subscribe input {
+            padding: 8px;
+            margin-right: 10px;
+            width: 200px;
+            border-radius: 20px;
+            border: none;
+        }
+
+        .footer-subscribe button {
+            background-color: #ffcc00;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+            .footer-subscribe button:hover {
+                background-color: #e5b800;
+            }
+
+        .footer-hotline {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        .footer-dmca img {
+            width: 120px;
+            margin-top: 10px;
+        }
+
+        .footer a {
+            text-decoration: none;
+        }
+
+            .footer a:hover {
+                text-decoration: underline;
+            }
+
     </style>
 </head>
 <body>
@@ -247,6 +358,50 @@
 
         </div>
     </div>
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-logo">
+                    <img src="~/Assets/logo-new.png" alt="Logo" class="logo">
+                </div>
+                <p>Địa chỉ: Số 88, Đường số 8, Khu dân cư Trung Sơn, Xã Bình Hưng, TP. Hồ Chí Minh</p>
+                <p>Email: info@nih.com.vn</p>
+                <p>GPĐKKD: 0312088602 cấp ngày 14/12/2012 bởi Sở Kế hoạch và đầu tư TP.HCM</p>
+            </div>
+            <div class="footer-center">
+                <h4>Về chúng tôi</h4>
+                <ul>
+                    <li><a href="#">Đội ngũ bác sĩ</a></li>
+                    <li><a href="#">Cơ sở vật chất</a></li>
+                    <li><a href="#">Câu chuyện khách hàng</a></li>
+                    <li><a href="#">Tuyển dụng</a></li>
+                    <li><a href="#">Cẩm nang bệnh</a></li>
+                    <li><a href="#">Chính sách bảo mật</a></li>
+                </ul>
+            </div>
+            <div class="footer-right">
+                <h4>Giờ làm việc</h4>
+                <p>Từ thứ 2 đến thứ 7</p>
+                <p>Buổi sáng: 7:00 - 12:00</p>
+                <p>Buổi chiều: 13:30 - 17:00</p>
+                <div class="footer-social">
+                    <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="social-icon"><i class="bi bi-youtube"></i></a>
+                    <a href="#" class="social-icon"><i class="bi bi-tiktok"></i></a>
+                    <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
+                </div>
+                <div class="footer-subscribe">
+                    <input style="width:300px" type="email" placeholder="Theo dõi bản tin chúng tôi" class="subscribe-input" id="emailSubscription" required>
+                    <button class="btn btn-subscribe" type="submit" onclick="window.location.href='@Url.Action("Login", "Account")'">
+                        Đăng Ký
+                    </button>
+                </div>
+
+                <p class="footer-hotline">Hotline: 1900 6923</p>
+
+            </div>
+        </div>
+    </footer>
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
