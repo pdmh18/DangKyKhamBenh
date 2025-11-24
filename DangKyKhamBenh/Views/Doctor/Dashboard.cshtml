@@ -38,7 +38,7 @@
 
     <style>
         body {
-            background: #f5f7fb;
+            background: #76b6e2;
         }
 
         .page-wrap {
@@ -95,6 +95,67 @@
             padding: .35rem .7rem;
             font-size: .85rem;
         }
+
+        .dropdown-toggle::after {
+            content: none !important;
+        }
+
+        .user .dropdown-menu {
+            min-width: 200px;
+        }
+
+        .result {
+        border-radius: 12px;
+        padding: 15px;
+        font-weight: 600;
+        font-size: 15px;
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+    }
+
+    .result-success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .result-error {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+
+    .result i {
+        font-size: 20px;
+    }
+
+    .result-success:hover {
+        background-color: #c8e5c7;
+    }
+
+    .result-error:hover {
+        background-color: #f1c6c7;
+    }
+
+    /* Responsive Styling */
+    @@media (max-width: 768px) {
+        .app-header .brand {
+            font-size: 18px;
+        }
+
+        .app-header .dropdown-toggle {
+            font-size: 14px;
+        }
+
+        .app-header .dropdown-menu {
+            font-size: 14px;
+        }
+
+        .result {
+            padding: 12px;
+            font-size: 14px;
+        }
+    }
+
     </style>
 </head>
 <body>
@@ -108,22 +169,37 @@
                     <span>UMC CARE — Bảng điều khiển Bác sĩ</span>
                 </div>
                 <div class="user">
-                    <a href="@Url.Action("CreateHoSoBacSi","HoSoBacSi")"
-                       class="btn btn-outline-light btn-sm me-3">
-                        <i class="fa-regular fa-id-badge me-1"></i> Hồ sơ
-                    </a>
-                    <span class="me-3">
-                        Xin chào,
-                        <strong>@((Model != null ? Model.TenBacSi : null) ?? "Bác sĩ")</strong>
-                        (@((Model != null ? Model.BS_MaBacSi : null) ?? "—"))
-                    </span>
-                    <a href="@Url.Action("Logout","Account")" class="btn btn-light btn-sm">
-                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Đăng xuất
-                    </a>
+                    <!-- Dropdown button for user options -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            Xin chào, <strong>@((Model != null ? Model.TenBacSi : null) ?? "Bác sĩ")</strong> (@((Model != null ? Model.BS_MaBacSi : null) ?? "—"))
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="userMenu">
+                            <li><a class="dropdown-item" href="@Url.Action("CreateHoSoBacSi", "HoSoBacSi")"><i class="fa-regular fa-id-badge me-2"></i> Hồ sơ</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("ForgotPassword", "Account")" onclick="return confirmdoipass()";><i class="fa-solid fa-key me-2"></i> Đổi mật khẩu</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Logout", "Account")" onclick="return confirmDangXuat()";><i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Đăng xuất</a></li>
+                        </ul>
+                    </div>
                 </div>
-                
+
             </div>
         </header>
+        <div>
+            @if (TempData["Msg"] != null)
+            {
+                <div class="result result-success">
+                    <i class="fa-solid fa-circle-check me-1"></i>@TempData["Msg"]
+                </div>
+            }
+
+            @if (TempData["Err"] != null)
+            {
+                <div class="result result-error">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i>@TempData["Err"]
+                </div>
+            }
+
+        </div>
 
         <!-- MAIN -->
         <main class="flex-fill">
@@ -536,6 +612,13 @@
                 console && console.warn && console.warn(e);
             }
         })();
+        function confirmDangXuat() {
+            return confirm('Bạn có chắc chắn muốn đăng xuất không');
+        }
+        
+        function confirmdoipass() {
+            return confirm('Bạn có chắc chắn muốn thay đổi mật khẩu không');
+        }
     </script>
 </body>
 </html>

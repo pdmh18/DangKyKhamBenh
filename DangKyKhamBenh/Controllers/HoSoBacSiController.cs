@@ -322,6 +322,7 @@ namespace DangKyKhamBenh.Controllers
                 }
 
                 TempData["Msg"] = "Hồ sơ bác sĩ đã được lưu thành công.";
+                return RedirectToAction("Dashboard", "Doctor");
             }
             catch (Exception ex)
             {
