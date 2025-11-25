@@ -249,6 +249,7 @@
     <Content Include="Views\Doctor\ScheduleDetail.cshtml" />
     <Content Include="Views\Admin\DoctorSchedule.cshtml" />
     <Content Include="Views\HoSoBacSi\CreateHoSoBacSi.cshtml" />
+    <Content Include="Views\DangKyKham\Index.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
