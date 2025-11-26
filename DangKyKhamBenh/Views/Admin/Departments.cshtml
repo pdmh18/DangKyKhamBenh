@@ -1,0 +1,105 @@
+﻿@model IEnumerable<DangKyKhamBenh.Models.Khoa>
+
+@{
+    ViewBag.Title = "Danh sách các khoa";
+}
+
+<h2 class="mb-4 text-center">@ViewBag.Title</h2>
+
+<!-- CSS cải tiến cho các hành động -->
+<style>
+    .table-container {
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+        .table thead {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        .table tbody tr {
+            background-color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+            .table tbody tr:hover {
+                background-color: #e3f2fd;
+            }
+
+    /* Nổi bật các action buttons */
+    .action-buttons a {
+        text-decoration: none;
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-weight: bold;
+        display: inline-block;
+        transition: transform 0.2s ease, background-color 0.3s ease;
+    }
+
+    .action-buttons .edit-button {
+        background-color: #ffc107; /* Màu vàng cho Edit */
+    }
+
+        .action-buttons .edit-button:hover {
+            background-color: #e0a800; /* Màu vàng đậm khi hover */
+            transform: scale(1.05); /* Tăng kích thước nhẹ khi hover */
+        }
+
+    .action-buttons .delete-button {
+        background-color: #dc3545; /* Màu đỏ cho Delete */
+    }
+
+        .action-buttons .delete-button:hover {
+            background-color: #c82333; /* Màu đỏ đậm khi hover */
+            transform: scale(1.05); /* Tăng kích thước nhẹ khi hover */
+        }
+</style>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Head of Department</th>
+                <th>Staff Count</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.K_MaKhoa</td>
+                    <td>@item.K_TenKhoa</td>
+                    <td>@item.K_SoDienThoai</td>
+                    <td>@item.K_Email</td>
+                    <td>@item.K_TruongKhoa</td>
+                    <td>@item.K_SoLuongNhanVien</td>
+                    <td class="action-buttons">
+                        @Html.ActionLink("Edit", "EditDepartment", new { id = item.K_MaKhoa }, new { @class = "edit-button" }) |
+                        @Html.ActionLink("Delete", "DeleteDepartment", new { id = item.K_MaKhoa }, new { @class = "delete-button" })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

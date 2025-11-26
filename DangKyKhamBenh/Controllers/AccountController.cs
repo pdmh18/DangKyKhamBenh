@@ -90,6 +90,75 @@ namespace DangKyKhamBenh.Controllers
                             var ndId = r.IsDBNull(4) ? "" : r.GetString(4);     // ND_IdNguoiDung
                             Session["ND_IdNguoiDung"] = ndId;
 
+
+                            // Kiểm tra nếu bác sĩ là trưởng khoa
+                            string khoaTruongKhoa = null;
+                            // string staffType = r.IsDBNull(2) ? "" : r.GetString(2); // Lấy staff type, ví dụ: BacSi, BenhNhan
+
+                            // Kiểm tra nếu bác sĩ là trưởng khoa
+                            //if (staffType.Equals("BacSi", StringComparison.OrdinalIgnoreCase))
+                            //{
+                            //    using (var cmdKhoa = new OracleCommand(@"
+                            //    SELECT K_TRUONGKHOA
+                            //    FROM KHOA
+                            //    WHERE K_TRUONGKHOA = :maBacSi", conn))
+                            //    {
+                            //        cmdKhoa.Parameters.Add(":maBacSi", bsMa);
+                            //        khoaTruongKhoa = cmdKhoa.ExecuteScalar()?.ToString();
+
+                            //        var maKhoa = cmdKhoa.ExecuteScalar()?.ToString();
+                            //        Session["IsTruongKhoa"] = !string.IsNullOrEmpty(khoaTruongKhoa);
+                            //        // Lưu MaKhoa vào session
+                            //        Session["MaKhoa"] = maKhoa;
+
+                            //        // Kiểm tra nếu bác sĩ là trưởng khoa
+                            //        using (var cmdTruongKhoa = new OracleCommand(@"
+                            //                        SELECT K_TRUONGKHOA
+                            //                        FROM KHOA
+                            //                        WHERE K_MaKhoa = :maKhoa", conn))
+                            //        {
+                            //            cmdTruongKhoa.Parameters.Add(":maKhoa", maKhoa);
+                            //            khoaTruongKhoa = cmdTruongKhoa.ExecuteScalar()?.ToString();
+                            //        }
+                            //    }
+
+                            //    // Lưu thông tin trưởng khoa vào session
+                            //   // Session["IsTruongKhoa"] = !string.IsNullOrEmpty(khoaTruongKhoa);
+                            //}
+
+                            if (staffType.Equals("BacSi", StringComparison.OrdinalIgnoreCase))
+                            {
+                                using (var cmdKhoa = new OracleCommand(@"
+                                        SELECT K_MaKhoa 
+                                        FROM KHOA
+                                        WHERE K_TRUONGKHOA = :maBacSi", conn))
+                                {
+                                    cmdKhoa.Parameters.Add(":maBacSi", bsMa);
+                                    khoaTruongKhoa = cmdKhoa.ExecuteScalar()?.ToString();
+                                    // Lưu MaKhoa vào session nếu cần
+                                    if (!string.IsNullOrEmpty(khoaTruongKhoa))
+                                    {
+                                        var maKhoa = khoaTruongKhoa; // Sử dụng giá trị đã có
+                                        Session["MaKhoa"] = maKhoa;
+
+                                        // Tiếp tục kiểm tra nếu bác sĩ là trưởng khoa trong khoa này
+                                        using (var cmdTruongKhoa = new OracleCommand(@"
+                                            SELECT K_TRUONGKHOA
+                                            FROM KHOA
+                                            WHERE K_MaKhoa = :maKhoa", conn))
+                                        {
+                                            cmdTruongKhoa.Parameters.Add(":maKhoa", maKhoa);
+                                            var result = cmdTruongKhoa.ExecuteScalar()?.ToString();
+                                            Session["IsTruongKhoa"] = !string.IsNullOrEmpty(result); // Đảm bảo session được thiết lập đúng
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Lưu thông tin trưởng khoa vào session
+                          //  Session["IsTruongKhoa"] = !string.IsNullOrEmpty(khoaTruongKhoa);
+
+
                             // Tiếp tục xác thực trạng thái tài khoản và các thông tin khác
                             if (!string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
                             {
@@ -102,6 +171,9 @@ namespace DangKyKhamBenh.Controllers
 
                                 return View();
                             }
+
+                            Session["User"] = user?.Trim();          // lưu plaintext để hiển thị
+                            Session["Role"] = role;
 
                             string maBenhNhan = null;
                             using (var cmdBN = new OracleCommand("SELECT BN_MaBenhNhan FROM BENHNHAN WHERE ND_IdNguoiDung = :ndid", conn))
@@ -142,7 +214,16 @@ namespace DangKyKhamBenh.Controllers
                                     ViewBag.Error = "Tài khoản bác sĩ chưa liên kết BS_MaBacSi. Vui lòng liên hệ quản trị.";
                                     return View();
                                 }
-                                return RedirectToAction("Dashboard", "Doctor");
+
+                                // Kiểm tra nếu là bác sĩ trưởng khoa
+                                if (Convert.ToBoolean(Session["IsTruongKhoa"]))
+                                {
+                                    return RedirectToAction("DashboardTruongKhoa", "Doctor");
+                                }
+                                else
+                                {
+                                    return RedirectToAction("Dashboard", "Doctor");
+                                }
                             }
 
                             return RedirectToAction("Index", "Home");

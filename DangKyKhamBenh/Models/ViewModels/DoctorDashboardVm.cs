@@ -13,6 +13,7 @@ namespace DangKyKhamBenh.Models.ViewModels
         public IEnumerable<LichTrucItem> LichTruc7Ngay { get; set; }
         public ThongKeBlock ThongKe { get; set; }
 
+        public bool IsTruongKhoa { get; set; }
         //
         public IEnumerable<LichHenItem> LichHenHomNay { get; set; }
         public IEnumerable<HangDoiItem> HangDoiKham { get; set; }

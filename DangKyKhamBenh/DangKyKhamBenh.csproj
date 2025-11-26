@@ -173,8 +173,12 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\ViewModels\BacSiItem.cs" />
+    <Compile Include="Models\ViewModels\CreateScheduleViewModel.cs" />
     <Compile Include="Models\ForgotPasswordOtpViewModel.cs" />
+    <Compile Include="Models\Khoa.cs" />
     <Compile Include="Models\NguoiDung.cs" />
+    <Compile Include="Models\ViewModels\PhongKhamItem.cs" />
     <Compile Include="Models\TaiKhoan.cs" />
     <Compile Include="Models\ViewModels\BacSi.cs" />
     <Compile Include="Models\ViewModels\BenhNhan.cs" />
@@ -248,6 +252,10 @@
     <Content Include="Views\Doctor\ScheduleDetail.cshtml" />
     <Content Include="Views\Admin\DoctorSchedule.cshtml" />
     <Content Include="Views\HoSoBacSi\CreateHoSoBacSi.cshtml" />
+    <Content Include="Views\Admin\EditDepartment.cshtml" />
+    <Content Include="Views\Admin\Departments.cshtml" />
+    <Content Include="Views\Doctor\DashboardTruongKhoa.cshtml" />
+    <Content Include="Views\Doctor\CreateSchedule.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

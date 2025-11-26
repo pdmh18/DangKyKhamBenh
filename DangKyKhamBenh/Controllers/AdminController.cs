@@ -1570,5 +1570,168 @@ namespace DangKyKhamBenh.Controllers
             return View(list);
         }
 
+
+        public ActionResult Departments()
+        {
+            ViewBag.Title = "Danh sách khoa";
+            ViewBag.Active = "Departments";
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            var list = new List<Khoa>();
+
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+                var sql = @"
+                    SELECT K_MaKhoa, K_TenKhoa, K_SoDienThoai, K_Email, K_TruongKhoa, K_SoLuongNhanVien
+                    FROM KHOA";
+
+                using (var cmd = new OracleCommand(sql, conn))
+                {
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            list.Add(new Khoa
+                            {
+                                K_MaKhoa = r["K_MaKhoa"]?.ToString(),
+                                K_TenKhoa = r["K_TenKhoa"]?.ToString(),
+                                K_SoDienThoai = r["K_SoDienThoai"]?.ToString(),
+                                K_Email = r["K_Email"]?.ToString(),
+                                K_TruongKhoa = r["K_TruongKhoa"]?.ToString(),
+                                K_SoLuongNhanVien = r.IsDBNull(r.GetOrdinal("K_SoLuongNhanVien")) ? (int?)null : Convert.ToInt32(r.GetDecimal(r.GetOrdinal("K_SoLuongNhanVien")))
+                            });
+                        }
+                    }
+                }
+            }
+
+            return View(list);  // Trả về danh sách các khoa
+        }
+
+        [HttpGet]
+        public ActionResult EditDepartment(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return RedirectToAction("Departments");
+            ViewBag.Title = "Chỉnh sửa khoa";
+            ViewBag.Active = "Departments";
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            Khoa khoa = null;
+            using (var conn = new OracleConnection(cs))
+            {
+                conn.Open();
+                var sql = @"
+            SELECT K_MaKhoa, K_TenKhoa, K_SoDienThoai, K_Email, K_TruongKhoa, K_SoLuongNhanVien
+            FROM KHOA
+            WHERE K_MaKhoa = :id";
+                using (var cmd = new OracleCommand(sql, conn))
+                {
+                    cmd.BindByName = true;
+                    cmd.Parameters.Add("id", id);
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        if (r.Read())
+                        {
+                            int ordTruongKhoa = r.GetOrdinal("K_TRUONGKHOA");  // Lấy index cột an toàn
+                            khoa = new Khoa
+                            {
+                                K_MaKhoa = r.GetString(r.GetOrdinal("K_MAKHOA")),  // Sử dụng GetString cho chắc
+                                K_TenKhoa = r.GetString(r.GetOrdinal("K_TENKHOA")),
+                                K_SoDienThoai = r.IsDBNull(r.GetOrdinal("K_SODIENTHOAI")) ? null : r.GetString(r.GetOrdinal("K_SODIENTHOAI")),
+                                K_Email = r.IsDBNull(r.GetOrdinal("K_EMAIL")) ? null : r.GetString(r.GetOrdinal("K_EMAIL")),
+                                K_TruongKhoa = r.IsDBNull(ordTruongKhoa) ? null : r.GetString(ordTruongKhoa),  // Sửa: GetString cho chuỗi mã
+                                K_SoLuongNhanVien = r.IsDBNull(r.GetOrdinal("K_SOLUONGNHANVIEN")) ? (int?)null : Convert.ToInt32(r.GetDecimal(r.GetOrdinal("K_SOLUONGNHANVIEN")))
+                            };
+                            // Debug: In giá trị load ra console để kiểm tra
+                            System.Diagnostics.Debug.WriteLine($"Loaded for ID {id}: K_TruongKhoa = '{khoa.K_TruongKhoa ?? "NULL"}'");
+                        }
+                    }
+                }
+            }
+            if (khoa == null)
+            {
+                System.Diagnostics.Debug.WriteLine($"Không tìm thấy khoa với ID {id}");
+                return RedirectToAction("Departments");
+            }
+            // Bỏ LoadTruongKhoaDropDown vì không dùng dropdown
+            return View(khoa);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditDepartment(Khoa khoa)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Err"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+                return View(khoa);
+            }
+
+            // Kiểm tra log giá trị đầu vào (giữ nguyên để debug)
+            System.Diagnostics.Debug.WriteLine($"Khoa ID: {khoa.K_MaKhoa}, Tên Khoa: {khoa.K_TenKhoa}, SĐT: {khoa.K_SoDienThoai}, Email: {khoa.K_Email}, Trưởng Khoa: {khoa.K_TruongKhoa}, Số Lượng Nhân Viên: {khoa.K_SoLuongNhanVien}");
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            try
+            {
+                using (var conn = new OracleConnection(cs))
+                {
+                    conn.Open();
+                    using (var tx = conn.BeginTransaction())
+                    {
+                        try
+                        {
+                            // SQL đã sửa: Thêm K_TenKhoa để update (vì view cho phép chỉnh sửa), không có comment bên trong string
+                            var sql = @"
+                        UPDATE KHOA
+                        SET K_TenKhoa = :tenkhoa,
+                            K_SoDienThoai = :sdt,
+                            K_Email = :email,
+                            K_TruongKhoa = :truongkhoa,
+                            K_SoLuongNhanVien = :soluong
+                        WHERE K_MaKhoa = :id";
+
+                            using (var cmd = new OracleCommand(sql, conn))
+                            {
+                                cmd.Transaction = tx;
+                                cmd.BindByName = true;
+                                cmd.Parameters.Add("tenkhoa", (object)khoa.K_TenKhoa ?? DBNull.Value);
+                                cmd.Parameters.Add("sdt", (object)khoa.K_SoDienThoai ?? DBNull.Value);
+                                cmd.Parameters.Add("email", (object)khoa.K_Email ?? DBNull.Value);
+                                cmd.Parameters.Add("truongkhoa", (object)khoa.K_TruongKhoa ?? DBNull.Value);
+                                cmd.Parameters.Add("soluong", (object)khoa.K_SoLuongNhanVien ?? DBNull.Value);
+                                cmd.Parameters.Add("id", khoa.K_MaKhoa);
+
+                                var rowsAffected = cmd.ExecuteNonQuery();
+                                System.Diagnostics.Debug.WriteLine($"Rows affected: {rowsAffected}");
+                                if (rowsAffected == 0)
+                                {
+                                    TempData["Err"] = "Không tìm thấy khoa để cập nhật (kiểm tra ID hoặc dữ liệu không thay đổi).";
+                                    tx.Rollback();
+                                    return View(khoa);
+                                }
+                            }
+                            tx.Commit();
+                            TempData["Msg"] = "Cập nhật khoa thành công.";
+                            return RedirectToAction("EditDepartment", new { id = khoa.K_MaKhoa });
+                        }
+                        catch (Exception exTx)
+                        {
+                            tx.Rollback();
+                            TempData["Err"] = "Lỗi cập nhật: " + exTx.Message;
+                            return View(khoa);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Err"] = "Lỗi lưu: " + ex.Message;
+                return View(khoa);
+            }
+        }
+
+
+
+
     }
 }
