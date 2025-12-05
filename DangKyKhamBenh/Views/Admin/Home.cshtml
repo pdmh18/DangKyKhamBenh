@@ -1,65 +1,104 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Home";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="row g-3">
-    @*<div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body" style="height:150px">
-                    <div class="fw-bold mb-1">Tài khoản chờ duyệt</div>
-                    <p class="text-muted">Xem & phê duyệt các tài khoản người dùng mới.</p>
-                    <a class="btn btn-primary btn-sm" href="@Url.Action("Pending","Admin")">Đi tới danh sách</a>
-                </div>
-            </div>
-        </div>*@
+<style>
+    .admin-card {
+        border-radius: 14px;
+        padding: 20px;
+        height: 170px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: 0.25s ease;
+        background: #ffffff;
+    }
+
+        .admin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        }
+
+    .admin-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .admin-desc {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .admin-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .admin-icon {
+        font-size: 26px;
+        color: #0d6efd;
+        margin-right: 8px;
+    }
+</style>
+
+<div class="row g-4">
+
     <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body" style="height:150px">
-                <div class="fw-bold mb-1">Lịch sử tài khoản</div>
-                <p class="text-muted">Theo dõi trạng thái & thời gian tạo tài khoản.</p>
-                <a class="btn btn-primary btn-sm" href="@Url.Action("History","Admin")">Xem lịch sử</a>
+        <div class="admin-card shadow-sm">
+            <div>
+                <i class="fa-solid fa-clock-rotate-left admin-icon"></i>
+                <span class="admin-title">Lịch sử tài khoản</span>
+                <p class="admin-desc">Theo dõi trạng thái & thời gian tạo tài khoản.</p>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm" style="height:150px">
-            <div class="card-body">
-                <div class="fw-bold mb-1">Tạo tài khoản bác sĩ</div>
-                <p class="text-muted">Admin mới có quyền tạo bác sĩ.</p>
-                <a class="btn btn-primary btn-sm" href="@Url.Action("CreateDoctor","Admin")">Tạo bác sĩ</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm" style="height:150px">
-            <div class="card-body">
-                <div class="fw-bold mb-1">Danh Sách Bác Sĩ</div>
-                <p class="text-muted">Admin mới có quyền chỉnh sửa thông tin bác sĩ.</p>
-                <a class="btn btn-primary btn-sm" href="@Url.Action("Doctors","Admin")">Quản lý bác sĩ</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm" style="height:150px">
-            <div class="card-body">
-                <div class="fw-bold mb-1">Danh Sách Bệnh Nhân</div>
-                <p class="text-muted">Admin mới có quyền chỉnh sửa thông tin bệnh nhân.</p>
-                <a class="btn btn-primary btn-sm" href="@Url.Action("Patients","Admin")">Quản lý bệnh nhân</a>
-            </div>
+            <a class="btn btn-primary admin-btn" href="@Url.Action("History","Admin")">Xem lịch sử</a>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="card shadow-sm" style="height:150px">
-            <div class="card-body">
-                <div class="fw-bold mb-1">Lịch làm của Bác sĩ</div>
-                <p class="text-muted">Xem danh sách các bác sĩ đang có ca trực.</p>
-                <a class="btn btn-primary btn-sm" href="@Url.Action("DoctorSchedule","Admin")">
-                    Xem lịch làm
-                </a>
+        <div class="admin-card shadow-sm">
+            <div>
+                <i class="fa-solid fa-user-doctor admin-icon"></i>
+                <span class="admin-title">Tạo tài khoản bác sĩ</span>
+                <p class="admin-desc">Admin mới có quyền tạo bác sĩ.</p>
             </div>
+            <a class="btn btn-primary admin-btn" href="@Url.Action("CreateDoctor","Admin")">Tạo bác sĩ</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="admin-card shadow-sm">
+            <div>
+                <i class="fa-solid fa-users admin-icon"></i>
+                <span class="admin-title">Danh Sách Bác Sĩ</span>
+                <p class="admin-desc">Chỉnh sửa thông tin bác sĩ.</p>
+            </div>
+            <a class="btn btn-primary admin-btn" href="@Url.Action("Doctors","Admin")">Quản lý bác sĩ</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="admin-card shadow-sm">
+            <div>
+                <i class="fa-solid fa-hospital-user admin-icon"></i>
+                <span class="admin-title">Danh Sách Bệnh Nhân</span>
+                <p class="admin-desc">Chỉnh sửa thông tin bệnh nhân.</p>
+            </div>
+            <a class="btn btn-primary admin-btn" href="@Url.Action("Patients","Admin")">Quản lý bệnh nhân</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="admin-card shadow-sm">
+            <div>
+                <i class="fa-solid fa-calendar-check admin-icon"></i>
+                <span class="admin-title">Lịch làm của Bác sĩ</span>
+                <p class="admin-desc">Xem danh sách các bác sĩ đang trực.</p>
+            </div>
+            <a class="btn btn-primary admin-btn" href="@Url.Action("DoctorSchedule","Admin")">Xem lịch làm</a>
         </div>
     </div>
 
@@ -73,6 +112,16 @@
         </div>
     </div>
 
+    <div class="col-md-4">
+        <div class="admin-card shadow-sm">
+            <div>
+                <i class="fa-solid fa-file-medical admin-icon"></i>
+                <span class="admin-title">Phiếu dịch vụ</span>
+                <p class="admin-desc">Quản lý phiếu dịch vụ: lọc theo ngày, tìm kiếm BN/BS, trạng thái.</p>
+            </div>
+            <a class="btn btn-primary admin-btn" href="@Url.Action("ServiceTickets","Admin")">Quản lý phiếu</a>
+        </div>
+    </div>
+
 
 </div>
-

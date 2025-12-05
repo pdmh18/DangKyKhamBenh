@@ -22,59 +22,6 @@ namespace DangKyKhamBenh.Controllers
         }
 
 
-
-        //// Hàm mã hóa Hồ Sơ và lưu vào cơ sở dữ liệu Oracle
-        //[HttpGet]
-        //public ActionResult HoSo()
-        //{
-        //    var userId = Session["ND_IdNguoiDung"]?.ToString();
-        //    if (string.IsNullOrEmpty(userId))
-        //    {
-        //        ViewBag.ErrorMessage = "Không xác định được người dùng.";
-        //        return View(new BenhNhan());
-        //    }
-
-        //    var maBenhNhan = Session["MaBenhNhan"] as string;
-
-        //    var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
-        //    using (var conn = new OracleConnection(cs))
-        //    {
-        //        conn.Open();
-
-        //        // Nếu Session chưa có thì thử tra từ DB theo ND_IdNguoiDung
-        //        if (string.IsNullOrEmpty(maBenhNhan))
-        //        {
-        //            using (var cmd = new OracleCommand(@"
-        //        SELECT BN_MaBenhNhan 
-        //        FROM   BENHNHAN 
-        //        WHERE  ND_IdNguoiDung = :id", conn))
-        //            {
-        //                cmd.BindByName = true;
-        //                cmd.Parameters.Add("id", userId);
-        //                var o = cmd.ExecuteScalar();
-        //                if (o != null && o != DBNull.Value)
-        //                {
-        //                    maBenhNhan = o.ToString();
-        //                    // lưu lại cho các chỗ khác dùng
-        //                    Session["MaBenhNhan"] = maBenhNhan;
-        //                }
-        //            }
-        //        }
-        //    }
-
-
-        //    var model = new BenhNhan
-        //    {
-        //        ND_IdNguoiDung = userId,
-        //        BN_MaBenhNhan = maBenhNhan
-        //    };
-
-
-        //    //var model = new BenhNhan { ND_IdNguoiDung = userId };
-        //    return View(model);
-
-
-        //}
         [HttpGet]
         public ActionResult HoSo()
         {
@@ -92,18 +39,44 @@ namespace DangKyKhamBenh.Controllers
             {
                 ND_IdNguoiDung = userId
             };
-
+            var hasCompleteProfile = false;
             using (var conn = new OracleConnection(cs))
             {
                 conn.Open();
+                // Kiểm tra nếu hồ sơ đầy đủ
+                var checkProfileSql = @"
+                    SELECT COUNT(*)
+                    FROM BENHNHAN bn
+                    JOIN NGUOIDUNG nd ON bn.ND_IdNguoiDung = nd.ND_IdNguoiDung
+                    WHERE bn.ND_IdNguoiDung = :userId
+                    AND (bn.BN_SoBaoHiemYT IS NOT NULL
+                    AND bn.BN_TieuSuBenhAn IS NOT NULL
+                    AND nd.ND_CCCD IS NOT NULL
+                    AND nd.ND_GioiTinh IS NOT NULL
+                    AND nd.ND_QuocGia IS NOT NULL
+                    AND nd.ND_DanToc IS NOT NULL
+                    AND nd.ND_NgheNghiep IS NOT NULL
+                    AND nd.ND_TinhThanh IS NOT NULL
+                    AND nd.ND_QuanHuyen IS NOT NULL
+                    AND nd.ND_PhuongXa IS NOT NULL)"; // Kiểm tra các trường bắt buộc
+
+                using (var cmd = new OracleCommand(checkProfileSql, conn))
+                {
+                    cmd.Parameters.Add("userId", OracleDbType.Varchar2).Value = userId;
+                    var count = Convert.ToInt32(cmd.ExecuteScalar());
+
+                    hasCompleteProfile = count > 0;
+                }
+
+
 
                 // 1) Nếu Session chưa có BN_MaBenhNhan thì lấy từ DB
                 if (string.IsNullOrEmpty(maBenhNhan))
                 {
                     using (var cmd = new OracleCommand(@"
-                SELECT BN_MaBenhNhan 
-                FROM   BENHNHAN 
-                WHERE  ND_IdNguoiDung = :id", conn))
+                        SELECT BN_MaBenhNhan 
+                        FROM   BENHNHAN 
+                        WHERE  ND_IdNguoiDung = :id", conn))
                     {
                         cmd.BindByName = true;
                         cmd.Parameters.Add("id", OracleDbType.Varchar2).Value = userId;
@@ -121,13 +94,13 @@ namespace DangKyKhamBenh.Controllers
 
                 // 2) Lấy thông tin NGUOIDUNG (email đang mã hoá) và giải mã
                 using (var cmd = new OracleCommand(@"
-            SELECT ND_HoTen,
-                   ND_Email,
-                   ND_NgaySinh,
-                   ND_DiaChiThuongChu,
-                   ND_SoDienThoai
-            FROM   NGUOIDUNG
-            WHERE  ND_IdNguoiDung = :id", conn))
+                SELECT ND_HoTen,
+                       ND_Email,
+                       ND_NgaySinh,
+                       ND_DiaChiThuongChu,
+                       ND_SoDienThoai
+                FROM   NGUOIDUNG
+                WHERE  ND_IdNguoiDung = :id", conn))
                 {
                     cmd.BindByName = true;
                     cmd.Parameters.Add("id", OracleDbType.Varchar2).Value = userId;
@@ -154,6 +127,15 @@ namespace DangKyKhamBenh.Controllers
                     }
                 }
             }
+            if (hasCompleteProfile)
+            {
+                TempData["Message"] = "Bạn đã có hồ sơ, bạn có muốn đăng ký khám không?";
+            }
+            else
+            {
+                TempData["Message"] = null;
+            }
+
 
             return View(model);
         }
@@ -199,22 +181,7 @@ namespace DangKyKhamBenh.Controllers
 
                     if (nguoiDungTonTai)
                     {
-                        // UPDATE NGUOIDUNG
-                        //    using (var cmd = new OracleCommand(@"
-                        //UPDATE NGUOIDUNG SET
-                        //    ND_HoTen           = :ht,
-                        //    ND_CCCD = :cccd,
-                        //    ND_GioiTinh = :gt,
-                        //    ND_QuocGia = :qg,
-                        //    ND_DanToc = :dt,
-                        //    ND_NgheNghiep = :nn,
-                        //    ND_TinhThanh = :tt,
-                        //    ND_QuanHuyen = :qh,
-                        //    ND_PhuongXa = :px,
-                        //    ND_DiaChiThuongChu = :dc,
-                        //    ND_Email = :email,
-                        //    ND_SoDienThoai = :sdt
-                        //WHERE ND_IdNguoiDung = :id", conn))
+                        
                         using (var cmd = new OracleCommand(@"
                     UPDATE NGUOIDUNG SET
                         ND_HoTen           = :ht,

@@ -440,23 +440,24 @@ namespace DangKyKhamBenh.Controllers
                             cmd.Parameters.Add(":PC_CaTruc", model.PC_CaTruc);
                             await cmd.ExecuteNonQueryAsync();
                         }
+                        await InsertSlotsByCaAsync(con, tx, pcId, model.PC_CaTruc, model.GioiHanMoiSlot);
 
                         // Thêm các slot thời gian vào bảng SLOTKHAM
-                        foreach (var slot in model.Slots)
-                        {
-                            using (var cmd = new OracleCommand(@"
-                                INSERT INTO SLOTKHAM (SLOT_Id, PC_Id, SLOT_GioBD, SLOT_GioKT, SLOT_GioiHan, SLOT_SoDaDK)
-                                VALUES (:SLOT_Id, :PC_Id, :SLOT_GioBD, :SLOT_GioKT, :SLOT_GioiHan, :SLOT_SoDaDK)", con))
-                            {
-                                cmd.Parameters.Add(":SLOT_Id", "SLOT" + DateTime.Now.ToString("yyyyMMddHHmmss")); // ID slot mới
-                                cmd.Parameters.Add(":PC_Id", pcId);  // ID phân công
-                                cmd.Parameters.Add(":SLOT_GioBD", slot.GioBD);
-                                cmd.Parameters.Add(":SLOT_GioKT", slot.GioKT);
-                                cmd.Parameters.Add(":SLOT_GioiHan", slot.GioiHan);
-                                cmd.Parameters.Add(":SLOT_SoDaDK", 0); // Số lượt đăng ký ban đầu là 0
-                                await cmd.ExecuteNonQueryAsync();
-                            }
-                        }
+                        //foreach (var slot in model.Slots)
+                        //{
+                        //    using (var cmd = new OracleCommand(@"
+                        //        INSERT INTO SLOTKHAM (SLOT_Id, PC_Id, SLOT_GioBD, SLOT_GioKT, SLOT_GioiHan, SLOT_SoDaDK)
+                        //        VALUES (:SLOT_Id, :PC_Id, :SLOT_GioBD, :SLOT_GioKT, :SLOT_GioiHan, :SLOT_SoDaDK)", con))
+                        //    {
+                        //        cmd.Parameters.Add(":SLOT_Id", "SLOT" + DateTime.Now.ToString("yyyyMMddHHmmss")); // ID slot mới
+                        //        cmd.Parameters.Add(":PC_Id", pcId);  // ID phân công
+                        //        cmd.Parameters.Add(":SLOT_GioBD", slot.GioBD);
+                        //        cmd.Parameters.Add(":SLOT_GioKT", slot.GioKT);
+                        //        cmd.Parameters.Add(":SLOT_GioiHan", slot.GioiHan);
+                        //        cmd.Parameters.Add(":SLOT_SoDaDK", 0); // Số lượt đăng ký ban đầu là 0
+                        //        await cmd.ExecuteNonQueryAsync();
+                        //    }
+                        //}
 
                         // Commit transaction sau khi thành công
                         tx.Commit();
@@ -501,5 +502,50 @@ namespace DangKyKhamBenh.Controllers
             var next = maxTail + 1;
             return prefix + next.ToString("00000000");
         }
+
+        private static async Task InsertSlotAsync(
+    OracleConnection con, OracleTransaction tx,
+    string pcId, string gioBD, string gioKT, int gioiHan, int soDaDK)
+        {
+            // SLOT_Id CHAR(10) => nên sinh kiểu SL00000001...
+            string slotId = NextId(con, tx, "SLOTKHAM", "SLOT_ID", "SL");
+
+            using (var cmd = new OracleCommand(@"
+        INSERT INTO SLOTKHAM (SLOT_Id, PC_Id, SLOT_GioBD, SLOT_GioKT, SLOT_GioiHan, SLOT_SoDaDK)
+        VALUES (:SLOT_Id, :PC_Id, :SLOT_GioBD, :SLOT_GioKT, :SLOT_GioiHan, :SLOT_SoDaDK)", con))
+            {
+                cmd.Transaction = tx;
+
+                cmd.Parameters.Add(":SLOT_Id", slotId);
+                cmd.Parameters.Add(":PC_Id", pcId);
+                cmd.Parameters.Add(":SLOT_GioBD", gioBD);
+                cmd.Parameters.Add(":SLOT_GioKT", gioKT);
+                cmd.Parameters.Add(":SLOT_GioiHan", gioiHan);
+                cmd.Parameters.Add(":SLOT_SoDaDK", soDaDK);
+
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+
+        private static async Task InsertSlotsByCaAsync(
+            OracleConnection con, OracleTransaction tx,
+            string pcId, string caTruc, int gioiHanMoiSlot)
+        {
+            if (string.Equals(caTruc, "Sáng", StringComparison.OrdinalIgnoreCase))
+            {
+                await InsertSlotAsync(con, tx, pcId, "06:30", "07:30", gioiHanMoiSlot, 0);
+                await InsertSlotAsync(con, tx, pcId, "07:30", "08:30", gioiHanMoiSlot, 0);
+                await InsertSlotAsync(con, tx, pcId, "08:30", "09:30", gioiHanMoiSlot, 0);
+                await InsertSlotAsync(con, tx, pcId, "09:30", "10:30", gioiHanMoiSlot, 0);
+                await InsertSlotAsync(con, tx, pcId, "10:30", "11:30", gioiHanMoiSlot, 0);
+                return;
+            }
+
+            // Chiều
+            await InsertSlotAsync(con, tx, pcId, "13:00", "14:00", gioiHanMoiSlot, 0);
+            await InsertSlotAsync(con, tx, pcId, "14:00", "15:00", gioiHanMoiSlot, 0);
+            await InsertSlotAsync(con, tx, pcId, "15:00", "16:00", gioiHanMoiSlot, 0);
+        }
+
     }
 }

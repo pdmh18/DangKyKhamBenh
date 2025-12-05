@@ -11,6 +11,7 @@ namespace DangKyKhamBenh.Models.ViewModels
         public string PK_MaPK { get; set; }
         public DateTime PC_Ngay { get; set; }
         public string PC_CaTruc { get; set; }
+        public int GioiHanMoiSlot { get; set; } = 3;
         public List<SlotItem> Slots { get; set; } // Danh sách các khung giờ
         public List<PhongKhamItem> PhongKhamList { get; set; }
         public List<BacSiItem> BacSiList { get; set; }

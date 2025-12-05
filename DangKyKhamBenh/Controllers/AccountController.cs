@@ -184,7 +184,6 @@ namespace DangKyKhamBenh.Controllers
                                     maBenhNhan = result.ToString();
                             }
 
-                            // ✅ Gán vào session nếu có
                             if (!string.IsNullOrEmpty(maBenhNhan))
                             {
                                 Session["MaBenhNhan"] = maBenhNhan;
@@ -251,6 +250,17 @@ namespace DangKyKhamBenh.Controllers
             {
                 cmd.BindByName = true;
                 cmd.Parameters.Add("pUser", user);
+
+                return cmd.ExecuteScalar()?.ToString();
+            }
+        }
+        public string DecryptUser(string encryptedUser, OracleConnection conn)
+        {
+            const string sql = "SELECT PKG_SECURITY.AES_DECRYPT_B64(:pEncryptedUser) FROM DUAL";
+            using (var cmd = new OracleCommand(sql, conn))
+            {
+                cmd.BindByName = true;
+                cmd.Parameters.Add("pEncryptedUser", encryptedUser);
 
                 return cmd.ExecuteScalar()?.ToString();
             }

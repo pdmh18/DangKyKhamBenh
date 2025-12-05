@@ -2,8 +2,9 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewBag.Title = "Sửa bác sĩ";
-    ViewBag.Active = "CreateDoctor"; // hoặc "Doctors"
+    ViewBag.Active = "CreateDoctor";
 }
+
 <div class="card shadow-sm">
     <div class="card-body">
         @using (Html.BeginForm("EditDoctor", "Admin", FormMethod.Post))
@@ -11,109 +12,143 @@
             @Html.AntiForgeryToken()
             @Html.HiddenFor(m => m.BS_MaBacSi)
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.TK_UserName, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.TK_UserName, new { @class = "form-control" })
-                        @Html.ValidationMessageFor(m => m.TK_UserName)
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.TK_TrangThai, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.TK_TrangThai, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_HoTen, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_HoTen, new { @class = "form-control" })
-                        @Html.ValidationMessageFor(m => m.ND_HoTen, "", new { @class = "text-danger" })
-                    </div>
-                    <div class="col-md-6">
-                        <label for="K_MaKhoa" class="form-label">Khoa / Chuyên khoa</label>
-                        @Html.DropDownListFor(m => m.K_MaKhoa,
-                            (IEnumerable<SelectListItem>)ViewBag.KhoaList,
-                            "-- Chọn khoa --",
-                            new { @class = "form-control" })
-                    </div>
+            <div class="row g-3">
 
-
-                    <div class="col-md-4">
-                        @Html.LabelFor(m => m.BS_ChucDanh, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.BS_ChucDanh, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-4">
-                        @Html.LabelFor(m => m.BS_NamKinhNghiem, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.BS_NamKinhNghiem, new { @class = "form-control", type = "number", min = "0" })
-                    </div>
-                    <div class="col-md-4">
-                        @Html.LabelFor(m => m.ND_NgaySinh, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_NgaySinh, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
-                    </div>
-
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_SoDienThoai, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_SoDienThoai, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_Email, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_Email, new { @class = "form-control"})
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_CCCD, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_CCCD, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_GioiTinh, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_GioiTinh, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_QuocGia, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_QuocGia, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_DanToc, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_DanToc, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_NgheNghiep, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_NgheNghiep, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_TinhThanh, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_TinhThanh, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_QuanHuyen, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_QuanHuyen, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-6">
-                        @Html.LabelFor(m => m.ND_PhuongXa, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_PhuongXa, new { @class = "form-control" })
-                    </div>
-                    <div class="col-md-12">
-                        @Html.LabelFor(m => m.ND_DiaChiThuongChu, new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.ND_DiaChiThuongChu, new { @class = "form-control" })
-                    </div>
-
-
-                    
-
+                <!-- Tài khoản -->
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.TK_UserName, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.TK_UserName, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.TK_UserName, "", new { @class = "text-danger" })
                 </div>
 
-                <div class="mt-3 d-flex gap-2">
-                    <div class="mt-3 d-flex gap-2">
-                        <!-- Nút Lưu: action = Save -->
-                        <button type="submit" name="action" value="Save" class="btn btn-primary">
-                            Lưu
-                        </button>
-
-                        <!-- Nút Giải mã: action = Decrypt -->
-                        <button type="submit" name="action" value="Decrypt" class="btn btn-warning">
-                            Giải mã
-                        </button>
-
-                        <a class="btn btn-outline-secondary" href="@Url.Action("Doctors","Admin")">Hủy</a>
-                    </div>
-
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.TK_TrangThai, new { @class = "form-label" })
+                    @Html.DropDownListFor(m => m.TK_TrangThai,
+                        new List<SelectListItem> {
+                            new SelectListItem { Text="Active", Value="Active" },
+                            new SelectListItem { Text="Inactive", Value="Inactive" },
+                            new SelectListItem { Text="Locked", Value="Locked" }
+                        },
+                        "-- Trạng thái tài khoản --",
+                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.TK_TrangThai, "", new { @class = "text-danger" })
                 </div>
-         }
+
+                <!-- Thông tin cá nhân -->
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_HoTen, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_HoTen, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.ND_HoTen, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Khoa / Chuyên khoa</label>
+                    @Html.DropDownListFor(m => m.K_MaKhoa,
+                        (IEnumerable<SelectListItem>)ViewBag.KhoaList,
+                        "-- Chọn khoa --",
+                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.K_MaKhoa, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-4">
+                    @Html.LabelFor(m => m.BS_ChucDanh, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.BS_ChucDanh, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.BS_ChucDanh, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-4">
+                    @Html.LabelFor(m => m.BS_NamKinhNghiem, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.BS_NamKinhNghiem,
+                        new { @class = "form-control", type = "number", min = "0" })
+                    @Html.ValidationMessageFor(m => m.BS_NamKinhNghiem, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-4">
+                    @Html.LabelFor(m => m.ND_NgaySinh, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_NgaySinh, "{0:yyyy-MM-dd}",
+                        new { @class = "form-control", type = "date" })
+                    @Html.ValidationMessageFor(m => m.ND_NgaySinh, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_SoDienThoai, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_SoDienThoai, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.ND_SoDienThoai, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_Email, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_Email, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.ND_Email, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_CCCD, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_CCCD, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.ND_CCCD, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_GioiTinh, new { @class = "form-label" })
+                    @Html.DropDownListFor(m => m.ND_GioiTinh,
+                        new List<SelectListItem> {
+                            new SelectListItem { Text="Nam", Value="Nam" },
+                            new SelectListItem { Text="Nữ", Value="Nữ" },
+                            new SelectListItem { Text="Khác", Value="Khác" }
+                        },
+                        "-- Chọn giới tính --",
+                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.ND_GioiTinh, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_QuocGia, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_QuocGia, new { @class = "form-control" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_DanToc, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_DanToc, new { @class = "form-control" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_NgheNghiep, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_NgheNghiep, new { @class = "form-control" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_TinhThanh, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_TinhThanh, new { @class = "form-control" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_QuanHuyen, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_QuanHuyen, new { @class = "form-control" })
+                </div>
+
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ND_PhuongXa, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_PhuongXa, new { @class = "form-control" })
+                </div>
+
+                <div class="col-md-12">
+                    @Html.LabelFor(m => m.ND_DiaChiThuongChu, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ND_DiaChiThuongChu, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <!-- Nút chức năng -->
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" name="action" value="Save" class="btn btn-primary">
+                    Lưu
+                </button>
+
+                @*<button type="submit" name="action" value="Decrypt" class="btn btn-warning">
+                    Giải mã
+                </button>*@
+
+                <a class="btn btn-outline-secondary" href="@Url.Action("Doctors","Admin")">Hủy</a>
+            </div>
+        }
     </div>
 </div>
