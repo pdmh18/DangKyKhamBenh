@@ -690,34 +690,30 @@ namespace DangKyKhamBenh.Controllers
                                 ND_Email = r.IsDBNull(cEmail) ? null : r.GetString(cEmail),
                             };
 
-
                             // Giải mã các trường cần thiết
                             try
                             {
+                                // Kiểm tra trước khi giải mã số điện thoại
                                 if (!string.IsNullOrEmpty(bacSi.ND_SoDienThoai))
                                 {
-                                    bacSi.ND_SoDienThoai = _rsaService.Decrypt(bacSi.ND_SoDienThoai);  // Giải mã số điện thoại
+                                    bacSi.ND_SoDienThoai = _rsaService.Decrypt(bacSi.ND_SoDienThoai);  
                                 }
-                                if (!string.IsNullOrEmpty(bacSi.BS_MaBacSi))
+
+                                if (!string.IsNullOrEmpty(bacSi.ND_Email))
                                 {
                                     bacSi.ND_Email = _hybridService.Decrypt(bacSi.ND_Email, bacSi.BS_MaBacSi);
-                                    
                                 }
                             }
                             catch (FormatException ex)
                             {
-                                
                                 Console.WriteLine($"Lỗi khi giải mã số điện thoại: {ex.Message}");
-                                bacSi.ND_SoDienThoai = " "; 
+                                bacSi.ND_SoDienThoai = " ";
                                 bacSi.ND_Email = " ";
                             }
-                            
 
                             list.Add(bacSi);
-
-
-       
                         }
+
                     }
                 }
             }
