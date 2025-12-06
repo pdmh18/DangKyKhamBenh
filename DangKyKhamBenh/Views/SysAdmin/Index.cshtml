@@ -1,0 +1,30 @@
+﻿@{
+    ViewBag.Title = "Trang chủ SysAdmin";
+    Layout = "~/Views/Shared/SysAdminLayout.cshtml";
+}
+
+<h2>Trang chủ SysAdmin</h2>
+
+<!-- Thêm các thông tin như card, thống kê, hoặc các chức năng cần thiết cho SysAdmin -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Quản lý người dùng</h5>
+                <p class="card-text">Kiểm tra các quyền và vai trò của người dùng trong hệ thống.</p>
+                <a href="@Url.Action("CheckUserRole", "SysAdmin")" class="btn btn-primary">Kiểm tra vai trò</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Các card chức năng khác -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Quản lý quyền</h5>
+                <p class="card-text">Quản lý quyền của người dùng và các vai trò trong hệ thống.</p>
+                <a href="@Url.Action("Index", "SysAdmin")" class="btn btn-primary">Xem chi tiết</a>
+            </div>
+        </div>
+    </div>
+</div>

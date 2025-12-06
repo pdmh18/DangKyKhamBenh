@@ -1,0 +1,30 @@
+﻿@{
+    ViewBag.Title = "Kiểm tra vai trò người dùng";
+    Layout = "~/Views/Shared/SysAdminLayout.cshtml";
+}
+
+<h2>Kiểm tra vai trò của người dùng</h2>
+
+<!-- Form để người dùng nhập tên và vai trò -->
+<form method="get" class="mb-3">
+    <label for="username">Nhập tên người dùng:</label>
+    <input type="text" id="username" name="username" class="form-control" required>
+
+    <label for="role" class="mt-2">Nhập vai trò:</label>
+    <input type="text" id="role" name="role" class="form-control" required>
+
+    <button type="submit" class="btn btn-primary mt-2">Kiểm tra vai trò</button>
+</form>
+
+<!-- Kiểm tra và hiển thị kết quả -->
+@if (ViewBag.HasRole != null)
+{
+    if (ViewBag.HasRole)
+    {
+        <h3>Người dùng "@ViewBag.Username" có vai trò "@ViewBag.Role".</h3>
+    }
+    else
+    {
+        <h3>Người dùng "@ViewBag.Username" không có vai trò "@ViewBag.Role".</h3>
+    }
+}

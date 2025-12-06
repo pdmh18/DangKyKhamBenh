@@ -203,6 +203,7 @@
     <Compile Include="Services\MaHoa_GiaiMa_Sql.cs" />
     <Compile Include="Services\RsaKeyManager.cs" />
     <Compile Include="Services\RsaService.cs" />
+    <Compile Include="Services\SysAdmin.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />
@@ -269,6 +270,10 @@
     <Content Include="Views\DangKyKham\ChonThanhToan.cshtml" />
     <Content Include="Views\DangKyKham\PhieuKhamBenh.cshtml" />
     <Content Include="Views\Admin\ServiceTickets.cshtml" />
+    <Content Include="Views\Shared\SysAdminLayout.cshtml" />
+    <Content Include="Views\SysAdmin\Index.cshtml" />
+    <Content Include="Views\SysAdmin\UserRoles.cshtml" />
+    <Content Include="Views\SysAdmin\CheckUserRole.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -278,7 +283,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Views\SysAdmin\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

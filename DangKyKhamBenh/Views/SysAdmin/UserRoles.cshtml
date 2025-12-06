@@ -1,0 +1,23 @@
+﻿@{
+    ViewBag.Title = "Vai trò của người dùng";
+    Layout = "~/Views/Shared/SysAdminLayout.cshtml";
+}
+
+<h2>Vai trò của người dùng</h2>
+
+<form method="get" class="mb-3">
+    <label for="username">Nhập tên người dùng:</label>
+    <input type="text" id="username" name="username" class="form-control" required>
+    <button type="submit" class="btn btn-primary mt-2">Kiểm tra vai trò</button>
+</form>
+
+@if (ViewBag.UserRoles != null)
+{
+    <h3>Vai trò của người dùng: @Request.QueryString["username"]</h3>
+    <ul>
+        @foreach (System.Data.DataRow row in ((System.Data.DataTable)ViewBag.UserRoles).Rows)
+        {
+            <li>@row["GRANTED_ROLE"]</li>
+        }
+    </ul>
+}
