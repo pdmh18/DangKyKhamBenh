@@ -169,12 +169,21 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\HoSoBacSiController.cs" />
     <Compile Include="Controllers\HoSoController.cs" />
+    <Compile Include="Controllers\SysAdminController.cs" />
     <Compile Include="Filters\AdminOnlyAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\ViewModels\BacSiItem.cs" />
+    <Compile Include="Models\ViewModels\ChonKhungGioVM.cs" />
+    <Compile Include="Models\ViewModels\ChonThanhToanVM.cs" />
+    <Compile Include="Models\ViewModels\CreateScheduleViewModel.cs" />
     <Compile Include="Models\ForgotPasswordOtpViewModel.cs" />
+    <Compile Include="Models\Khoa.cs" />
     <Compile Include="Models\NguoiDung.cs" />
+    <Compile Include="Models\ViewModels\PhieuKhamBenhVM.cs" />
+    <Compile Include="Models\ViewModels\PhieuTongHopVM.cs" />
+    <Compile Include="Models\ViewModels\PhongKhamItem.cs" />
     <Compile Include="Models\TaiKhoan.cs" />
     <Compile Include="Models\ViewModels\BacSi.cs" />
     <Compile Include="Models\ViewModels\BenhNhan.cs" />
@@ -185,11 +194,13 @@
     <Compile Include="Models\Patient.cs" />
     <Compile Include="Models\ViewModels\LichBacSi.cs" />
     <Compile Include="Models\ViewModels\NgayKhamItemVM.cs" />
+    <Compile Include="Models\ViewModels\XacNhanBHYTVM.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CaesarCipher.cs" />
     <Compile Include="Services\HoSoHelper.cs" />
     <Compile Include="Services\HybridService.cs" />
     <Compile Include="Services\KeyDerivationService.cs" />
+    <Compile Include="Services\MaHoa_GiaiMa_Sql.cs" />
     <Compile Include="Services\RsaKeyManager.cs" />
     <Compile Include="Services\RsaService.cs" />
   </ItemGroup>
@@ -240,7 +251,6 @@
     <Content Include="Views\Account\ForgotPassword.cshtml" />
     <Content Include="Views\Doctor\Dashboard.cshtml" />
     <Content Include="Views\HoSo\HoSo.cshtml" />
-    <Content Include="Views\Shared\shared\_AdminLayout.cshtml" />
     <Content Include="Views\HoSo\HoSoCaNhan.cshtml" />
     <Content Include="Views\HoSo\CapNhatHoSo.cshtml" />
     <Content Include="Views\DangKyKham\ChonChuyenKhoa.cshtml" />
@@ -248,6 +258,17 @@
     <Content Include="Views\Doctor\ScheduleDetail.cshtml" />
     <Content Include="Views\Admin\DoctorSchedule.cshtml" />
     <Content Include="Views\HoSoBacSi\CreateHoSoBacSi.cshtml" />
+    <Content Include="Views\Admin\EditDepartment.cshtml" />
+    <Content Include="Views\Admin\Departments.cshtml" />
+    <Content Include="Views\Doctor\DashboardTruongKhoa.cshtml" />
+    <Content Include="Views\Doctor\CreateSchedule.cshtml" />
+    <Content Include="Views\DangKyKham\Index.cshtml" />
+    <Content Include="Views\DangKyKham\ChonKhungGio.cshtml" />
+    <Content Include="Views\DangKyKham\XacNhanBHYT.cshtml" />
+    <Content Include="Views\DangKyKham\PhieuTongHop.cshtml" />
+    <Content Include="Views\DangKyKham\ChonThanhToan.cshtml" />
+    <Content Include="Views\DangKyKham\PhieuKhamBenh.cshtml" />
+    <Content Include="Views\Admin\ServiceTickets.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -257,6 +278,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\SysAdmin\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

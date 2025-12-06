@@ -1,0 +1,181 @@
+﻿@model DangKyKhamBenh.Models.ViewModels.PhieuKhamBenhVM
+@using System.Globalization
+@{
+    Layout = null;
+    var vi = new CultureInfo("vi-VN");
+    var moneyStr = Model.TienKham.ToString("N0", vi) + " đồng";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: #f3f6fb;
+            font-family: 'Segoe UI',sans-serif;
+        }
+
+        .page {
+            max-width: 420px;
+            margin: 10px auto;
+            background: #fff;
+            border-radius: 18px;
+            border: 1px solid #e6edf7;
+            overflow: hidden;
+        }
+
+        .top {
+            padding: 14px 16px;
+            text-align: center;
+        }
+
+        .title {
+            font-weight: 900;
+            color: #0b5ed7;
+            font-size: 22px;
+        }
+
+        .sub {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .big {
+            text-align: center;
+            padding: 8px 16px 2px;
+        }
+
+        .dept {
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .room {
+            color: #1f7a1f;
+            font-weight: 900;
+            font-size: 18px;
+        }
+
+        .sttWrap {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0 6px;
+        }
+
+        .circle {
+            width: 110px;
+            height: 110px;
+            border-radius: 999px;
+            border: 3px solid #73c76b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #2a8a2a;
+        }
+
+            .circle .n {
+                font-size: 44px;
+                font-weight: 1000;
+                line-height: 1;
+            }
+
+            .circle .t {
+                font-weight: 900;
+                margin-top: -6px;
+            }
+
+        .body {
+            padding: 10px 16px 16px;
+        }
+
+        .rowx {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 0;
+        }
+
+        .k {
+            color: #6c757d;
+            font-weight: 700;
+        }
+
+        .v {
+            font-weight: 800;
+            text-align: right;
+        }
+
+        .note {
+            font-size: 12px;
+            color: #6c757d;
+            padding: 10px 0 0;
+        }
+        .actions {
+            padding: 0 16px 16px;
+        }
+
+        .btn-home {
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 800;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="top">
+            <div class="sub">Bệnh viện Đại học Y Dược TP. Hồ Chí Minh</div>
+            <div class="sub">215 Hồng Bàng, Phường Chợ Lớn, TP. Hồ Chí Minh</div>
+            <div class="title mt-2">PHIẾU KHÁM BỆNH</div>
+            <div class="sub">(Mã phiếu: @Model.PdvId)</div>
+            @if (!string.IsNullOrEmpty(Model.MaGiaoDich))
+            {
+                <div class="sub">(Mã giao dịch: @Model.MaGiaoDich)</div>
+            }
+        </div>
+
+        <div class="big">
+            <div class="dept text-uppercase">@Model.TenDichVu</div>
+            <div class="room">@Model.TenPhong - @Model.ViTri</div>
+        </div>
+
+        <div class="sttWrap">
+            <div class="circle">
+                <div class="n">@Model.STT</div>
+                <div class="t">STT</div>
+            </div>
+        </div>
+
+        <div class="body">
+            <div class="rowx"><div class="k">Họ tên:</div><div class="v text-uppercase">@Model.HoTen</div></div>
+            <div class="rowx"><div class="k">Ngày sinh:</div><div class="v">@((Model.NgaySinh.HasValue)? Model.NgaySinh.Value.ToString("dd/MM/yyyy") : "")</div></div>
+            <div class="rowx"><div class="k">Giới tính:</div><div class="v">@Model.GioiTinh</div></div>
+            <div class="rowx"><div class="k">Tỉnh/TP:</div><div class="v">@Model.TinhTP</div></div>
+
+            <div class="rowx"><div class="k">Ngày khám:</div><div class="v">@Model.NgayKham.ToString("dd/MM/yyyy") (@Model.Buoi)</div></div>
+            <div class="rowx"><div class="k">Giờ khám dự kiến:</div><div class="v">@Model.GioBD - @Model.GioKT</div></div>
+
+            <div class="rowx"><div class="k">Tiền khám:</div><div class="v text-success">@moneyStr</div></div>
+            <div class="rowx"><div class="k">Đối tượng:</div><div class="v">@Model.DoiTuong</div></div>
+
+            <div class="note">
+                Vui lòng đến trực tiếp phòng khám trước hẹn 15-30 phút để khám bệnh.<br />
+                Số hồ sơ (Mã người bệnh): <b>@Model.SoHoSo</b><br />
+                <i>Ghi chú: Số thứ tự này chỉ có giá trị trong ngày khám.</i>
+            </div>
+        </div>
+        <div class="actions">
+            <a class="btn btn-primary w-100 btn-home"
+               href="@Url.Action("Index","Home")">
+                Về trang chủ
+            </a>
+        </div>
+
+    </div>
+</body>
+</html>

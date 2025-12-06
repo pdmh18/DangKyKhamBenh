@@ -8,7 +8,7 @@
 <style>
     .card-style {
         background: #fff;
-        padding: 18px 22px;
+        padding: 10px 22px;
         border-radius: 12px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
@@ -46,28 +46,21 @@
 </style>
 
 <div class="card-style mb-4">
+    <div class="d-flex justify-content-between align-items-center">
 
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4 class="mb-0 fw-bold">Danh sách bệnh nhân</h4>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Home", "Admin")">←</a>
 
-        <form class="d-flex gap-2" method="get" action="@Url.Action("Patients","Admin")">
+        <form class="d-flex gap-2" method="get" action="@Url.Action("Patients", "Admin")">
             <div class="input-group">
-                <span class="input-group-text bg-white border-end-0">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input name="kw"
-                       class="form-control border-start-0"
-                       style="width:260px"
-                       placeholder="Tìm mã BN, họ tên, username..."
-                       value="@Request["kw"]" />
+                <input name="kw" class="form-control border-start" style="width:350px" placeholder="Tìm mã BN, họ tên, username..." value="@Request["kw"]" />
+                <button class="btn btn-primary px-4">Tìm</button>
             </div>
-            <button class="btn btn-primary px-4">
-                Tìm
-            </button>
+            
         </form>
+        
     </div>
-
 </div>
+
 
 
 <div class="card-style">
@@ -133,27 +126,30 @@
                         <td>
                             <div class="action-btns d-flex flex-wrap gap-2">
 
-                                <a class="btn btn-sm btn-outline-primary"
-                                   href="@Url.Action("EditPatient","Admin", new { id = b.BN_MaBenhNhan })">
+                                <!-- Nút Sửa với xác nhận -->
+                                <a class="btn btn-sm btn-outline-primary" href="@Url.Action("EditPatient", "Admin", new { id = b.BN_MaBenhNhan })" onclick="return confirmAction('Bạn có chắc chắn muốn sửa thông tin bệnh nhân này?');">
                                     Sửa
                                 </a>
 
+                                <!-- Nút Khóa với xác nhận -->
                                 @using (Html.BeginForm("TogglePatientStatus", "Admin", FormMethod.Post))
                                 {
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@b.BN_MaBenhNhan" />
-                                    if (b.TrangThai?.ToUpper() == "ACTIVE")
-                                    {
-                                        <button class="btn btn-sm btn-outline-warning" type="submit">Khóa</button>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-sm btn-outline-success" type="submit">Mở</button>
-                                    }
+                                    <button class="btn btn-sm btn-outline-warning" type="submit" onclick="return confirmAction('Bạn có chắc chắn muốn thay đổi trạng thái tài khoản của bệnh nhân này?');">
+                                        @if (b.TrangThai?.ToUpper() == "ACTIVE")
+                                        {
+                                            <span>Khóa</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Mở</span>
+                                        }
+                                    </button>
                                 }
 
-                                @using (Html.BeginForm("DeletePatient", "Admin", FormMethod.Post,
-                                    new { onsubmit = "return confirm('Bạn có chắc muốn xóa bệnh nhân này?');" }))
+                                <!-- Nút Xóa với xác nhận -->
+                                @using (Html.BeginForm("DeletePatient", "Admin", FormMethod.Post, new { onsubmit = "return confirmAction('Bạn có chắc chắn muốn xóa bệnh nhân này và toàn bộ dữ liệu liên quan?');" }))
                                 {
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@b.BN_MaBenhNhan" />
@@ -165,11 +161,17 @@
                     </tr>
                 }
             </tbody>
+
         </table>
     </div>
 
-    <div class="mt-3">
-        <a class="btn btn-outline-secondary" href="@Url.Action("Home","Admin")">← Quay lại</a>
-    </div>
+    
 
 </div>
+<script>
+    // Hàm xác nhận cho các hành động như Sửa, Khóa, Xóa
+    function confirmAction(message) {
+        return confirm(message);
+    }
+
+</script>

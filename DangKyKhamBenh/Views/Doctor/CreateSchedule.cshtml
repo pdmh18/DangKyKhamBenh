@@ -1,0 +1,148 @@
+﻿@model DangKyKhamBenh.Models.ViewModels.CreateScheduleViewModel
+
+@{
+    Layout = null;  // Nếu bạn đang sử dụng Layout Page
+}
+
+<!-- Thêm phần CSS vào trong file Razor -->
+<style>
+    /* Tạo kiểu dáng chung cho form */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Tạo kiểu dáng cho tiêu đề */
+    h2 {
+        font-size: 1.8rem;
+        color: #4CAF50;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    /* Tạo kiểu dáng cho label */
+    label {
+        font-size: 1rem;
+        color: #333;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    /* Làm nổi bật dropdown list */
+    .form-control {
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 100%;
+    }
+
+        .form-control:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+
+    /* Tạo kiểu cho các ô nhập thông tin */
+    input[type="text"], input[type="number"] {
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+
+    /* Định dạng cho khung giờ */
+    .form-group span {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #4CAF50;
+        margin-right: 10px;
+    }
+
+    .form-group input[type="number"] {
+        padding: 8px;
+        font-size: 1rem;
+        width: 150px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    /* Tạo hiệu ứng hover cho nút submit */
+    button[type="submit"] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+    /* Thêm padding và căn giữa form */
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<!-- Nội dung form -->
+<div class="form-container">
+    <h2>Tạo lịch trực cho bác sĩ</h2>
+
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <!-- Dropdown chọn bác sĩ -->
+        <div class="form-group">
+            <label for="BS_MaBacSi" class="form-label highlight">Chọn Bác sĩ:</label>
+            @Html.DropDownListFor(m => m.BS_MaBacSi, new SelectList(Model.BacSiList, "BS_MaBacSi", "HoTen"), "Chọn bác sĩ", new { @class = "form-control" })
+        </div>
+
+        <!-- Dropdown chọn phòng khám -->
+        <div class="form-group">
+            <label for="PK_MaPK" class="form-label highlight">Chọn Phòng khám:</label>
+            @Html.DropDownListFor(m => m.PK_MaPK, new SelectList(Model.PhongKhamList, "PK_MaPK", "TenPhong"), "Chọn phòng khám", new { @class = "form-control" })
+        </div>
+
+        <!-- Chọn ngày -->
+        <div class="form-group">
+            <label for="PC_Ngay" class="form-label highlight">Chọn Ngày:</label>
+            @Html.TextBoxFor(m => m.PC_Ngay, "{0:dd/MM/yyyy}", new { @class = "form-control" })
+        </div>
+
+        <!-- Dropdown chọn ca trực -->
+        <div class="form-group">
+            <label for="PC_CaTruc" class="form-label highlight">Chọn Ca Trực:</label>
+            @Html.DropDownListFor(m => m.PC_CaTruc, new SelectList(new[] { "Sáng", "Chiều" }), "Chọn ca trực", new { @class = "form-control" })
+        </div>
+
+        <!-- Khung giờ -->
+        <div class="form-group">
+            <label for="Slots" class="form-label highlight">Khung giờ:</label>
+            @foreach (var slot in Model.Slots)
+            {
+                <div>
+                    <span>@slot.GioBD - @slot.GioKT (Giới hạn: @slot.GioiHan)</span>
+                    <input type="number" name="Slots[0].SoLuongDangKy" placeholder="Số lượt đăng ký" />
+                </div>
+            }
+        </div>
+
+        <button type="submit" class="btn btn-primary">Lưu lịch trực</button>
+    }
+</div>

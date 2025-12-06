@@ -1,0 +1,86 @@
+﻿@model System.Data.DataTable
+@{
+    ViewBag.Title = ViewBag.Title ?? "Quản lý phiếu dịch vụ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Quản lý phiếu dịch vụ</h4>
+</div>
+
+<form class="row g-2 mb-3" method="get" action="@Url.Action("ServiceTickets","Admin")">
+    <div class="col-md-3">
+        <input type="date" class="form-control" name="from"
+               value="@(ViewBag.From != null ? ((DateTime)ViewBag.From).ToString("yyyy-MM-dd") : "")" />
+    </div>
+    <div class="col-md-3">
+        <input type="date" class="form-control" name="to"
+               value="@(ViewBag.To != null ? ((DateTime)ViewBag.To).ToString("yyyy-MM-dd") : "")" />
+    </div>
+    <div class="col-md-4">
+        <input class="form-control" name="kw" placeholder="Tìm theo mã phiếu, mã BN, tên BN/BS..."
+               value="@(ViewBag.Kw ?? "")" />
+    </div>
+    <div class="col-md-2 d-grid">
+        <button class="btn btn-primary">Lọc</button>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Mã phiếu</th>
+                        <th>Bệnh nhân</th>
+                        <th>Bác sĩ</th>
+                        <th>Dịch vụ</th>
+                        <th>Phòng khám</th>
+                        <th>Giờ BD</th>
+                        <th>Giờ KT</th>
+                        <th>Ngày tạo</th>
+                        <th>Tổng tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model == null || Model.Rows.Count == 0)
+                    {
+                        <tr><td colspan="9" class="text-center text-muted py-4">Chưa có dữ liệu.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (System.Data.DataRow row in Model.Rows)
+                        {
+                            var giaTien = (row["DV_GiaTien"] == DBNull.Value) ? 0m : Convert.ToDecimal(row["DV_GiaTien"]);
+                <tr>
+                    <td class="fw-bold">@row["PDV_MaPhieu"]</td>
+
+                    <td>
+                        <div class="fw-semibold">@row["BN_HoTen"]</div>
+                        <div class="text-muted small">@row["BN_MaBenhNhan"]</div>
+                    </td>
+
+                    <td>
+                        <div class="fw-semibold">@row["BS_HoTen"]</div>
+                        <div class="text-muted small">@row["BS_MaBacSi"]</div>
+                    </td>
+
+                    <td>
+                        <div class="fw-semibold">@row["DV_TenDichVu"]</div>
+                        <div class="text-muted small">@row["DV_MaDichVu"]</div>
+                    </td>
+
+                    <td>@row["PK_TenPhong"]</td>
+                    <td>@row["SLOT_GioBD"]</td>
+                    <td>@row["SLOT_GioKT"]</td>
+                    <td>@row["PDV_NgayChiDinh"]</td>
+                    <td>@(giaTien.ToString("N0") + " đ")</td>
+                </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

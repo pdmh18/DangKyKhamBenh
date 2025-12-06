@@ -1,0 +1,223 @@
+﻿@model DangKyKhamBenh.Models.ViewModels.ChonThanhToanVM
+@using System.Globalization
+@using DangKyKhamBenh.Models.ViewModels
+@{
+    Layout = null;
+    var vi = new CultureInfo("vi-VN");
+    string moneyStr = $"{Model.TienKham.ToString("N0", vi)}đ";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: #f3f6fb;
+            font-family: 'Segoe UI',sans-serif;
+        }
+
+        .page {
+            max-width: 520px;
+            margin: 14px auto;
+            padding: 0 12px 92px;
+        }
+
+        .cardx {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e6edf7;
+            overflow: hidden;
+        }
+
+            .cardx .head {
+                padding: 14px 16px;
+                border-bottom: 1px solid #eef2f7;
+                font-weight: 800;
+                color: #0b5ed7;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .cardx .body {
+                padding: 14px 16px;
+            }
+
+        .rowItem {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+            .rowItem:last-child {
+                border-bottom: 0;
+            }
+
+        .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .iconBox {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: #f1f5ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .name {
+            font-weight: 700;
+        }
+
+        .price {
+            font-weight: 900;
+            color: #0b5ed7;
+        }
+
+        .sticky {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            border-top: 1px solid #e6edf7;
+        }
+
+            .sticky .wrap {
+                max-width: 520px;
+                margin: 0 auto;
+                padding: 10px 12px;
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+
+        .total {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 900;
+            color: #23c16b;
+            text-align: right;
+        }
+
+        .btnx {
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <a href="javascript:history.back()" class="text-decoration-none fs-4">&larr;</a>
+            <div class="fw-bold fs-5">Thanh toán</div>
+        </div>
+
+        <!-- Chuyên khoa đã chọn -->
+        <div class="cardx mb-3">
+            <div class="head">🩺 Chuyên khoa đã chọn (1)</div>
+            <div class="body d-flex justify-content-between align-items-center">
+                <div class="name text-uppercase">@Model.TenDichVu</div>
+                <div class="price">@moneyStr</div>
+            </div>
+        </div>
+
+        @using (Html.BeginForm("ChonThanhToan", "DangKyKham", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.SlotId)
+            @Html.HiddenFor(m => m.DV_MaDichVu)
+            @Html.HiddenFor(m => m.NgayKham)
+            @Html.HiddenFor(m => m.TenDichVu)
+            @Html.HiddenFor(m => m.TienKham)
+
+            <!-- Phương thức thanh toán -->
+            <div class="cardx">
+                <div class="head">💳 Phương thức thanh toán</div>
+                <div class="body">
+
+                    <!-- NEW: Thanh toán tại bệnh viện (default) -->
+                    <label class="rowItem w-100" for="pm0">
+                        <div class="left">
+                            <div class="iconBox">🏥</div>
+                            <div class="name">Thanh toán tại bệnh viện</div>
+                        </div>
+                        @Html.RadioButtonFor(m => m.SelectedMethod, PaymentMethod.PayAtHospital, new { id = "pm0", @class = "form-check-input", style = "transform:scale(1.3)" })
+                    </label>
+
+                    <label class="rowItem w-100" for="pm1">
+                        <div class="left">
+                            <div class="iconBox">🪪</div>
+                            <div class="name">Thẻ khám bệnh BV ĐHYD TPHCM</div>
+                        </div>
+                        @Html.RadioButtonFor(m => m.SelectedMethod, PaymentMethod.HospitalCard, new { id = "pm1", @class = "form-check-input", style = "transform:scale(1.3)" })
+                    </label>
+
+                    <label class="rowItem w-100" for="pm2">
+                        <div class="left">
+                            <div class="iconBox">m</div>
+                            <div class="name">Ví điện tử MoMo</div>
+                        </div>
+                        @Html.RadioButtonFor(m => m.SelectedMethod, PaymentMethod.MoMo, new { id = "pm2", @class = "form-check-input", style = "transform:scale(1.3)" })
+                    </label>
+
+                    <label class="rowItem w-100" for="pm3">
+                        <div class="left">
+                            <div class="iconBox">📱</div>
+                            <div class="name">Ứng dụng Mobile Banking</div>
+                        </div>
+                        @Html.RadioButtonFor(m => m.SelectedMethod, PaymentMethod.MobileBanking, new { id = "pm3", @class = "form-check-input", style = "transform:scale(1.3)" })
+                    </label>
+
+                    <label class="rowItem w-100" for="pm4">
+                        <div class="left">
+                            <div class="iconBox">🏧</div>
+                            <div class="name">Thẻ nội địa và tài khoản ngân hàng</div>
+                        </div>
+                        @Html.RadioButtonFor(m => m.SelectedMethod, PaymentMethod.DomesticCard, new { id = "pm4", @class = "form-check-input", style = "transform:scale(1.3)" })
+                    </label>
+
+                    <label class="rowItem w-100" for="pm5">
+                        <div class="left">
+                            <div class="iconBox">💳</div>
+                            <div class="name">Thẻ thanh toán quốc tế</div>
+                        </div>
+                        @Html.RadioButtonFor(m => m.SelectedMethod, PaymentMethod.InternationalCard, new { id = "pm5", @class = "form-check-input", style = "transform:scale(1.3)" })
+                    </label>
+
+                    <label class="rowItem w-100" for="pm6">
+                        <div class="left">
+                            <div class="iconBox">🔳</div>
+                            <div class="name">Mã QR (Ví điện tử và ứng dụng hỗ trợ quét mã)</div>
+                        </div>
+                        @Html.RadioButtonFor(m => m.SelectedMethod, PaymentMethod.QR, new { id = "pm6", @class = "form-check-input", style = "transform:scale(1.3)" })
+                    </label>
+                </div>
+            </div>
+
+            <!-- bottom bar -->
+            <div class="sticky">
+                <div class="wrap">
+                    <a class="btn btn-outline-primary btnx w-50" href="javascript:history.back()">Quay lại</a>
+                    <button type="submit" class="btn btn-primary btnx w-50">Tiếp tục</button>
+                </div>
+                <div class="wrap pt-0">
+                    <div class="text-muted fw-semibold">Tổng tiền khám:</div>
+                    <div class="total">@moneyStr</div>
+                </div>
+            </div>
+        }
+    </div>
+</body>
+</html>
