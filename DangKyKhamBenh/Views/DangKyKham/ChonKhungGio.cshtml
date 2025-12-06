@@ -15,6 +15,7 @@
         body {
             background: #eef2f7;
             font-family: 'Segoe UI', sans-serif;
+            color: #333;
         }
 
         .page {
@@ -23,6 +24,7 @@
             padding: 0 12px;
         }
 
+        /* Dải ngày */
         .chip {
             width: 78px;
             padding: 10px 8px;
@@ -31,14 +33,23 @@
             background: #fff;
             text-align: center;
             margin-right: 10px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
             .chip.active {
                 border: 2px solid #0d6efd;
                 color: #0d6efd;
                 font-weight: 700;
+                background-color: #eaf2ff; /* Nền khi chọn */
             }
 
+            /* Hiệu ứng hover cho chip */
+            .chip:hover {
+                background-color: #f0f8ff; /* Thêm màu nền nhẹ khi hover */
+                border-color: #0d6efd;
+            }
+
+        /* Nút chọn ca khám */
         .slot-btn {
             width: 100%;
             border-radius: 12px;
@@ -46,29 +57,127 @@
             background: #e9edf2;
             border: 0;
             font-weight: 600;
+            transition: background-color 0.3s, transform 0.3s ease;
         }
 
-            .slot-btn:disabled {
-                opacity: .55;
+            .slot-btn:hover {
+                background-color: #d5e8ff; /* Màu nền khi hover */
+                transform: scale(1.05); /* Tăng kích thước nhẹ khi hover */
             }
 
+            .slot-btn:disabled {
+                opacity: 0.55;
+            }
+
+        /* Card hồ sơ */
         .cardx {
             background: #fff;
             border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,.06);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             padding: 14px;
             margin-bottom: 14px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
+            .cardx:hover {
+                transform: translateY(-4px); /* Hiệu ứng nhấc lên khi hover */
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15); /* Bóng đổ mạnh hơn */
+            }
+
+        /* Tên bác sĩ */
         .doctor {
             font-weight: 800;
             color: #0b5ed7;
+            font-size: 18px; /* Tăng kích thước font */
         }
 
         .sub {
-            color: #6c757d;
-            font-weight: 600;
+            background-color: #f1faff; /* Màu nền nhẹ, dễ nhìn */
+            border-radius: 12px; /* Bo viền các góc */
+            padding: 10px 14px; /* Thêm khoảng cách bên trong */
+            border: 1px solid #1a73e8; /* Viền xanh nổi bật */
+            color: #0d6efd; /* Màu chữ xanh để nổi bật */
+            font-weight: 600; /* Làm đậm chữ */
+            font-size: 16px; /* Tăng kích thước chữ */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Thêm bóng đổ nhẹ */
+            transition: all 0.3s ease; /* Hiệu ứng mượt mà khi hover */
         }
+
+            .sub:hover {
+                background-color: #d5e8ff; /* Màu nền thay đổi khi hover */
+                border-color: #0d6efd; /* Viền thay đổi khi hover */
+                color: #0a58ca; /* Màu chữ thay đổi khi hover */
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15); /* Thêm bóng đổ khi hover */
+            }
+
+        /* Tối ưu liên kết */
+        a {
+            text-decoration: none;
+            color: #0d6efd;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+            a:hover {
+                color: #1a73e8;
+                text-decoration: underline;
+                font-size: 17px; /* Tăng kích thước chữ khi hover */
+            }
+
+        /* Thêm hiệu ứng khi hover vào icon (nếu có) */
+        .cardx .d-flex i {
+            color: #3b82f6;
+            transition: color 0.3s ease;
+        }
+
+            .cardx .d-flex i:hover {
+                color: #1a73e8;
+            }
+
+        /* Tăng bóng đổ cho toàn bộ container */
+        .container {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            background: #fff;
+        }
+        .mb-2.text-muted.small {
+            background-color: #eaf2ff; /* Màu nền nhẹ */
+            border-radius: 12px; /* Bo viền các góc */
+            padding: 8px 12px; /* Thêm khoảng cách bên trong */
+            border: 1px solid #1a73e8; /* Viền màu xanh nổi bật */
+            color: #0d6efd; /* Màu chữ xanh để nổi bật */
+            font-weight: 600; /* Làm đậm chữ */
+            font-size: 16px; /* Tăng kích thước chữ một chút */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Thêm bóng đổ nhẹ */
+            transition: all 0.3s ease; /* Hiệu ứng mượt mà khi hover */
+        }
+
+            .mb-2.text-muted.small:hover {
+                background-color: #d5e8ff; /* Thay đổi màu nền khi hover */
+                border-color: #0d6efd; /* Thay đổi viền khi hover */
+                color: #0a58ca; /* Màu chữ khi hover */
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15); /* Thêm bóng đổ khi hover */
+            }
+        .mt-2.small.text-success.fw-semibold {
+            background-color: #e8f5e9; /* Màu nền nhẹ của success (xanh lá cây) */
+            border-radius: 12px; /* Bo viền các góc */
+            padding: 10px 14px; /* Thêm khoảng cách bên trong */
+            border: 1px solid #28a745; /* Viền màu xanh lá cây nổi bật */
+            color: #28a745; /* Màu chữ xanh lá cây */
+            font-weight: 600; /* Làm đậm chữ */
+            font-size: 16px; /* Tăng kích thước chữ */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Thêm bóng đổ nhẹ */
+            transition: all 0.3s ease; /* Hiệu ứng mượt mà khi hover */
+        }
+
+            .mt-2.small.text-success.fw-semibold:hover {
+                background-color: #d4edda; /* Màu nền khi hover */
+                border-color: #218838; /* Viền thay đổi khi hover */
+                color: #218838; /* Màu chữ thay đổi khi hover */
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15); /* Thêm bóng đổ khi hover */
+            }
+
     </style>
 </head>
 <body>

@@ -27,13 +27,52 @@
             padding: 0 12px 96px;
         }
 
+        /* Thêm màu nền cho các card */
         .cardx {
             background: #fff;
             border: 1px solid #dde4ef;
             border-radius: 14px;
             padding: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1); /* Thêm bóng đổ */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
+            /* Hiệu ứng hover cho card */
+            .cardx:hover {
+                transform: translateY(-5px); /* Di chuyển card lên một chút khi hover */
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); /* Thêm bóng đổ khi hover */
+            }
+
+            /* Thêm màu nền cho các card tiêu đề */
+            .cardx .fw-bold {
+                font-size: 16px;
+                font-weight: 700;
+                color: #0d6efd; /* Màu xanh dương cho tiêu đề */
+            }
+
+            /* Màu nền cho các card nổi bật (success, blue, etc.) */
+            .cardx.success {
+                background-color: #e7f9f0; /* Nền xanh nhạt */
+                border-left: 5px solid #28a745; /* Viền trái màu xanh lá */
+            }
+
+            .cardx.blue {
+                background-color: #e0f7fa; /* Nền xanh biển */
+                border-left: 5px solid #17a2b8; /* Viền trái màu xanh biển */
+            }
+
+            .cardx.warning {
+                background-color: #fff3cd; /* Nền vàng nhạt */
+                border-left: 5px solid #ffc107; /* Viền trái màu vàng */
+            }
+
+            .cardx.danger {
+                background-color: #f8d7da; /* Nền đỏ nhạt */
+                border-left: 5px solid #dc3545; /* Viền trái màu đỏ */
+            }
+
+        /* Định dạng các dòng thông tin trong card */
         .rowline {
             display: flex;
             justify-content: space-between;
@@ -46,6 +85,7 @@
                 border-bottom: 0;
             }
 
+        /* Định dạng các thông tin chính trong card */
         .k {
             color: #6c757d;
             font-weight: 600;
@@ -56,6 +96,7 @@
             text-align: right;
         }
 
+        /* Phần badge */
         .badge-soft {
             background: #eef4ff;
             color: #0d6efd;
@@ -64,6 +105,7 @@
             border-radius: 999px;
         }
 
+        /* Các phần sticky footer */
         .sticky {
             position: fixed;
             left: 0;
@@ -79,10 +121,12 @@
                 padding: 10px 12px;
             }
 
+        /* Tiền khám */
         .money {
             font-weight: 900;
             color: #0b5ed7;
         }
+
     </style>
 </head>
 <body>
@@ -98,7 +142,7 @@
             <div class="text-muted small">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
         </div>
 
-        <div class="cardx mb-3">
+        <div class="cardx success mb-3">
             <div class="fw-bold mb-2">Thông tin lịch khám</div>
 
             <div class="rowline">
@@ -123,7 +167,7 @@
             </div>
         </div>
 
-        <div class="cardx mb-3">
+        <div class="cardx blue mb-3">
             <div class="fw-bold mb-2">Thông tin BHYT</div>
 
             <div class="rowline">
@@ -136,7 +180,7 @@
             </div>
         </div>
 
-        <div class="cardx">
+        <div class="cardx warning">
             <div class="fw-bold mb-2">Thông tin người khám</div>
 
             <div class="rowline">

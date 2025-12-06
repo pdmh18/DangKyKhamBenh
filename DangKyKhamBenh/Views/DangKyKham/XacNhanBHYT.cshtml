@@ -70,6 +70,53 @@
             border: 1px solid #dde4ef;
             border-radius: 12px;
             padding: 12px;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+
+            /* Thêm hiệu ứng hover cho phần block */
+            .block:hover {
+                background-color: #f7fafd; /* Thay đổi màu nền khi hover */
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Thêm bóng đổ nhẹ khi hover */
+            }
+
+            .block .fw-bold {
+                font-size: 16px;
+                color: #0d6efd; /* Màu chữ nổi bật */
+                margin-bottom: 10px;
+            }
+        .form-check:hover {
+            background-color: #eaf2ff; /* Thay đổi màu nền khi hover */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Thêm bóng đổ nhẹ khi hover */
+        }
+
+        /* Cải thiện các radio button */
+        .form-check-input {
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+
+            .form-check-input:checked {
+                border-color: #0d6efd; /* Viền khi chọn radio */
+                background-color: #0d6efd; /* Màu nền khi chọn */
+            }
+
+            .form-check-input:focus {
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.4); /* Thêm hiệu ứng khi focus */
+            }
+
+        .form-check-label {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            margin-left: 10px;
+        }
+        .text-danger {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #dc3545;
         }
 
         .sticky {
