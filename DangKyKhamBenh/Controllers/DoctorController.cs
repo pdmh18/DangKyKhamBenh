@@ -682,6 +682,10 @@ namespace DangKyKhamBenh.Controllers
                                     if (!string.IsNullOrEmpty(resultItem.NdDiaChiThuongChu))
                                         resultItem.NdDiaChiThuongChu = _rsaService.Decrypt(resultItem.NdDiaChiThuongChu); // Giải mã địa chỉ
 
+
+
+
+
                                     // Giải mã các thông tin cá nhân và bảo hiểm
                                     if (!string.IsNullOrEmpty(resultItem.NdCccd))
                                         resultItem.NdCccd = _hybridService.Decrypt(resultItem.NdCccd, resultItem.BN_MaBenhNhan); // Căn cước công dân
