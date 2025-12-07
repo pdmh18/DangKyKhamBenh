@@ -2,6 +2,7 @@
 
 @{
     ViewBag.Title = "Danh sách các khoa";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <h2 class="mb-4 text-center">@ViewBag.Title</h2>
@@ -69,8 +70,19 @@
             background-color: #c82333; /* Màu đỏ đậm khi hover */
             transform: scale(1.05); /* Tăng kích thước nhẹ khi hover */
         }
-</style>
 
+    .back-btn {
+        background-color: #f0f0f0; 
+        color: #333; 
+        border: 1px solid #ddd; 
+        margin-bottom: 10px; 
+    }
+
+        .back-btn:hover {
+            background-color: #e0e0e0; 
+        }
+</style>
+<a class="btn btn-outline-secondary back-btn" href="@Url.Action("Home", "Admin")">←</a>
 <div class="table-container">
     <table class="table">
         <thead>

@@ -1,0 +1,48 @@
+﻿@using DangKyKhamBenh.Models.ViewModels
+@model List<SearchResultItem>
+
+@{
+    ViewBag.Title = "Kết quả tìm kiếm";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Họ tên</th>
+            <th>Số điện thoại</th>
+            <th>Email</th>
+            <th>Ngày sinh</th>
+            <th>Giới tính</th>
+            <th>Quê quán</th>
+            <th>Dân tộc</th>
+            <th>Nghề nghiệp</th>
+            <th>Tỉnh/Thành phố</th>
+            <th>Quận/Huyện</th>
+            <th>Phường/Xã</th>
+            <th>Địa chỉ hộ khẩu</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.NdHoTen</td>
+                <td>@item.NdSoDienThoai</td>
+                <td>@item.NdEmail</td>
+                <td>@item.NdNgaySinh?.ToString("dd/MM/yyyy")</td>
+                <td>@item.NdGioiTinh</td>
+                <td>@item.NdQuocGia</td>
+                <td>@item.NdDanToc</td>
+                <td>@item.NdNgheNghiep</td>
+                <td>@item.NdTinhThanh</td>
+                <td>@item.NdQuanHuyen</td>
+                <td>@item.NdPhuongXa</td>
+                <td>@item.NdDiaChiThuongChu</td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,125 @@
+﻿@model List<DangKyKhamBenh.Models.ViewModels.SearchResultItem>
+<style>
+    .text-custom {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #ff6f61; 
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2); 
+    }
+
+    .table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+        border-radius: 10px; 
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #ffeb3b; 
+        color: #fff; 
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .table-bordered th, .table-bordered td {
+        border: 2px solid #4caf50;
+        padding: 15px;
+        font-size: 1.1rem;
+    }
+
+    .table-primary {
+        background-color: #007bff;
+        color: white;
+        font-weight: 600;
+        border-radius: 10px 10px 0 0;
+    }
+
+    th i {
+        font-size: 1.1rem;
+        color: #ffffff;
+    }
+
+    .text-muted {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #d9534f; 
+        padding: 20px;
+        background-color: #fff3cd;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .alert-warning {
+        font-size: 1.2rem;
+        font-weight: 500;
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-striped tbody tr:nth-child(odd) {
+        background-color: #f1f8e9;
+    }
+
+    .table-striped tbody tr:nth-child(even) {
+        background-color: #e1bee7; 
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #81c784; 
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .alert-warning i {
+        font-size: 1.6rem;
+        color: #ff6f61;
+        margin-right: 10px;
+    }
+
+
+
+</style>
+<div class="card shadow-lg mb-4 rounded-lg">
+    <div class="card-body">
+        <h5 class="mb-4 text-custom">
+            <i class="fa-solid fa-search me-2"></i> Kết quả tìm kiếm
+        </h5>
+        @if (Model.Any())
+        {
+            <table class="table table-hover table-striped table-bordered">
+                <thead class="table-primary">
+                    <tr>
+                        <th><i class="fa-solid fa-id-card me-2"></i>ID</th>
+                        <th><i class="fa-solid fa-user me-2"></i>Họ tên</th>
+                        <th><i class="fa-solid fa-phone me-2"></i>Số điện thoại</th>
+                        <th><i class="fa-solid fa-heart me-2"></i>Số bảo hiểm y tế</th>
+                        <th><i class="fa-solid fa-blood-drop me-2"></i>Nhóm máu</th>
+                        <th><i class="fa-solid fa-notes-medical me-2"></i>Tiểu sử bệnh án</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.Name</td>
+                            <td>@item.Info</td>
+                            <td>@item.SoBaoHiemYT</td>
+                            <td>@item.NhomMau</td>
+                            <td>@item.TieuSuBenhAn</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="text-muted text-center mt-3 alert alert-warning">
+                <i class="fa-solid fa-exclamation-triangle me-2"></i>Không có kết quả tìm kiếm phù hợp.
+            </div>
+        }
+    </div>
+</div>

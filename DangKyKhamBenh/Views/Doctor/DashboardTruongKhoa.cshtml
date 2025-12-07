@@ -108,19 +108,19 @@
                     <span>UMC CARE — Bảng điều khiển Bác sĩ</span>
                 </div>
                 <div class="user">
-                    <a href="@Url.Action("CreateHoSoBacSi","HoSoBacSi")"
-                       class="btn btn-outline-light btn-sm me-3">
-                        <i class="fa-regular fa-id-badge me-1"></i> Hồ sơ
-                    </a>
-                    <span class="me-3">
-                        Xin chào,
-                        <strong>@((Model != null ? Model.TenBacSi : null) ?? "Bác sĩ")</strong>
-                        (@((Model != null ? Model.BS_MaBacSi : null) ?? "—"))
-                    </span>
-                    <a href="@Url.Action("Logout","Account")" class="btn btn-light btn-sm">
-                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Đăng xuất
-                    </a>
+                    <!-- Dropdown button for user options -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            Xin chào, <strong>@((Model != null ? Model.TenBacSi : null) ?? "Bác sĩ")</strong> (@((Model != null ? Model.BS_MaBacSi : null) ?? "—"))
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="userMenu">
+                            <li><a class="dropdown-item" href="@Url.Action("CreateHoSoBacSi", "HoSoBacSi")"><i class="fa-regular fa-id-badge me-2"></i> Hồ sơ</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("ForgotPassword", "Account")" onclick="return confirmdoipass()" ;><i class="fa-solid fa-key me-2"></i> Đổi mật khẩu</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Logout", "Account")" onclick="return confirmDangXuat()" ;><i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Đăng xuất</a></li>
+                        </ul>
+                    </div>
                 </div>
+
             </div>
         </header>
 
@@ -143,19 +143,19 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card shadow-sm">
-                            <div class="card-body">
-                                <div class="metric-label">Doanh thu dự kiến (30 ngày)</div>
-                                <div class="metric-value display-6">
-                                    @String.Format("{0:N0} đ", (stats != null ? stats.DoanhThuDuKien_30Ngay : 0m))
-                                </div>
-                                <div class="text-muted small">
-                                    Đơn giá TB: @String.Format("{0:N0} đ", (stats != null ? stats.DonGiaTrungBinh : 0m))
-                                </div>
-                            </div>
+                    @*<div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="metric-label">Doanh thu dự kiến (30 ngày)</div>
+                        <div class="metric-value display-6">
+                            @String.Format("{0:N0} đ", (stats != null ? stats.DoanhThuDuKien_30Ngay : 0m))
+                        </div>
+                        <div class="text-muted small">
+                            Đơn giá TB: @String.Format("{0:N0} đ", (stats != null ? stats.DonGiaTrungBinh : 0m))
                         </div>
                     </div>
+                </div>
+            </div>*@
                     <div class="col-md-3">
                         <div class="card shadow-sm">
                             <div class="card-body">
@@ -200,28 +200,25 @@
                                     <h5 class="mb-0">
                                         <i class="fa-solid fa-bolt me-2"></i>Tác vụ nhanh
                                     </h5>
-                                    <a class="btn btn-outline-primary btn-sm" href="@Url.Action("Dashboard", "Doctor")">
+                                    <a class="btn btn-outline-primary btn-sm" href="@Url.Action("DashboardTruongKhoa", "Doctor")">
                                         <i class="fa-solid fa-rotate-right me-1"></i> Làm mới
                                     </a>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2">
-                                    <a class="btn btn-primary btn-icon" href="@Url.Action("CreateVisit","Clinic")">
-                                        <i class="fa-solid fa-user-plus"></i> Tạo phiếu khám
-                                    </a>
-                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("OrderLab","Clinic")">
-                                        <i class="fa-solid fa-vials"></i> Chỉ định cận lâm sàng
-                                    </a>
-                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Prescribe","Clinic")">
-                                        <i class="fa-solid fa-prescription-bottle-medical"></i> Kê đơn
-                                    </a>
-                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Appointments","Doctor")">
-                                        <i class="fa-regular fa-calendar-plus"></i> Tạo lịch hẹn
-                                    </a>
-                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Patients","Doctor")">
+                                    @*<a class="btn btn-primary btn-icon" href="@Url.Action("CreateVisit","Clinic")">
+                                <i class="fa-solid fa-user-plus"></i> Tạo phiếu khám
+                            </a>*@
+                                    @*<a class="btn btn-outline-secondary btn-icon" href="@Url.Action("OrderLab","Clinic")">
+                                <i class="fa-solid fa-vials"></i> Chỉ định cận lâm sàng
+                            </a>*@
+                                    @*<a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Prescribe","Clinic")">
+                                <i class="fa-solid fa-prescription-bottle-medical"></i> Kê đơn
+                            </a>*@
+                                    @*<a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Appointments","Doctor")">
+                                <i class="fa-regular fa-calendar-plus"></i> Tạo lịch hẹn
+                            </a>*@
+                                    <a class="btn btn-primary btn-icon" href="@Url.Action("Patients","Doctor")">
                                         <i class="fa-solid fa-users"></i> Danh sách bệnh nhân
-                                    </a>
-                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Messages","Doctor")">
-                                        <i class="fa-regular fa-message"></i> Hộp thư
                                     </a>
 
                                     <!-- Thêm tác vụ "Tạo lịch ca trực" cho bác sĩ trưởng khoa -->
@@ -231,6 +228,9 @@
                                             <i class="fa-solid fa-calendar-day"></i> Tạo lịch ca trực
                                         </a>
                                     }
+                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Messages","Doctor")">
+                                        <i class="fa-regular fa-message"></i> Hộp thư
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -250,7 +250,7 @@
                                         <select name="scope" class="form-select">
                                             <option value="patient">Bệnh nhân</option>
                                             <option value="record">Hồ sơ khám</option>
-                                            <option value="lab">Cận lâm sàng</option>
+                                            @*<option value="lab">Cận lâm sàng</option>*@
                                         </select>
                                     </div>
                                     <div class="col-6">
@@ -322,66 +322,67 @@
                 </div>
 
                 <!-- Lịch hẹn hôm nay + Hàng đợi -->
-                <div class="row g-3 mt-1">
-                    <div class="col-xl-7">
-                        <div class="card shadow-sm">
-                            <div class="card-body">
-                                <h5 class="mb-3">
-                                    <i class="fa-regular fa-calendar-check me-2"></i>Lịch hẹn hôm nay
-                                </h5>
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Giờ</th>
-                                                <th>Bệnh nhân</th>
-                                                <th>Lý do khám</th>
-                                                <th>Trạng thái</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @if (lichHenHomNay.Any())
-                                            {
-                                                foreach (var a in lichHenHomNay)
-                                                {
-                                                    <tr>
-                                                        <td>@a.ThoiGian.ToString("HH:mm")</td>
-                                                        <td>
-                                                            <strong>@a.TenBenhNhan</strong>
-                                                            <div class="text-muted small">@a.MaBenhNhan • @a.SDT</div>
-                                                        </td>
-                                                        <td>@a.LyDo</td>
-                                                        <td>
-                                                            <span class="badge @(a.TrangThai == "Đã đến" ? "bg-success" : "bg-secondary")">
-                                                                @a.TrangThai
-                                                            </span>
-                                                        </td>
-                                                        <td class="text-end">
-                                                            <a class="btn btn-sm btn-outline-primary"
-                                                               href="@Url.Action("OpenVisit","Clinic", new { id = a.MaHoSo })">
-                                                                Mở hồ sơ
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                <tr>
-                                                    <td colspan="5" class="text-muted">
-                                                        Hôm nay chưa có lịch hẹn.
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                @*<div class="row g-3 mt-1">
+        <div class="col-xl-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-3">
+                        <i class="fa-regular fa-calendar-check me-2"></i>Lịch hẹn hôm nay
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Giờ</th>
+                                    <th>Bệnh nhân</th>
+                                    <th>Lý do khám</th>
+                                    <th>Trạng thái</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (lichHenHomNay.Any())
+                                {
+                                    foreach (var a in lichHenHomNay)
+                                    {
+                                        <tr>
+                                            <td>@a.ThoiGian.ToString("HH:mm")</td>
+                                            <td>
+                                                <strong>@a.TenBenhNhan</strong>
+                                                <div class="text-muted small">@a.MaBenhNhan • @a.SDT</div>
+                                            </td>
+                                            <td>@a.LyDo</td>
+                                            <td>
+                                                <span class="badge @(a.TrangThai == "Đã đến" ? "bg-success" : "bg-secondary")">
+                                                    @a.TrangThai
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <a class="btn btn-sm btn-outline-primary"
+                                                   href="@Url.Action("OpenVisit","Clinic", new { id = a.MaHoSo })">
+                                                    Mở hồ sơ
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-muted">
+                                            Hôm nay chưa có lịch hẹn.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
+                </div>
+            </div>
+        </div>*@
 
-                    <div class="col-xl-5">
+                <div class="row g-3 mt-1">
+                    <div class="col-lg-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
                                 <h5 class="mb-3">
@@ -422,65 +423,66 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                    @*</div>
+            </div>*@
 
-                <!-- CLS mới + KPI 30 ngày -->
-                <div class="row g-3 mt-1">
-                    <div class="col-lg-7">
-                        <div class="card shadow-sm">
-                            <div class="card-body">
-                                <h5 class="mb-3">
-                                    <i class="fa-solid fa-vial-circle-check me-2"></i>Kết quả cận lâm sàng mới
-                                </h5>
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover align-middle mb-0">
-                                        <thead>
+                    <!-- CLS mới + KPI 30 ngày -->
+                    <!--<div class="row g-3 mt-1">
+            <div class="col-lg-7">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-3">
+                            <i class="fa-solid fa-vial-circle-check me-2"></i>Kết quả cận lâm sàng mới
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Thời gian</th>
+                                        <th>BN</th>
+                                        <th>Loại</th>
+                                        <th>Kết quả</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (clsMoi.Any())
+                                    {
+                                        foreach (var r in clsMoi.Take(10))
+                                        {
                                             <tr>
-                                                <th>Thời gian</th>
-                                                <th>BN</th>
-                                                <th>Loại</th>
-                                                <th>Kết quả</th>
-                                                <th></th>
+                                                <td>@r.ThoiGian.ToString("dd/MM HH:mm")</td>
+                                                <td>
+                                                    <strong>@r.TenBenhNhan</strong>
+                                                    <span class="text-muted small">(@r.MaBenhNhan)</span>
+                                                </td>
+                                                <td>@r.LoaiXetNghiem</td>
+                                                <td><span class="chip bg-light">@r.TomTat</span></td>
+                                                <td class="text-end">
+                                                    <a class="btn btn-sm btn-outline-primary"
+                                                       href="@Url.Action("LabResult","Clinic", new { id = r.Id })">
+                                                        Xem
+                                                    </a>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @if (clsMoi.Any())
-                                            {
-                                                foreach (var r in clsMoi.Take(10))
-                                                {
-                                                    <tr>
-                                                        <td>@r.ThoiGian.ToString("dd/MM HH:mm")</td>
-                                                        <td>
-                                                            <strong>@r.TenBenhNhan</strong>
-                                                            <span class="text-muted small">(@r.MaBenhNhan)</span>
-                                                        </td>
-                                                        <td>@r.LoaiXetNghiem</td>
-                                                        <td><span class="chip bg-light">@r.TomTat</span></td>
-                                                        <td class="text-end">
-                                                            <a class="btn btn-sm btn-outline-primary"
-                                                               href="@Url.Action("LabResult","Clinic", new { id = r.Id })">
-                                                                Xem
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                <tr>
-                                                    <td colspan="5" class="text-muted">
-                                                        Chưa có kết quả mới.
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="text-muted">
+                                                Chưa có kết quả mới.
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                </div>
+            </div>-->
 
-                    <div class="col-lg-5">
+                    <div class="col-lg-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -494,8 +496,8 @@
                         </div>
                     </div>
                 </div>
-
             </div>
+            @*</div>*@
         </main>
 
         <!-- FOOTER -->

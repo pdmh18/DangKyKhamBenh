@@ -103,12 +103,13 @@
     </div>
 
     <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body" style="height:150px">
-                <div class="fw-bold mb-1">Chỉnh sửa thông tin Khoa</div>
-                <p class="text-muted">Chỉnh sửa số điện thoại, email, trưởng khoa và số lượng nhân viên.</p>
-                <a class="btn btn-primary btn-sm" href="@Url.Action("EditDepartment","Admin")">Chỉnh sửa khoa</a>
+        <div class="admin-card shadow-sm">
+            <div>
+                <i class="fa-solid fa-edit admin-icon"></i>
+                <span class="admin-title">Chỉnh sửa thông tin Khoa</span>
+                <p class="admin-desc">Chỉnh sửa số điện thoại, email, trưởng khoa và số lượng nhân viên.</p>
             </div>
+            <a class="btn btn-primary admin-btn" href="@Url.Action("EditDepartment","Admin")">Chỉnh sửa khoa</a>
         </div>
     </div>
 
