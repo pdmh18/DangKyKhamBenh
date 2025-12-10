@@ -1,0 +1,76 @@
+﻿@model List<DangKyKhamBenh.Models.ViewModels.PatientItem>
+
+<div class="container py-4">
+    <h3 class="mb-4 text-center text-primary">Danh sách Bệnh nhân theo Phiếu Dịch Vụ</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover shadow-lg rounded">
+            <thead class="thead-dark bg-primary text-white">
+                <tr>
+                    <th>Mã Bệnh Nhân</th>
+                    <th>Họ Tên</th>
+                    <th>Số Điện Thoại</th>
+                    <th>Số Bảo Hiểm Y Tế</th>
+                    <th>Nhóm Máu</th>
+                    <th>Tiểu Sử Bệnh Án</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var patient in Model)
+                {
+                    <tr class="table-hover" style="transition: background-color 0.3s;">
+                        <td>@patient.Id</td>
+                        <td>@patient.Name</td>
+                        <td>@patient.Phone</td>
+                        <td>@patient.SoBaoHiemYT</td>
+                        <td>@patient.NhomMau</td>
+                        <td>@patient.TieuSuBenhAn</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<style>
+    table {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    tbody tr:hover {
+        background-color: #d1ecf1; 
+        transform: scale(1.02);
+    }
+
+    th, td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 12px;
+    }
+
+    th {
+        font-size: 1.1rem;
+        background-color: #007bff;
+    }
+
+    .table-bordered {
+        border: 2px solid #007bff; 
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8d7da;
+    }
+
+    .thead-dark {
+        background-color: #343a40;
+    }
+
+    .table-hover tbody tr:nth-child(even) {
+        background-color: #f4f4f4;
+    }
+
+    .table-hover tbody tr:nth-child(odd) {
+        background-color: #ffffff;
+    }
+</style>

@@ -745,5 +745,77 @@ namespace DangKyKhamBenh.Controllers
             return PartialView("SearchResults", searchResults);
         }
 
+        [HttpGet]
+        public async Task<ActionResult> Patients(string maBacSi)
+        {
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+            var patients = new List<PatientItem>();
+
+            using (var con = new OracleConnection(cs))
+            {
+                await con.OpenAsync();
+
+                string sql = @"
+            SELECT DISTINCT
+                BN.BN_MaBenhNhan, 
+                ND.ND_HoTen, 
+                ND.ND_SoDienThoai, 
+                BN.BN_SOBAOHIEMYT, 
+                BN.BN_NHOMMAU, 
+                BN.BN_TIEUSUBENHAN
+            FROM 
+                PHIEUDICHVU PDV
+            JOIN 
+                BENHNHAN BN ON PDV.BN_MaBenhNhan = BN.BN_MaBenhNhan
+            JOIN 
+                NGUOIDUNG ND ON BN.ND_IdNguoiDung = ND.ND_IdNguoiDung
+            WHERE 
+                 PDV.BS_MaBacSi = :maBacSi";
+
+                using (var cmd = new OracleCommand(sql, con))
+                {
+                    cmd.Parameters.Add(":maBacSi", maBacSi); 
+
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var resultItem = new PatientItem
+                            {
+                                Id = reader.GetString(0),
+                                Name = reader.GetString(1),
+                                Phone = reader.GetString(2),
+                                SoBaoHiemYT = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                                NhomMau = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                                TieuSuBenhAn = reader.IsDBNull(5) ? "" : reader.GetString(5)
+                            };
+
+                            try
+                            {
+                                if (!string.IsNullOrEmpty(resultItem.SoBaoHiemYT))
+                                    resultItem.SoBaoHiemYT = _hybridService.Decrypt(resultItem.SoBaoHiemYT, resultItem.Id);
+
+                                if (!string.IsNullOrEmpty(resultItem.TieuSuBenhAn))
+                                    resultItem.TieuSuBenhAn = _rsaService.Decrypt(resultItem.TieuSuBenhAn);
+
+                                if (!string.IsNullOrEmpty(resultItem.Phone))
+                                    resultItem.Phone = _rsaService.Decrypt(resultItem.Phone);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Lỗi giải mã: {ex.Message}");
+                            }
+
+                            patients.Add(resultItem);
+                        }
+                    }
+                }
+            }
+
+            return View(patients);
+        }
+
+
+
     }
 }

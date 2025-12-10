@@ -217,9 +217,12 @@
                                     @*<a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Appointments","Doctor")">
                                 <i class="fa-regular fa-calendar-plus"></i> Tạo lịch hẹn
                             </a>*@
-                                    <a class="btn btn-primary btn-icon" href="@Url.Action("Patients","Doctor")">
+                                    <a class="btn btn-primary btn-icon" href="@Url.Action("Patients", "Doctor", new { maBacSi = Session["BS_MaBacSi"] })">
                                         <i class="fa-solid fa-users"></i> Danh sách bệnh nhân
                                     </a>
+
+
+
 
                                     <!-- Thêm tác vụ "Tạo lịch ca trực" cho bác sĩ trưởng khoa -->
                                     @if (Model.IsTruongKhoa)
@@ -249,7 +252,7 @@
                                     <div class="col-6">
                                         <select name="scope" class="form-select">
                                             <option value="patient">Bệnh nhân</option>
-                                            <option value="record">Hồ sơ khám</option>
+                                            @*<option value="record">Hồ sơ khám</option>*@
                                             @*<option value="lab">Cận lâm sàng</option>*@
                                         </select>
                                     </div>
