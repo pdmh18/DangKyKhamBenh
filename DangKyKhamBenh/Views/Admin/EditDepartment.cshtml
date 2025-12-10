@@ -6,7 +6,7 @@
 }
 
 <h2 class="mb-4 text-center">@ViewBag.Title</h2>
-
+<a class="btn btn-outline-secondary back-btn" href="@Url.Action("Home", "Admin")">←</a>
 <!-- CSS cải tiến -->
 <style>
     .form-container {
@@ -95,8 +95,9 @@
             @Html.LabelFor(m => m.K_SoLuongNhanVien)
             @Html.EditorFor(m => m.K_SoLuongNhanVien, new { htmlAttributes = new { @class = "form-control", type = "number" } }) 
         </div>
-        <div class="form-actions">
+        <div class="form-actions d-flex justify-content-between">
             <button type="submit">Lưu thay đổi</button>
+            <button type="button"class="btn btn-secondary" onclick="window.location.href='@Url.Action("Departments", "Admin")';">Quay về</button>
         </div>
     }
 </div>

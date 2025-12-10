@@ -194,6 +194,7 @@
     <Compile Include="Models\Patient.cs" />
     <Compile Include="Models\ViewModels\LichBacSi.cs" />
     <Compile Include="Models\ViewModels\NgayKhamItemVM.cs" />
+    <Compile Include="Models\ViewModels\SearchResultItem.cs" />
     <Compile Include="Models\ViewModels\XacNhanBHYTVM.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CaesarCipher.cs" />
@@ -269,6 +270,8 @@
     <Content Include="Views\DangKyKham\ChonThanhToan.cshtml" />
     <Content Include="Views\DangKyKham\PhieuKhamBenh.cshtml" />
     <Content Include="Views\Admin\ServiceTickets.cshtml" />
+    <Content Include="Views\Doctor\SearchResults.cshtml" />
+    <Content Include="Views\Doctor\SearchResultsHoSo.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

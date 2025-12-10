@@ -155,7 +155,7 @@
             <div class="rowx"><div class="k">Họ tên:</div><div class="v text-uppercase">@Model.HoTen</div></div>
             <div class="rowx"><div class="k">Ngày sinh:</div><div class="v">@((Model.NgaySinh.HasValue)? Model.NgaySinh.Value.ToString("dd/MM/yyyy") : "")</div></div>
             <div class="rowx"><div class="k">Giới tính:</div><div class="v">@Model.GioiTinh</div></div>
-            <div class="rowx"><div class="k">Tỉnh/TP:</div><div class="v">@Model.TinhTP</div></div>
+            @*<div class="rowx"><div class="k">Tỉnh/TP:</div><div class="v">@Model.TinhTP</div></div>*@
 
             <div class="rowx"><div class="k">Ngày khám:</div><div class="v">@Model.NgayKham.ToString("dd/MM/yyyy") (@Model.Buoi)</div></div>
             <div class="rowx"><div class="k">Giờ khám dự kiến:</div><div class="v">@Model.GioBD - @Model.GioKT</div></div>

@@ -17,41 +17,65 @@
     <style>
         body {
             background: #f5f8ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
         }
 
         .header-title {
             font-weight: 700;
             font-size: 24px;
+            color: #1a73e8;
+            margin-bottom: 20px;
         }
 
         .back-btn {
             text-decoration: none;
             color: #0d6efd;
             font-weight: 500;
+            font-size: 16px;
+            transition: color 0.3s ease;
         }
+
+            .back-btn:hover {
+                color: #1a73e8;
+            }
 
             .back-btn i {
                 margin-right: 6px;
             }
-
         /* CARD HỒ SƠ */
+
         .profile-card {
             border-radius: 16px;
             padding: 18px;
             border: 1px solid #d6e4ff;
             background: #ffffff;
             transition: 0.2s;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
             cursor: pointer;
+            margin-bottom: 15px;
         }
 
             .profile-card:hover {
                 border-color: #3b82f6;
-                box-shadow: 0 4px 14px rgba(59,130,246,0.25);
+                box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
                 transform: translateY(-2px);
             }
 
+            .profile-card .d-flex {
+                align-items: center;
+            }
+
+            .profile-card .fs-5 {
+                font-size: 18px;
+                font-weight: 600;
+            }
+
+            .profile-card .text-secondary {
+                font-size: 14px;
+            }
         /* NÚT TẠO HỒ SƠ TRÒN */
+
         .add-profile-wrapper {
             display: inline-flex;
             flex-direction: column;
@@ -61,6 +85,16 @@
             cursor: pointer;
             transition: 0.2s ease;
         }
+
+            .add-profile-wrapper:hover .add-profile-circle {
+                background: #eaf2ff;
+                transform: scale(1.06);
+                border-color: #1a73e8;
+            }
+
+            .add-profile-wrapper:hover span {
+                color: #1a73e8;
+            }
 
         .add-profile-circle {
             width: 110px;
@@ -84,21 +118,46 @@
             font-size: 16px;
             font-weight: 600;
         }
-
-        .add-profile-wrapper:hover .add-profile-circle {
-            background: #eaf2ff;
-            transform: scale(1.06);
-            border-color: #1a73e8;
-        }
-
-        .add-profile-wrapper:hover span {
-            color: #1a73e8;
-        }
-
         /* KHOẢNG CÁCH CÁC CARD */
+
         .card-list {
             margin-top: 20px;
         }
+        /* Thông báo khi chưa có hồ sơ đầy đủ */
+
+        .mt-3.text-danger {
+            font-size: 16px;
+            font-weight: 600;
+            color: #dc3545;
+        }
+        /* Cải thiện liên kết tạo hồ sơ */
+
+        a {
+            text-decoration: none;
+            color: #0d6efd;
+            font-weight: 600;
+        }
+
+            a:hover {
+                color: #1a73e8;
+                text-decoration: underline;
+            }
+        /* Tối ưu hóa các liên kết và thông báo */
+
+        p {
+            font-size: 16px;
+            color: #333;
+        }
+        /* Các hiệu ứng nhỏ khi hover vào profile card */
+
+        .profile-card .d-flex i {
+            color: #3b82f6;
+            transition: color 0.3s ease;
+        }
+
+            .profile-card .d-flex i:hover {
+                color: #1a73e8;
+            }
     </style>
 </head>
 
@@ -110,7 +169,9 @@
             <i class="fa-solid fa-arrow-left"></i> Trở lại
         </a>
 
-        <h2 class="header-title mt-2">Chọn hồ sơ đăng ký khám</h2>
+        <h2 class="header-title mt-2">
+            Chọn hồ sơ đăng ký khám <i class="fa-solid fa-user"></i>
+        </h2>
 
         <a href="@Url.Action("HoSo", "HoSo")" class="add-profile-wrapper mt-3">
             <div class="add-profile-circle">

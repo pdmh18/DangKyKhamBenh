@@ -5,12 +5,26 @@ using System.Threading.Tasks;
 using System.Web.Mvc;
 using System;
 using DangKyKhamBenh.Models.ViewModels;
+using DangKyKhamBenh.Services;
+using System.Reflection;
 
 namespace DangKyKhamBenh.Controllers
 {
     [DoctorOnly]
     public class DoctorController : Controller
     {
+        private readonly CaesarCipher _caesarCipher;
+        private readonly RsaService _rsaService;
+        private readonly HybridService _hybridService;
+        private readonly MaHoa_GiaiMa_Sql _maHoa_GiaiMa_Sql;
+
+        public DoctorController()
+        {
+            _caesarCipher = new CaesarCipher();
+            _rsaService = new RsaService();
+            _hybridService = new HybridService();
+            _maHoa_GiaiMa_Sql = new MaHoa_GiaiMa_Sql();
+        }
         public async Task<ActionResult> Dashboard()
         {
             var maBs = (Session["BS_MaBacSi"] ?? "").ToString();
@@ -545,6 +559,190 @@ namespace DangKyKhamBenh.Controllers
             await InsertSlotAsync(con, tx, pcId, "13:00", "14:00", gioiHanMoiSlot, 0);
             await InsertSlotAsync(con, tx, pcId, "14:00", "15:00", gioiHanMoiSlot, 0);
             await InsertSlotAsync(con, tx, pcId, "15:00", "16:00", gioiHanMoiSlot, 0);
+        }
+
+
+        [HttpGet]
+        public async Task<ActionResult> Search(string q, string scope)
+        {
+            // Kiểm tra nếu không có gì được tìm kiếm
+            if (string.IsNullOrEmpty(q))
+            {
+                TempData["Err"] = "Vui lòng nhập từ khóa tìm kiếm.";
+                return RedirectToAction("Dashboard");
+            }
+
+            var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
+
+            // Khởi tạo biến kết quả tìm kiếm
+            var searchResults = new List<SearchResultItem>();
+
+            using (var con = new OracleConnection(cs))
+            {
+                await con.OpenAsync();
+
+                string sql = "";
+
+                if (scope == "patient") // Tìm bệnh nhân
+                {
+                    sql = @"
+            SELECT BN.BN_MaBenhNhan, ND.ND_HoTen, ND.ND_SoDienThoai,
+                   BN.BN_SOBAOHIEMYT, BN.BN_NHOMMAU, BN.BN_TIEUSUBENHAN
+            FROM BENHNHAN BN
+            JOIN NGUOIDUNG ND ON BN.ND_IdNguoiDung = ND.ND_IdNguoiDung
+            WHERE (UPPER(ND.ND_HoTen) LIKE '%' || UPPER(:q) || '%'
+               OR UPPER(ND.ND_SoDienThoai) LIKE '%' || UPPER(:q) || '%')
+               OR UPPER(BN.BN_MaBenhNhan) LIKE '%' || UPPER(:q) || '%'";
+                }
+                else if (scope == "record") // Tìm hồ sơ khám
+                {
+                    sql = @"
+            SELECT 
+                PDV.PDV_MaPhieu, 
+                PDV.PDV_NgayChiDinh, 
+                BN.BN_MaBenhNhan,
+                NU.ND_IDNGUOIDUNG, 
+                NU.ND_HOTEN, 
+                NU.ND_SODIENTHOAI, 
+                NU.ND_EMAIL, 
+                NU.ND_CCCD, 
+                NU.ND_NGAYSINH, 
+                NU.ND_GIOITINH, 
+                NU.ND_QUOCGIA, 
+                NU.ND_DANTOC, 
+                NU.ND_NGHENGHIEP, 
+                NU.ND_TINHTHANH, 
+                NU.ND_QUANHUYEN, 
+                NU.ND_PHUONGXA, 
+                NU.ND_DIACHITHUONGCHU
+            FROM 
+                PHIEUDICHVU PDV
+            JOIN 
+                BENHNHAN BN ON PDV.BN_MaBenhNhan = BN.BN_MaBenhNhan
+            JOIN 
+                NGUOIDUNG NU ON BN.ND_IDNGUOIDUNG = NU.ND_IDNGUOIDUNG
+            WHERE 
+                UPPER(PDV.PDV_MaPhieu) LIKE '%' || UPPER(:q) || '%'
+                OR UPPER(BN.BN_MaBenhNhan) LIKE '%' || UPPER(:q) || '%'";
+                }
+
+                using (var cmd = new OracleCommand(sql, con))
+                {
+                    cmd.Parameters.Add(":q", q.Trim());
+
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var resultItem = new SearchResultItem();
+
+                            // Kiểm tra theo scope
+                            if (scope == "patient") // Dành cho bệnh nhân
+                            {
+                                resultItem.Id = reader.GetString(0);
+                                resultItem.Name = reader.GetString(1);
+                                resultItem.Info = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                                resultItem.SoBaoHiemYT = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                                resultItem.NhomMau = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                                resultItem.TieuSuBenhAn = reader.IsDBNull(5) ? "" : reader.GetString(5);
+
+                                // Giải mã các trường bệnh nhân
+                                try
+                                {
+                                    if (!string.IsNullOrEmpty(resultItem.SoBaoHiemYT))
+                                        resultItem.SoBaoHiemYT = _hybridService.Decrypt(resultItem.SoBaoHiemYT, resultItem.Id);
+
+                                    if (!string.IsNullOrEmpty(resultItem.TieuSuBenhAn))
+                                        resultItem.TieuSuBenhAn = _rsaService.Decrypt(resultItem.TieuSuBenhAn);
+
+                                    if (!string.IsNullOrEmpty(resultItem.Info))
+                                        resultItem.Info = _rsaService.Decrypt(resultItem.Info); // Giải mã số điện thoại
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Lỗi giải mã: {ex.Message}");
+                                }
+                            }
+                            else if (scope == "record") // Dành cho hồ sơ khám
+                            {
+                                resultItem.PDV_MaPhieu = reader.GetString(0);
+                                resultItem.PDV_NgayChiDinh = reader.GetDateTime(1);
+                                resultItem.BN_MaBenhNhan = reader.GetString(2);
+
+                                // Dữ liệu thêm (giải mã theo yêu cầu)
+                                try
+                                {
+                                    // Giải mã các trường liên quan đến bệnh nhân và hồ sơ
+                                    if (!string.IsNullOrEmpty(resultItem.NdTinhThanh))
+                                        resultItem.NdTinhThanh = _caesarCipher.Decrypt(resultItem.NdTinhThanh, 15);
+                                    if (!string.IsNullOrEmpty(resultItem.NdQuanHuyen))
+                                        resultItem.NdQuanHuyen = _caesarCipher.Decrypt(resultItem.NdQuanHuyen, 15);
+                                    if (!string.IsNullOrEmpty(resultItem.NdPhuongXa))
+                                        resultItem.NdPhuongXa = _caesarCipher.Decrypt(resultItem.NdPhuongXa, 15);
+                                    if (!string.IsNullOrEmpty(resultItem.NdDiaChiThuongChu))
+                                        resultItem.NdDiaChiThuongChu = _rsaService.Decrypt(resultItem.NdDiaChiThuongChu); // Giải mã địa chỉ
+
+
+
+
+
+                                    // Giải mã các thông tin cá nhân và bảo hiểm
+                                    if (!string.IsNullOrEmpty(resultItem.NdCccd))
+                                        resultItem.NdCccd = _hybridService.Decrypt(resultItem.NdCccd, resultItem.BN_MaBenhNhan); // Căn cước công dân
+
+                                    if (!string.IsNullOrEmpty(resultItem.NdSoDienThoai))
+                                        resultItem.NdSoDienThoai = _rsaService.Decrypt(resultItem.NdSoDienThoai); // Số điện thoại
+
+                                    if (!string.IsNullOrEmpty(resultItem.NdEmail))
+                                        resultItem.NdEmail = _hybridService.Decrypt(resultItem.NdEmail, resultItem.BN_MaBenhNhan); // Email
+
+                                    // Giải mã số bảo hiểm y tế và tiểu sử bệnh án
+                                    if (!string.IsNullOrEmpty(resultItem.SoBaoHiemYT))
+                                        resultItem.SoBaoHiemYT = _hybridService.Decrypt(resultItem.SoBaoHiemYT, resultItem.BN_MaBenhNhan);
+
+                                    if (!string.IsNullOrEmpty(resultItem.TieuSuBenhAn))
+                                        resultItem.TieuSuBenhAn = _rsaService.Decrypt(resultItem.TieuSuBenhAn); // Tiểu sử bệnh án
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Lỗi giải mã hồ sơ: {ex.Message}");
+                                }
+
+                                // Cập nhật các thông tin khác (họ tên, số điện thoại, email, etc.)
+                                resultItem.NdHoTen = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                                resultItem.NdSoDienThoai = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                                resultItem.NdEmail = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                                resultItem.NdCccd = reader.IsDBNull(7) ? "" : reader.GetString(7);
+                                resultItem.NdNgaySinh = reader.IsDBNull(8) ? (DateTime?)null : reader.GetDateTime(8);
+                                resultItem.NdGioiTinh = reader.IsDBNull(9) ? "" : reader.GetString(9);
+                                resultItem.NdQuocGia = reader.IsDBNull(10) ? "" : reader.GetString(10);
+                                resultItem.NdDanToc = reader.IsDBNull(11) ? "" : reader.GetString(11);
+                                resultItem.NdNgheNghiep = reader.IsDBNull(12) ? "" : reader.GetString(12);
+                                resultItem.NdTinhThanh = reader.IsDBNull(13) ? "" : reader.GetString(13);
+                                resultItem.NdQuanHuyen = reader.IsDBNull(14) ? "" : reader.GetString(14);
+                                resultItem.NdPhuongXa = reader.IsDBNull(15) ? "" : reader.GetString(15);
+                                resultItem.NdDiaChiThuongChu = reader.IsDBNull(16) ? "" : reader.GetString(16);
+                            }
+
+                            searchResults.Add(resultItem);
+
+                        }
+                    }
+                }
+            }
+
+            // Trả về view tìm kiếm với kết quả (Dùng PartialView)
+            if (scope == "patient")
+            {
+                return PartialView("SearchResults", searchResults);
+            }
+            else if (scope == "record")
+            {
+                return PartialView("SearchResultsHoSo", searchResults);
+            }
+
+            // Trả về view tìm kiếm với kết quả
+            return PartialView("SearchResults", searchResults);
         }
 
     }

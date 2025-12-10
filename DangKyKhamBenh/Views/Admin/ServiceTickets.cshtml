@@ -3,11 +3,23 @@
     ViewBag.Title = ViewBag.Title ?? "Quản lý phiếu dịch vụ";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
+<style>
+    .back-btn {
+        background-color: #f0f0f0; 
+        color: #333; 
+        border: 1px solid #ddd; 
+        margin-bottom: 10px; 
+    }
 
+        .back-btn:hover {
+            background-color: #e0e0e0; 
+        }
+
+</style>
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Quản lý phiếu dịch vụ</h4>
 </div>
-
+<a class="btn btn-outline-secondary back-btn" href="@Url.Action("Home", "Admin")">←</a>
 <form class="row g-2 mb-3" method="get" action="@Url.Action("ServiceTickets","Admin")">
     <div class="col-md-3">
         <input type="date" class="form-control" name="from"
