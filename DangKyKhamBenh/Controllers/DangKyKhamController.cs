@@ -26,62 +26,6 @@ namespace DangKyKhamBenh.Controllers
             _hybridService = new HybridService();
         }
 
-        //public ActionResult Index()
-        //{
-        //    var userId = Session["ND_IdNguoiDung"]?.ToString();
-        //    if (string.IsNullOrEmpty(userId))
-        //    {
-        //        TempData["Err"] = "Bạn chưa đăng nhập.";
-        //        return RedirectToAction("Login", "Account");
-        //    }
-
-        //    var model = new List<BenhNhan>();
-
-        //    var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
-        //    using (var conn = new OracleConnection(cs))
-        //    {
-        //        conn.Open();
-
-        //        var sql = @"
-        //            SELECT BN_MaBenhNhan, ND_HoTen, ND_SoDienThoai
-        //            FROM BENHNHAN bn
-        //            JOIN NGUOIDUNG nd ON bn.ND_IdNguoiDung = nd.ND_IdNguoiDung
-        //            WHERE bn.ND_IdNguoiDung = :userId";
-
-        //        using (var cmd = new OracleCommand(sql, conn))
-        //        {
-        //            cmd.Parameters.Add("userId", OracleDbType.Varchar2).Value = userId;
-        //            using (var reader = cmd.ExecuteReader())
-        //            {
-        //                while (reader.Read())
-        //                {
-        //                    model.Add(new BenhNhan
-        //                    {
-        //                        BN_MaBenhNhan = reader["BN_MaBenhNhan"].ToString(),
-        //                        ND_HoTen = reader["ND_HoTen"].ToString(),
-        //                        ND_SoDienThoai = reader["ND_SoDienThoai"].ToString()
-        //                    });
-        //                }
-
-        //            }
-        //        }
-        //    }
-
-        //    try
-        //    {
-        //        foreach (var item in model)
-        //        {
-        //            item.ND_SoDienThoai = _rsaService.Decrypt(item.ND_SoDienThoai);
-        //            System.Diagnostics.Debug.WriteLine("Số điện thoại sau giải mã: " + item.ND_SoDienThoai);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        TempData["Err"] = "Lỗi giải mã số điện thoại: " + ex.Message;
-        //        return View(model);
-        //    }
-        //    return View(model);
-        //}
         public ActionResult Index()
         {
             var userId = Session["ND_IdNguoiDung"]?.ToString();
@@ -130,10 +74,14 @@ namespace DangKyKhamBenh.Controllers
                                 ND_QuanHuyen = reader["ND_QuanHuyen"] as string,
                                 ND_PhuongXa = reader["ND_PhuongXa"] as string
                             };
+
                             model.Add(benhNhan);
                         }
                     }
                 }
+              
+                
+
             }
 
             // Kiểm tra hồ sơ đầy đủ
@@ -169,6 +117,7 @@ namespace DangKyKhamBenh.Controllers
                 TempData["Err"] = "Lỗi giải mã số điện thoại: " + ex.Message;
                 return View(model);
             }
+
 
             return View(model); // Trả về danh sách hồ sơ
         }
@@ -273,140 +222,19 @@ namespace DangKyKhamBenh.Controllers
            
             return RedirectToAction("ChonKhungGio", new { dvId = dvId, ngay = ngayKham.ToString("yyyy-MM-dd") });
         }
-        //[HttpGet]
-        //public ActionResult ChonKhungGio(string dvId, string ngay)
-        //{
-        //    if (string.IsNullOrWhiteSpace(dvId) || string.IsNullOrWhiteSpace(ngay))
-        //        return RedirectToAction("ChonChuyenKhoa");
-
-        //    if (!DateTime.TryParseExact(ngay, "yyyy-MM-dd", CultureInfo.InvariantCulture,
-        //                                DateTimeStyles.None, out var selectedDate))
-        //        return RedirectToAction("ChonNgayKham", new { dvId });
-
-        //    var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
-
-        //    using (var con = new OracleConnection(cs))
-        //    {
-        //        con.Open();
-
-        //        // 1) Lấy K_MaKhoa từ dvId (để biết khoa nào)
-        //        string maKhoa = null;
-        //        using (var cmd = new OracleCommand(@"SELECT K_MaKhoa FROM DICHVU WHERE DV_MaDichVu = :dvId", con))
-        //        {
-        //            cmd.BindByName = true;
-        //            cmd.Parameters.Add("dvId", OracleDbType.Char).Value = dvId;
-        //            maKhoa = cmd.ExecuteScalar()?.ToString();
-        //        }
-
-        //        if (string.IsNullOrWhiteSpace(maKhoa))
-        //            return RedirectToAction("ChonChuyenKhoa");
-
-        //        var vm = new ChonKhungGioVM
-        //        {
-        //            DV_MaDichVu = dvId,
-        //            Ngay = selectedDate.Date
-        //        };
-
-        //        // 2) Lấy 5 ngày gần nhất có lịch của khoa (để hiển thị dãy ngày như ảnh)
-        //        using (var cmd = new OracleCommand(@"
-        //    SELECT Ngay FROM (
-        //        SELECT DISTINCT TRUNC(pc.PC_Ngay) AS Ngay
-        //        FROM PHANCONG pc
-        //        JOIN PHONGKHAM pk ON pk.PK_MaPK = pc.PK_MaPK
-        //        WHERE pk.K_MaKhoa = :maKhoa
-        //          AND TRUNC(pc.PC_Ngay) >= TRUNC(SYSDATE)
-        //        ORDER BY Ngay
-        //    )
-        //    WHERE ROWNUM <= 5", con))
-        //        {
-        //            cmd.BindByName = true;
-        //            cmd.Parameters.Add("maKhoa", OracleDbType.Char).Value = maKhoa;
-
-        //            using (var rd = cmd.ExecuteReader())
-        //            {
-        //                while (rd.Read())
-        //                    vm.NgayCoLich.Add(rd.GetDateTime(0));
-        //            }
-        //        }
-
-        //        // 3) Lấy danh sách PHANCONG + SLOTKHAM theo ngày + khoa
-        //        var map = new Dictionary<string, CaKhamBlockVM>();
-
-        //        using (var cmd = new OracleCommand(@"
-        //    SELECT
-        //        pc.PC_Id,
-        //        pc.PC_CaTruc,
-        //        pk.PK_TenPhong,
-        //        pk.PK_ViTri,
-        //        bs.BS_MaBacSi,
-        //        nd.ND_HoTen,
-        //        sl.SLOT_Id,
-        //        sl.SLOT_GioBD,
-        //        sl.SLOT_GioKT,
-        //        NVL(sl.SLOT_GioiHan,0),
-        //        NVL(sl.SLOT_SoDaDK,0)
-        //    FROM PHANCONG pc
-        //    JOIN PHONGKHAM pk ON pk.PK_MaPK = pc.PK_MaPK
-        //    JOIN BACSI bs      ON bs.BS_MaBacSi = pc.BS_MaBacSi
-        //    JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
-        //    JOIN SLOTKHAM sl   ON sl.PC_Id = pc.PC_Id
-        //    WHERE pk.K_MaKhoa = :maKhoa
-        //      AND TRUNC(pc.PC_Ngay) = :ngay
-        //    ORDER BY nd.ND_HoTen, pc.PC_CaTruc, sl.SLOT_GioBD", con))
-        //        {
-        //            cmd.BindByName = true;
-        //            cmd.Parameters.Add("maKhoa", OracleDbType.Char).Value = maKhoa;
-        //            cmd.Parameters.Add("ngay", OracleDbType.Date).Value = selectedDate.Date;
-
-        //            using (var rd = cmd.ExecuteReader())
-        //            {
-        //                while (rd.Read())
-        //                {
-        //                    var pcId = rd.GetString(0);
-
-        //                    if (!map.TryGetValue(pcId, out var block))
-        //                    {
-        //                        block = new CaKhamBlockVM
-        //                        {
-        //                            PC_Id = pcId,
-        //                            CaTruc = rd.IsDBNull(1) ? null : rd.GetString(1),
-        //                            TenPhong = rd.IsDBNull(2) ? null : rd.GetString(2),
-        //                            ViTri = rd.IsDBNull(3) ? null : rd.GetString(3),
-        //                            BS_MaBacSi = rd.IsDBNull(4) ? null : rd.GetString(4),
-        //                            TenBacSi = rd.IsDBNull(5) ? null : rd.GetString(5)
-        //                        };
-        //                        map[pcId] = block;
-        //                        vm.Blocks.Add(block);
-        //                    }
-
-        //                    block.Slots.Add(new SlotChonVM
-        //                    {
-        //                        SlotId = rd.GetString(6),
-        //                        GioBD = rd.IsDBNull(7) ? null : rd.GetString(7),
-        //                        GioKT = rd.IsDBNull(8) ? null : rd.GetString(8),
-        //                        GioiHan = rd.GetInt32(9),
-        //                        SoDaDK = rd.GetInt32(10)
-        //                    });
-        //                }
-        //            }
-        //        }
-
-        //        return View(vm); // Views/DangKyKham/ChonKhungGio.cshtml
-        //    }
-        //}
-
+        
 
         private async Task<List<SlotChonVM>> GetSlotsForBacSi(string pcId, OracleConnection conn)
         {
             var slots = new List<SlotChonVM>();
 
             var cmd = new OracleCommand(@"
-    SELECT 
-        SLOT_Id, SLOT_GioBD, SLOT_GioKT, SLOT_GioiHan, SLOT_SoDaDK 
-    FROM 
-        SLOTKHAM 
-    WHERE 
-        PC_Id = :pcId", conn);
+                    SELECT 
+                        SLOT_Id, SLOT_GioBD, SLOT_GioKT, SLOT_GioiHan, SLOT_SoDaDK 
+                    FROM 
+                        SLOTKHAM 
+                    WHERE 
+                        PC_Id = :pcId", conn);
 
             cmd.Parameters.Add(":pcId", OracleDbType.Varchar2).Value = pcId;
 
@@ -444,10 +272,10 @@ namespace DangKyKhamBenh.Controllers
                 // 1) Lấy K_MaKhoa + TenKhoa từ dvId
                 string maKhoa = null, tenKhoa = null;
                 using (var cmd = new OracleCommand(@"
-            SELECT dv.K_MaKhoa, k.K_TenKhoa
-            FROM DICHVU dv
-            JOIN KHOA k ON k.K_MaKhoa = dv.K_MaKhoa
-            WHERE dv.DV_MaDichVu = :dvId", con))
+                    SELECT dv.K_MaKhoa, k.K_TenKhoa
+                    FROM DICHVU dv
+                    JOIN KHOA k ON k.K_MaKhoa = dv.K_MaKhoa
+                    WHERE dv.DV_MaDichVu = :dvId", con))
                 {
                     cmd.Parameters.Add(":dvId", dvId);
                     using (var rd = cmd.ExecuteReader())
@@ -473,16 +301,16 @@ namespace DangKyKhamBenh.Controllers
 
                 // 2) Lấy list ngày có lịch (để hiện dải ngày như ảnh)
                 using (var cmd = new OracleCommand(@"
-            SELECT * FROM (
-              SELECT DISTINCT pc.PC_Ngay
-              FROM PHANCONG pc
-              JOIN PHONGKHAM pk ON pk.PK_MaPK = pc.PK_MaPK
-              WHERE pk.K_MaKhoa = :khoa
-                AND pc.PC_Ngay >= TRUNC(SYSDATE)
-              ORDER BY pc.PC_Ngay
-            )
-            WHERE ROWNUM <= 10", con))
-                {
+                        SELECT * FROM (
+                          SELECT DISTINCT pc.PC_Ngay
+                          FROM PHANCONG pc
+                          JOIN PHONGKHAM pk ON pk.PK_MaPK = pc.PK_MaPK
+                          WHERE pk.K_MaKhoa = :khoa
+                            AND pc.PC_Ngay >= TRUNC(SYSDATE)
+                          ORDER BY pc.PC_Ngay
+                        )
+                        WHERE ROWNUM <= 10", con))
+                            {
                     cmd.Parameters.Add(":khoa", maKhoa);
                     using (var rd = cmd.ExecuteReader())
                     {
@@ -494,28 +322,28 @@ namespace DangKyKhamBenh.Controllers
                 // 3) Lấy lịch + slot đúng ngày
                 var map = new Dictionary<string, BacSiKhungGioCardVM>(); // key: PC_Id
                 using (var cmd = new OracleCommand(@"
-            SELECT
-                pc.PC_Id,
-                pc.PC_CaTruc,
-                bs.BS_MaBacSi,
-                nd.ND_HoTen,
-                pk.PK_MaPK,
-                pk.PK_TenPhong,
-                pk.PK_ViTri,
-                s.SLOT_Id,
-                s.SLOT_GioBD,
-                s.SLOT_GioKT,
-                NVL(s.SLOT_GioiHan,0) AS GioiHan,
-                NVL(s.SLOT_SoDaDK,0)  AS SoDaDK
-            FROM PHANCONG pc
-            JOIN BACSI bs     ON bs.BS_MaBacSi = pc.BS_MaBacSi
-            JOIN NGUOIDUNG nd ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
-            JOIN PHONGKHAM pk ON pk.PK_MaPK = pc.PK_MaPK
-            LEFT JOIN SLOTKHAM s ON s.PC_Id = pc.PC_Id
-            WHERE pk.K_MaKhoa = :khoa
-              AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)
-            ORDER BY nd.ND_HoTen, pc.PC_CaTruc, s.SLOT_GioBD", con))
-                {
+                        SELECT
+                            pc.PC_Id,
+                            pc.PC_CaTruc,
+                            bs.BS_MaBacSi,
+                            nd.ND_HoTen,
+                            pk.PK_MaPK,
+                            pk.PK_TenPhong,
+                            pk.PK_ViTri,
+                            s.SLOT_Id,
+                            s.SLOT_GioBD,
+                            s.SLOT_GioKT,
+                            NVL(s.SLOT_GioiHan,0) AS GioiHan,
+                            NVL(s.SLOT_SoDaDK,0)  AS SoDaDK
+                        FROM PHANCONG pc
+                        JOIN BACSI bs     ON bs.BS_MaBacSi = pc.BS_MaBacSi
+                        JOIN NGUOIDUNG nd ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
+                        JOIN PHONGKHAM pk ON pk.PK_MaPK = pc.PK_MaPK
+                        LEFT JOIN SLOTKHAM s ON s.PC_Id = pc.PC_Id
+                        WHERE pk.K_MaKhoa = :khoa
+                          AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)
+                        ORDER BY nd.ND_HoTen, pc.PC_CaTruc, s.SLOT_GioBD", con))
+                            {
                     cmd.BindByName = true;
                     cmd.Parameters.Add(":khoa", maKhoa);
                     cmd.Parameters.Add(":ngay", ngayChon);
@@ -587,24 +415,24 @@ namespace DangKyKhamBenh.Controllers
                 con.Open();
 
                 var sql = @"
-            SELECT
-                dv.DV_TenDichVu,
-                dv.DV_GiaTien,
-                sl.SLOT_GioBD,
-                sl.SLOT_GioKT,
-                pk.PK_TenPhong,
-                pk.PK_ViTri,
-                nd.ND_HoTen
-            FROM SLOTKHAM sl
-            JOIN PHANCONG pc   ON pc.PC_Id = sl.PC_Id
-            JOIN PHONGKHAM pk  ON pk.PK_MaPK = pc.PK_MaPK
-            JOIN BACSI bs      ON bs.BS_MaBacSi = pc.BS_MaBacSi
-            JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
-            JOIN DICHVU dv     ON dv.DV_MaDichVu = :dvId
-            WHERE sl.SLOT_Id = :slotId
-              AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)";
+                        SELECT
+                            dv.DV_TenDichVu,
+                            dv.DV_GiaTien,
+                            sl.SLOT_GioBD,
+                            sl.SLOT_GioKT,
+                            pk.PK_TenPhong,
+                            pk.PK_ViTri,
+                            nd.ND_HoTen
+                        FROM SLOTKHAM sl
+                        JOIN PHANCONG pc   ON pc.PC_Id = sl.PC_Id
+                        JOIN PHONGKHAM pk  ON pk.PK_MaPK = pc.PK_MaPK
+                        JOIN BACSI bs      ON bs.BS_MaBacSi = pc.BS_MaBacSi
+                        JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
+                        JOIN DICHVU dv     ON dv.DV_MaDichVu = :dvId
+                        WHERE sl.SLOT_Id = :slotId
+                          AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)";
 
-                using (var cmd = new OracleCommand(sql, con))
+                            using (var cmd = new OracleCommand(sql, con))
                 {
                     cmd.BindByName = true;
                     cmd.Parameters.Add(":dvId", OracleDbType.Char).Value = dvId;
@@ -686,30 +514,29 @@ namespace DangKyKhamBenh.Controllers
                 BaoLanhVienPhi = baoLanh,
                 BhytCaseText = MapBhytCase(bhytCase)
             };
-            BenhNhan model = new BenhNhan();
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
             using (var con = new OracleConnection(cs))
             {
                 con.Open();
 
                 // 1) lấy thông tin lịch khám từ slot + dv + ngày
-                using (var cmd = new OracleCommand(@"
-            SELECT
-                dv.DV_TenDichVu,
-                dv.DV_GiaTien,
-                sl.SLOT_GioBD,
-                sl.SLOT_GioKT,
-                pk.PK_TenPhong,
-                pk.PK_ViTri,
-                nd.ND_HoTen
-            FROM SLOTKHAM sl
-            JOIN PHANCONG pc   ON pc.PC_Id = sl.PC_Id
-            JOIN PHONGKHAM pk  ON pk.PK_MaPK = pc.PK_MaPK
-            JOIN BACSI bs      ON bs.BS_MaBacSi = pc.BS_MaBacSi
-            JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
-            JOIN DICHVU dv     ON dv.DV_MaDichVu = :dvId
-            WHERE sl.SLOT_Id = :slotId
-              AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)", con))
+                   using (var cmd = new OracleCommand(@"
+                        SELECT
+                            dv.DV_TenDichVu,
+                            dv.DV_GiaTien,
+                            sl.SLOT_GioBD,
+                            sl.SLOT_GioKT,
+                            pk.PK_TenPhong,
+                            pk.PK_ViTri,
+                            nd.ND_HoTen
+                        FROM SLOTKHAM sl
+                        JOIN PHANCONG pc   ON pc.PC_Id = sl.PC_Id
+                        JOIN PHONGKHAM pk  ON pk.PK_MaPK = pc.PK_MaPK
+                        JOIN BACSI bs      ON bs.BS_MaBacSi = pc.BS_MaBacSi
+                        JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
+                        JOIN DICHVU dv     ON dv.DV_MaDichVu = :dvId
+                        WHERE sl.SLOT_Id = :slotId
+                          AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)", con))
                 {
                     cmd.BindByName = true;
                     cmd.Parameters.Add(":dvId", OracleDbType.Char).Value = dvId;
@@ -733,14 +560,20 @@ namespace DangKyKhamBenh.Controllers
                         vm.TenBacSi = rd.IsDBNull(6) ? "" : rd.GetString(6);
                     }
                 }
-
                 // 2) lấy thông tin bệnh nhân theo user đăng nhập (lấy 1 hồ sơ)
                 using (var cmd = new OracleCommand(@"
-            SELECT nd.ND_HoTen, nd.ND_SoDienThoai, nd.ND_CCCD, bn.BN_SoBaoHiemYT
-            FROM BENHNHAN bn
-            JOIN NGUOIDUNG nd ON nd.ND_IdNguoiDung = bn.ND_IdNguoiDung
-            WHERE bn.ND_IdNguoiDung = :userId", con))
+                        SELECT 
+                            bn.BN_MaBenhNhan,
+                            nd.ND_HoTen,
+                            nd.ND_SoDienThoai,
+                            nd.ND_CCCD,
+                            bn.BN_SoBaoHiemYT
+                        FROM BENHNHAN bn
+                        JOIN NGUOIDUNG nd ON nd.ND_IdNguoiDung = bn.ND_IdNguoiDung
+                        WHERE bn.ND_IdNguoiDung = :userId
+                        FETCH FIRST 1 ROWS ONLY", con))
                 {
+
                     cmd.BindByName = true;
                     cmd.Parameters.Add(":userId", OracleDbType.Varchar2).Value = userId;
 
@@ -748,21 +581,31 @@ namespace DangKyKhamBenh.Controllers
                     {
                         if (rd.Read())
                         {
-                            vm.HoTen = rd.IsDBNull(0) ? "" : rd.GetString(0);
+                            vm.BN_MaBenhNhan = rd.IsDBNull(0) ? "" : rd.GetString(0).Trim();
 
-                            var phoneEnc = rd.IsDBNull(1) ? "" : rd.GetString(1);
+                            vm.HoTen = rd.IsDBNull(1) ? "" : rd.GetString(1);
+
+                            var phoneEnc = rd.IsDBNull(2) ? "" : rd.GetString(2);
                             try { vm.SoDienThoai = string.IsNullOrEmpty(phoneEnc) ? "" : _rsaService.Decrypt(phoneEnc); }
                             catch { vm.SoDienThoai = phoneEnc; }
 
-                            vm.CCCD = rd.IsDBNull(2) ? "" : rd.GetString(2);
-                            vm.SoBHYT = rd.IsDBNull(3) ? "" : rd.GetString(3);
+                            var cccdEnc = rd.IsDBNull(3) ? "" : rd.GetString(3);
+                            var key = (vm.BN_MaBenhNhan ?? "").Trim();
+                            vm.CCCD = string.IsNullOrEmpty(cccdEnc) || string.IsNullOrEmpty(key)
+                                ? cccdEnc
+                                : _hybridService.Decrypt(cccdEnc, key);
+
+                            var bhytEnc = rd.IsDBNull(4) ? "" : rd.GetString(4);
+                            vm.SoBHYT = string.IsNullOrEmpty(bhytEnc) || string.IsNullOrEmpty(key)
+                                ? bhytEnc
+                                : _hybridService.Decrypt(bhytEnc, key);
                         }
                     }
-                    
                 }
+
             }
 
-            return View(vm); // Views/DangKyKham/PhieuTongHop.cshtml
+            return View(vm);
         }
 
         private string MapBhytCase(string v)
@@ -800,9 +643,9 @@ namespace DangKyKhamBenh.Controllers
 
                 // chỉ cần tên DV + giá
                 using (var cmd = new OracleCommand(@"
-            SELECT DV_TenDichVu, DV_GiaTien
-            FROM DICHVU
-            WHERE DV_MaDichVu = :dvId", con))
+                    SELECT DV_TenDichVu, DV_GiaTien
+                    FROM DICHVU
+                    WHERE DV_MaDichVu = :dvId", con))
                 {
                     cmd.BindByName = true;
                     cmd.Parameters.Add(":dvId", OracleDbType.Char).Value = dvId;
