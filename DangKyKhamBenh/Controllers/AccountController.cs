@@ -618,24 +618,20 @@ namespace DangKyKhamBenh.Controllers
         [HttpGet, AllowAnonymous]
         public ActionResult ForgotPassword()
         {
-            // Trả về model rỗng để view binding
             return View(new ForgotPasswordOtpViewModel());
         }
 
         [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
         public ActionResult ForgotPassword(ForgotPasswordOtpViewModel model)
         {
-            // Xác định đang ở bước nào: nhập OTP hay chưa
             bool isVerifyPhase = !string.IsNullOrWhiteSpace(model.Otp);
 
-            // Validate cơ bản: luôn cần Username + Email
             if (string.IsNullOrWhiteSpace(model.UserName))
                 ModelState.AddModelError("UserName", "Vui lòng nhập tài khoản.");
 
             if (string.IsNullOrWhiteSpace(model.Email))
                 ModelState.AddModelError("Email", "Vui lòng nhập email đã đăng ký.");
 
-            // Nếu đang ở bước xác nhận OTP → bắt buộc mật khẩu mới + confirm
             if (isVerifyPhase)
             {
                 if (string.IsNullOrWhiteSpace(model.NewPassword))
@@ -650,7 +646,6 @@ namespace DangKyKhamBenh.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Nếu đã gửi OTP rồi thì vẫn hiện ô OTP
                 model.OtpSent = isVerifyPhase || model.OtpSent;
                 return View(model);
             }
@@ -664,10 +659,7 @@ namespace DangKyKhamBenh.Controllers
                 {
                     conn.Open();
 
-                    // Mã hoá username để so khớp với TK_UserName đã lưu (AES_ENCRYPT_B64)
                     string encryptedUser = EncryptUser(N(model.UserName), conn);
-
-                    // Lấy TK_MaTK + email đã mã hoá + BN_MaBenhNhan + BS_MaBacSi + StaffType
                     const string sqlFind = @"
                 SELECT tk.TK_MaTK,
                        nd.ND_Email,
@@ -707,20 +699,16 @@ namespace DangKyKhamBenh.Controllers
                         }
                     }
 
-                    // Chọn key để giải mã email: BN_MaBenhNhan (bệnh nhân) hoặc BS_MaBacSi (bác sĩ)
                     string keyForEmail = null;
                     if (!string.IsNullOrWhiteSpace(staffTypeDb) && IsDoctor(staffTypeDb))
                     {
-                        // Tài khoản bác sĩ → email mã hoá bằng BS_MaBacSi
                         keyForEmail = bsId;
                     }
                     else
                     {
-                        // Tài khoản bệnh nhân (hoặc mặc định) → email mã hoá bằng BN_MaBenhNhan
                         keyForEmail = bnId;
                     }
 
-                    // Giải mã email bằng HybridService
                     string emailFromDbPlain = null;
                     try
                     {
@@ -735,8 +723,6 @@ namespace DangKyKhamBenh.Controllers
                         model.OtpSent = false;
                         return View(model);
                     }
-
-                    // So khớp email người dùng nhập
                     if (!string.Equals(emailFromDbPlain ?? "", N(model.Email), StringComparison.OrdinalIgnoreCase))
                     {
                         ViewBag.Error = "Không tìm thấy tài khoản với Username và Email này.";
@@ -758,9 +744,8 @@ namespace DangKyKhamBenh.Controllers
                         SendOtpEmail(N(model.Email), N(model.UserName), otp);
 
                         ViewBag.Info = "Đã gửi mã OTP đến email của bạn. Vui lòng kiểm tra hộp thư và nhập OTP để xác nhận đổi mật khẩu.";
-                        model.OtpSent = true;  // Để view hiện ô nhập OTP
+                        model.OtpSent = true;  
 
-                        // KHÔNG đổi mật khẩu ở bước này
                         return View(model);
                     }
 
@@ -795,7 +780,6 @@ namespace DangKyKhamBenh.Controllers
                         return View(model);
                     }
 
-                    // OTP hợp lệ → Hash mật khẩu mới và cập nhật DB
                     string hashedPassword = HashPassword(N(model.NewPassword), conn);
 
                     const string sqlUpdate = @"
@@ -811,7 +795,6 @@ namespace DangKyKhamBenh.Controllers
                         up.ExecuteNonQuery();
                     }
 
-                    // Xoá OTP khỏi Session sau khi dùng xong
                     Session.Remove(key);
                     Session.Remove(expKey);
 
@@ -834,7 +817,6 @@ namespace DangKyKhamBenh.Controllers
         }
 
 
-        // ================== HÀM HỖ TRỢ OTP & EMAIL ==================
 
         private string GenerateOtpCode(int length)
         {

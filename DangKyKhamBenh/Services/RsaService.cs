@@ -15,7 +15,7 @@ public class RsaService
         _publicKeyPath = HttpContext.Current.Server.MapPath("~/App_Data/rsa_public.xml");
         _privateKeyPath = HttpContext.Current.Server.MapPath("~/App_Data/rsa_private.xml");
 
-        EnsureKeysExist(); // Tự động tạo nếu chưa có
+        EnsureKeysExist(); 
     }
 
     private void EnsureKeysExist()

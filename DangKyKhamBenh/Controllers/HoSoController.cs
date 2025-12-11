@@ -162,7 +162,6 @@ namespace DangKyKhamBenh.Controllers
                 model.ND_DiaChiThuongChu = _rsaService.Encrypt(model.ND_DiaChiThuongChu);
                 model.BN_TieuSuBenhAn = _rsaService.Encrypt( model.BN_TieuSuBenhAn);
 
-                //model.ND_Email = _hybridService.Encrypt(model.ND_Email, model.BN_MaBenhNhan);
                 model.ND_CCCD = _hybridService.Encrypt( model.ND_CCCD, model.BN_MaBenhNhan);
                 model.BN_SoBaoHiemYT = _hybridService.Encrypt( model.BN_SoBaoHiemYT, model.BN_MaBenhNhan);
 
@@ -383,7 +382,6 @@ namespace DangKyKhamBenh.Controllers
                     model.ND_QuanHuyen = _caesarCipher.Decrypt(model.ND_QuanHuyen, 15);
                     model.ND_PhuongXa = _caesarCipher.Decrypt(model.ND_PhuongXa, 15);
 
-                    // Giải mã dữ liệu RSA
                     try
                     {
                         model.ND_SoDienThoai = _rsaService.Decrypt(model.ND_SoDienThoai);
@@ -407,7 +405,7 @@ namespace DangKyKhamBenh.Controllers
                     TempData["Err"] = "Lỗi giải mã: " + ex.Message;
                 }
 
-                ModelState.Clear(); // Bỏ qua lỗi validation do dữ liệu đang mã hóa
+                ModelState.Clear(); 
                 return View(model);
          
          
