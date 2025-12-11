@@ -817,11 +817,20 @@ namespace DangKyKhamBenh.Controllers
 
                         vm.TenDichVu = rd.IsDBNull(0) ? "" : rd.GetString(0);
                         vm.TienKham = rd.IsDBNull(1) ? 0 : Convert.ToDecimal(rd.GetValue(1));
+
                     }
                 }
+                VietQrVm vietQrModel = new VietQrVm
+                {
+                    AccountNo = "977783867979",
+                    AccountName = "TO TRUONG TRUONG THANH",
+                    Amount = Convert.ToInt64(vm.TienKham),
+                    AddInfo = "Thanh toán khám bệnh"
+                };
+                ViewBag.VietQrModel = vietQrModel;
             }
-
-            return View(vm); // Views/DangKyKham/ChonThanhToan.cshtml
+            
+            return View(vm); 
         }
 
         [HttpPost]
@@ -829,6 +838,19 @@ namespace DangKyKhamBenh.Controllers
         public async Task<ActionResult> ChonThanhToan(ChonThanhToanVM vm)
         {
             if (vm == null) return RedirectToAction("ChonChuyenKhoa");
+
+            if (vm.SelectedMethod == PaymentMethod.QR)
+            {
+                VietQrVm vietQrModel = new VietQrVm
+                {
+                    AccountNo = "977783867979",
+                    AccountName = "TO TRUONG TRUONG THANH",
+                    Amount = Convert.ToInt64(vm.TienKham),
+                    AddInfo = "Thanh toán khám bệnh"
+                };
+                ViewBag.VietQrModel = vietQrModel;
+                return RedirectToAction("VietQr", "DangKyKham", new { amount = vm.TienKham });
+            }
 
             var userId = Session["ND_IdNguoiDung"]?.ToString();
             if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
@@ -1061,12 +1083,67 @@ namespace DangKyKhamBenh.Controllers
                 }
             }
 
-
-            // Đối tượng: tuỳ logic BHYT của bạn
             vm.DoiTuong = "Thu phí";
 
-            return View(vm); // Views/DangKyKham/PhieuKhamBenh.cshtml
+            return View(vm); 
         }
+
+        [HttpGet]
+        public ActionResult VietQr(decimal amount)
+        {
+            var vm = new VietQrVm
+            {
+                AccountNo = "977783867979",
+                AccountName = "TO TRUONG TRUONG THANH",
+                Amount = Convert.ToInt64(amount),
+                AddInfo = "Thanh toán khám bệnh",
+                QrUrl = BuildVietQrUrl(amount)
+            };
+
+            return View(vm); 
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult VietQr(VietQrVm vm)
+        {
+            decimal amount = vm.Amount.GetValueOrDefault(); 
+            vm.QrUrl = BuildVietQrUrl(amount);
+
+            return View(vm);
+        }
+
+
+        private string BuildVietQrUrl(decimal amount)
+        {
+            var baseUrl = $"https://img.vietqr.io/image/mbbank-977783867979-compact2.png";
+
+            var qs = new List<string>();
+
+            if (amount > 0)
+                qs.Add($"amount={amount}");
+
+            if (!string.IsNullOrWhiteSpace("Thanh toán khám bệnh"))
+                qs.Add($"addInfo={Uri.EscapeDataString("Thanh toán khám bệnh")}");
+
+            if (!string.IsNullOrWhiteSpace("TO TRUONG TRUONG THANH"))
+                qs.Add($"accountName={Uri.EscapeDataString("TO TRUONG TRUONG THANH")}");
+
+            return qs.Count == 0 ? baseUrl : $"{baseUrl}?{string.Join("&", qs)}";
+        }
+
+        private string GenerateQrUrl(decimal amount)
+        {
+            string qrData = $"bank_id=mbbank&account=977783867979&account_name=TO TRUONG TRUONG THANH&amount={amount}&add_info=Thanh toán khám bệnh";
+
+            // Sử dụng Google Chart API hoặc bất kỳ thư viện nào bạn muốn để tạo mã QR
+            string qrUrl = $"https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl={HttpUtility.UrlEncode(qrData)}";
+
+            return qrUrl;
+        }
+
 
     }
 }

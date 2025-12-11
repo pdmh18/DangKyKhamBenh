@@ -203,6 +203,13 @@
                         </div>
                         @Html.RadioButtonFor(m => m.SelectedMethod, PaymentMethod.QR, new { id = "pm6", @class = "form-check-input", style = "transform:scale(1.3)" })
                     </label>
+
+                    <div id="qrModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; padding: 20px; border: 1px solid #ddd; background: #fff; border-radius: 8px;">
+                        <div class="text-center">
+                            <img id="qrImage" src="" alt="Mã QR" style="max-width:100%; height:auto;" />
+                        </div>
+                        <button type="button" onclick="closeQrModal()" class="btn btn-secondary mt-3">Đóng</button>
+                    </div>
                 </div>
             </div>
 

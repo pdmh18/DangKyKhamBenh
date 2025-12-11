@@ -1,0 +1,125 @@
+﻿@model DangKyKhamBenh.Models.ViewModels.VietQrVm
+
+<div class="container">
+    <div class="qr-container">
+        <h3 class="text-center mb-4">VietQR (MBBANK)</h3>
+        <div class="info-container">
+            <div class="info-item">
+                <b>STK:</b> @Model.AccountNo
+            </div>
+            <div class="info-item">
+                <b>Tên:</b> @Model.AccountName
+            </div>
+        </div>
+
+        <div class="amount">
+            <b>Số tiền:</b> @Model.Amount VND
+        </div>
+
+        <div class="qr-image">
+            <img src="@Model.QrUrl" alt="Mã QR" class="qr-code" />
+        </div>
+
+        @*<div class="button-container mt-4">
+            <a href="#" class="btn btn-secondary me-2">Quay về</a>
+            <a href="#" class="btn btn-primary">Tiếp tục</a>
+        </div>*@
+    </div>
+</div>
+
+<style>
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f7f7f7;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .qr-container {
+        text-align: center;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .mb-4 {
+        margin-bottom: 1.5rem;
+    }
+
+    .info-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .info-item {
+        font-size: 16px;
+        margin: 5px 0;
+    }
+
+    .amount {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 20px;
+        color: #1a73e8;
+    }
+
+    .qr-image {
+        margin-top: 20px;
+    }
+
+    .qr-code {
+        width: 100%;
+        max-width: 400px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .button-container {
+        margin-top: 20px;
+    }
+
+    .btn {
+        font-size: 16px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: #fff;
+    }
+
+        .btn-secondary:hover {
+            background-color: #5a636a;
+        }
+
+    .btn-primary {
+        background-color: #1a73e8;
+        color: #fff;
+    }
+
+        .btn-primary:hover {
+            background-color: #1558b0;
+        }
+</style>
+
+
+@*<div style="margin-top:10px">
+        <b>Link QR:</b>
+        <div style="word-break:break-all; background:#f7f7f7; padding:8px; border-radius:6px">
+            @Model.QrUrl
+        </div>
+    </div>*@
