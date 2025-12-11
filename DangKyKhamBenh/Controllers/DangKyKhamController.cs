@@ -4,11 +4,12 @@ using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using System.Globalization;
-using System.Threading.Tasks;
 namespace DangKyKhamBenh.Controllers
 {
     public class DangKyKhamController : Controller
@@ -685,7 +686,7 @@ namespace DangKyKhamBenh.Controllers
                 BaoLanhVienPhi = baoLanh,
                 BhytCaseText = MapBhytCase(bhytCase)
             };
-
+            BenhNhan model = new BenhNhan();
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
             using (var con = new OracleConnection(cs))
             {
@@ -757,6 +758,7 @@ namespace DangKyKhamBenh.Controllers
                             vm.SoBHYT = rd.IsDBNull(3) ? "" : rd.GetString(3);
                         }
                     }
+                    
                 }
             }
 
@@ -1058,6 +1060,7 @@ namespace DangKyKhamBenh.Controllers
                     }
                 }
             }
+
 
             // Đối tượng: tuỳ logic BHYT của bạn
             vm.DoiTuong = "Thu phí";

@@ -192,12 +192,12 @@
                 </div>
             }
 
-            @if (TempData["Err"] != null)
-            {
-                <div class="result result-error">
-                    <i class="fa-solid fa-circle-exclamation me-1"></i>@TempData["Err"]
-                </div>
-            }
+                @*@if (TempData["Err"] != null)
+                {
+                    <div class="result result-error">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i>@TempData["Err"]
+                    </div>
+                }*@
 
         </div>
 
@@ -297,7 +297,7 @@
                                     <a class="btn btn-primary btn-icon" href="@Url.Action("Patients", "Doctor", new { maBacSi = Session["BS_MaBacSi"] })">
                                         <i class="fa-solid fa-users"></i> Danh sách bệnh nhân
                                     </a>
-                                    <a class="btn btn-outline-secondary btn-icon" href="@Url.Action("Messages","Doctor")">
+                                    <a class="btn btn-outline-secondary btn-icon" href="#">
                                         <i class="fa-regular fa-message"></i> Hộp thư
                                     </a>
                                 </div>
