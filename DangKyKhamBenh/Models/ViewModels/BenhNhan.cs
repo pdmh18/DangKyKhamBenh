@@ -51,9 +51,9 @@ namespace DangKyKhamBenh.Models.ViewModels
         // Thông tin phụ BN (tuỳ có/không trong DB)
         public string BN_SoBaoHiemYT { get; set; }   
         public string BN_NhomMau { get; set; }   
-        public string BN_TieuSuBenhAn { get; set; }     
-        
+        public string BN_TieuSuBenhAn { get; set; }
 
+        public bool HasBooking { get; set; }
 
     }
 }

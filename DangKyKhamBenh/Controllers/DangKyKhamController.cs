@@ -74,10 +74,14 @@ namespace DangKyKhamBenh.Controllers
                                 ND_QuanHuyen = reader["ND_QuanHuyen"] as string,
                                 ND_PhuongXa = reader["ND_PhuongXa"] as string
                             };
+
                             model.Add(benhNhan);
                         }
                     }
                 }
+              
+                
+
             }
 
             // Kiểm tra hồ sơ đầy đủ
@@ -113,6 +117,7 @@ namespace DangKyKhamBenh.Controllers
                 TempData["Err"] = "Lỗi giải mã số điện thoại: " + ex.Message;
                 return View(model);
             }
+
 
             return View(model); // Trả về danh sách hồ sơ
         }
@@ -224,12 +229,12 @@ namespace DangKyKhamBenh.Controllers
             var slots = new List<SlotChonVM>();
 
             var cmd = new OracleCommand(@"
-    SELECT 
-        SLOT_Id, SLOT_GioBD, SLOT_GioKT, SLOT_GioiHan, SLOT_SoDaDK 
-    FROM 
-        SLOTKHAM 
-    WHERE 
-        PC_Id = :pcId", conn);
+                    SELECT 
+                        SLOT_Id, SLOT_GioBD, SLOT_GioKT, SLOT_GioiHan, SLOT_SoDaDK 
+                    FROM 
+                        SLOTKHAM 
+                    WHERE 
+                        PC_Id = :pcId", conn);
 
             cmd.Parameters.Add(":pcId", OracleDbType.Varchar2).Value = pcId;
 
@@ -410,24 +415,24 @@ namespace DangKyKhamBenh.Controllers
                 con.Open();
 
                 var sql = @"
-            SELECT
-                dv.DV_TenDichVu,
-                dv.DV_GiaTien,
-                sl.SLOT_GioBD,
-                sl.SLOT_GioKT,
-                pk.PK_TenPhong,
-                pk.PK_ViTri,
-                nd.ND_HoTen
-            FROM SLOTKHAM sl
-            JOIN PHANCONG pc   ON pc.PC_Id = sl.PC_Id
-            JOIN PHONGKHAM pk  ON pk.PK_MaPK = pc.PK_MaPK
-            JOIN BACSI bs      ON bs.BS_MaBacSi = pc.BS_MaBacSi
-            JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
-            JOIN DICHVU dv     ON dv.DV_MaDichVu = :dvId
-            WHERE sl.SLOT_Id = :slotId
-              AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)";
+                        SELECT
+                            dv.DV_TenDichVu,
+                            dv.DV_GiaTien,
+                            sl.SLOT_GioBD,
+                            sl.SLOT_GioKT,
+                            pk.PK_TenPhong,
+                            pk.PK_ViTri,
+                            nd.ND_HoTen
+                        FROM SLOTKHAM sl
+                        JOIN PHANCONG pc   ON pc.PC_Id = sl.PC_Id
+                        JOIN PHONGKHAM pk  ON pk.PK_MaPK = pc.PK_MaPK
+                        JOIN BACSI bs      ON bs.BS_MaBacSi = pc.BS_MaBacSi
+                        JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
+                        JOIN DICHVU dv     ON dv.DV_MaDichVu = :dvId
+                        WHERE sl.SLOT_Id = :slotId
+                          AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)";
 
-                using (var cmd = new OracleCommand(sql, con))
+                            using (var cmd = new OracleCommand(sql, con))
                 {
                     cmd.BindByName = true;
                     cmd.Parameters.Add(":dvId", OracleDbType.Char).Value = dvId;
@@ -509,30 +514,29 @@ namespace DangKyKhamBenh.Controllers
                 BaoLanhVienPhi = baoLanh,
                 BhytCaseText = MapBhytCase(bhytCase)
             };
-            BenhNhan model = new BenhNhan();
             var cs = ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString;
             using (var con = new OracleConnection(cs))
             {
                 con.Open();
 
                 // 1) lấy thông tin lịch khám từ slot + dv + ngày
-                using (var cmd = new OracleCommand(@"
-            SELECT
-                dv.DV_TenDichVu,
-                dv.DV_GiaTien,
-                sl.SLOT_GioBD,
-                sl.SLOT_GioKT,
-                pk.PK_TenPhong,
-                pk.PK_ViTri,
-                nd.ND_HoTen
-            FROM SLOTKHAM sl
-            JOIN PHANCONG pc   ON pc.PC_Id = sl.PC_Id
-            JOIN PHONGKHAM pk  ON pk.PK_MaPK = pc.PK_MaPK
-            JOIN BACSI bs      ON bs.BS_MaBacSi = pc.BS_MaBacSi
-            JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
-            JOIN DICHVU dv     ON dv.DV_MaDichVu = :dvId
-            WHERE sl.SLOT_Id = :slotId
-              AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)", con))
+                   using (var cmd = new OracleCommand(@"
+                        SELECT
+                            dv.DV_TenDichVu,
+                            dv.DV_GiaTien,
+                            sl.SLOT_GioBD,
+                            sl.SLOT_GioKT,
+                            pk.PK_TenPhong,
+                            pk.PK_ViTri,
+                            nd.ND_HoTen
+                        FROM SLOTKHAM sl
+                        JOIN PHANCONG pc   ON pc.PC_Id = sl.PC_Id
+                        JOIN PHONGKHAM pk  ON pk.PK_MaPK = pc.PK_MaPK
+                        JOIN BACSI bs      ON bs.BS_MaBacSi = pc.BS_MaBacSi
+                        JOIN NGUOIDUNG nd  ON nd.ND_IdNguoiDung = bs.ND_IdNguoiDung
+                        JOIN DICHVU dv     ON dv.DV_MaDichVu = :dvId
+                        WHERE sl.SLOT_Id = :slotId
+                          AND TRUNC(pc.PC_Ngay) = TRUNC(:ngay)", con))
                 {
                     cmd.BindByName = true;
                     cmd.Parameters.Add(":dvId", OracleDbType.Char).Value = dvId;
@@ -577,7 +581,6 @@ namespace DangKyKhamBenh.Controllers
                     {
                         if (rd.Read())
                         {
-                            // ✅ gán BN_MaBenhNhan trước
                             vm.BN_MaBenhNhan = rd.IsDBNull(0) ? "" : rd.GetString(0).Trim();
 
                             vm.HoTen = rd.IsDBNull(1) ? "" : rd.GetString(1);
@@ -587,7 +590,6 @@ namespace DangKyKhamBenh.Controllers
                             catch { vm.SoDienThoai = phoneEnc; }
 
                             var cccdEnc = rd.IsDBNull(3) ? "" : rd.GetString(3);
-                            // ✅ dùng đúng key (Trim để khỏi dính CHAR padding)
                             var key = (vm.BN_MaBenhNhan ?? "").Trim();
                             vm.CCCD = string.IsNullOrEmpty(cccdEnc) || string.IsNullOrEmpty(key)
                                 ? cccdEnc
@@ -641,9 +643,9 @@ namespace DangKyKhamBenh.Controllers
 
                 // chỉ cần tên DV + giá
                 using (var cmd = new OracleCommand(@"
-            SELECT DV_TenDichVu, DV_GiaTien
-            FROM DICHVU
-            WHERE DV_MaDichVu = :dvId", con))
+                    SELECT DV_TenDichVu, DV_GiaTien
+                    FROM DICHVU
+                    WHERE DV_MaDichVu = :dvId", con))
                 {
                     cmd.BindByName = true;
                     cmd.Parameters.Add(":dvId", OracleDbType.Char).Value = dvId;
