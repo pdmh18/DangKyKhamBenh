@@ -30,6 +30,8 @@ namespace DangKyKhamBenh.Models.ViewModels
         public string CCCD { get; set; }
         public string SoBHYT { get; set; }
 
+        public string BN_MaBenhNhan { get; set; }  
+
         // text hiển thị
         public string BhytCaseText { get; set; }
         public string BaoLanhText => BaoLanhVienPhi ? "Có" : "Không";

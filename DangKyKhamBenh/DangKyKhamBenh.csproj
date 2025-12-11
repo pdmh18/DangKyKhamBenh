@@ -182,6 +182,7 @@
     <Compile Include="Models\ForgotPasswordOtpViewModel.cs" />
     <Compile Include="Models\Khoa.cs" />
     <Compile Include="Models\NguoiDung.cs" />
+    <Compile Include="Models\ViewModels\PatientItem.cs" />
     <Compile Include="Models\ViewModels\PhieuKhamBenhVM.cs" />
     <Compile Include="Models\ViewModels\PhieuTongHopVM.cs" />
     <Compile Include="Models\ViewModels\PhongKhamItem.cs" />
@@ -273,6 +274,7 @@
     <Content Include="Views\Admin\ServiceTickets.cshtml" />
     <Content Include="Views\Doctor\SearchResults.cshtml" />
     <Content Include="Views\Doctor\SearchResultsHoSo.cshtml" />
+    <Content Include="Views\Doctor\Patients.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
